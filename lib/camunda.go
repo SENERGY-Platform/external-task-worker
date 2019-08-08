@@ -291,15 +291,16 @@ func createKafkaCommandMessage(request messages.BpmnMsg, task messages.CamundaTa
 
 func createMessageForProtocolHandler(instance model.DeviceInstance, service model.Service, inputs map[string]interface{}, task messages.CamundaTask) (result messages.ProtocolMsg, err error) {
 	result = messages.ProtocolMsg{
-		WorkerId:         GetWorkerId(),
-		DeviceUrl:        formatter_lib.UseDeviceConfig(instance.Config, instance.Url),
-		ServiceUrl:       formatter_lib.UseDeviceConfig(instance.Config, service.Url),
-		TaskId:           task.Id,
-		DeviceInstanceId: instance.Id,
-		ServiceId:        service.Id,
-		OutputName:       "result", //task.ActivityId,
-		Time:             strconv.FormatInt(time.Now().Unix(), 10),
-		Service:          service,
+		WorkerId:           GetWorkerId(),
+		CompletionStrategy: util.Config.CompletionStrategy,
+		DeviceUrl:          formatter_lib.UseDeviceConfig(instance.Config, instance.Url),
+		ServiceUrl:         formatter_lib.UseDeviceConfig(instance.Config, service.Url),
+		TaskId:             task.Id,
+		DeviceInstanceId:   instance.Id,
+		ServiceId:          service.Id,
+		OutputName:         "result", //task.ActivityId,
+		Time:               strconv.FormatInt(time.Now().Unix(), 10),
+		Service:            service,
 	}
 	for _, serviceInput := range service.Input {
 		for name, inputInterface := range inputs {
@@ -332,6 +333,11 @@ func CompleteCamundaTask(msg string) (err error) {
 	if err != nil {
 		return err
 	}
+
+	if nrMsg.CompletionStrategy == "optimistic" {
+		return
+	}
+
 	if util.Config.QosStrategy == ">=" && missesCamundaDuration(nrMsg) {
 		return
 	}

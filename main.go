@@ -44,10 +44,7 @@ func main() {
 	}
 
 	go lib.CamundaWorker()
-
-	if util.Config.CompletionStrategy == "pessimistic" {
-		go lib.InitConsumer()
-	}
+	go lib.InitConsumer()
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
