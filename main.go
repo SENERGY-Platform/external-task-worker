@@ -24,9 +24,9 @@ import (
 
 	"syscall"
 
-	"github.com/Shopify/sarama"
 	"github.com/SENERGY-Platform/external-task-worker/lib"
 	"github.com/SENERGY-Platform/external-task-worker/util"
+	"github.com/Shopify/sarama"
 )
 
 func main() {
@@ -44,7 +44,10 @@ func main() {
 	}
 
 	go lib.CamundaWorker()
-	go lib.InitConsumer()
+
+	if util.Config.CompletionStrategy == "pessimistic" {
+		go lib.InitConsumer()
+	}
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)

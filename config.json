@@ -1,5 +1,7 @@
 {
   "DeviceRepoUrl": "http://iot:8080",
+  "CompletionStrategy": "optimistic",
+  "OptimisticTaskCompletionTimeout": 100,
   "CamundaWorkerTimeout": 1000,
   "CamundaWorkerTasks": 10,
   "CamundaFetchLockDuration": 60000,

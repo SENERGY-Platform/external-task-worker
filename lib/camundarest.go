@@ -17,13 +17,13 @@
 package lib
 
 import (
-	"log"
-
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
+	"log"
+	"time"
 
-	"github.com/satori/go.uuid"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"github.com/SmartEnergyPlatform/util/http/request"
+	"github.com/satori/go.uuid"
 )
 
 var workerId = uuid.NewV4().String()
@@ -51,23 +51,36 @@ func CamundaError(task messages.CamundaTask, msg string) {
 }
 
 func completeCamundaTask(taskId string, workerId string, outputName string, output messages.BpmnMsg) (err error) {
+	var completeRequest messages.CamundaCompleteRequest
+
 	if workerId == "" {
 		workerId = GetWorkerId()
 	}
 
-	variables := map[string]messages.CamundaOutput{
-		outputName: {
-			Value: output,
-		},
+	if util.Config.CompletionStrategy == "pessimistic" {
+		variables := map[string]messages.CamundaOutput{
+			outputName: {
+				Value: output,
+			},
+		}
+		completeRequest = messages.CamundaCompleteRequest{WorkerId: workerId, Variables: variables}
+	} else {
+		completeRequest = messages.CamundaCompleteRequest{WorkerId: workerId}
 	}
-	completeRequest := messages.CamundaCompleteRequest{WorkerId: workerId, Variables: variables}
+
+	duration := time.Duration(util.Config.OptimisticTaskCompletionTimeout) * time.Millisecond
+
+	time.Sleep(duration)
+
 	pl := ""
 	var code int
+	log.Println("Start complete Request")
 	err, pl, code = request.Post(util.Config.CamundaUrl+"/external-task/"+taskId+"/complete", completeRequest, nil)
 	if code == 204 || code == 200 {
 		log.Println("complete camunda task: ", completeRequest, pl)
-	}else{
-		CamundaError(messages.CamundaTask{Id:taskId}, pl)
+	} else {
+		CamundaError(messages.CamundaTask{Id: taskId}, pl)
+		log.Println("Error on completeCamundaTask.")
 	}
 	return
 }

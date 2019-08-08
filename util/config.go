@@ -28,28 +28,30 @@ import (
 )
 
 type ConfigStruct struct {
-	DeviceRepoUrl               string
-	CamundaWorkerTimeout        int64
-	CamundaWorkerTasks          int64
-	CamundaAsyncResponseTimeout int64
-	CamundaFetchLockDuration    int64
-	CamundaUrl                  string
-	CamundaTopic                string
-	ZookeeperUrl                string //host1:2181,host2:2181/chroot
-	KafkaConsumerGroup          string
-	ResponseTopic               string
-	QosStrategy                 string // <=, >=
-	KafkaTimeout                int64
-	SaramaLog                   string
-	FatalKafkaErrors            string
-	AuthExpirationTimeBuffer    float64
-	AuthEndpoint                string
-	AuthClientId                string
-	AuthClientSecret            string
-	JwtPrivateKey               string
-	JwtExpiration               int64
-	JwtIssuer                   string
-	PermissionsUrl              string
+	DeviceRepoUrl                   string
+	CompletionStrategy              string
+	OptimisticTaskCompletionTimeout int64
+	CamundaWorkerTimeout            int64
+	CamundaWorkerTasks              int64
+	CamundaAsyncResponseTimeout     int64
+	CamundaFetchLockDuration        int64
+	CamundaUrl                      string
+	CamundaTopic                    string
+	ZookeeperUrl                    string //host1:2181,host2:2181/chroot
+	KafkaConsumerGroup              string
+	ResponseTopic                   string
+	QosStrategy                     string // <=, >=
+	KafkaTimeout                    int64
+	SaramaLog                       string
+	FatalKafkaErrors                string
+	AuthExpirationTimeBuffer        float64
+	AuthEndpoint                    string
+	AuthClientId                    string
+	AuthClientSecret                string
+	JwtPrivateKey                   string
+	JwtExpiration                   int64
+	JwtIssuer                       string
+	PermissionsUrl                  string
 }
 type ConfigType *ConfigStruct
 
