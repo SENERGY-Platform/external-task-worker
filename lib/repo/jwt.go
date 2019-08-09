@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package lib
+package repo
 
 import (
 	"bytes"
@@ -32,9 +32,9 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/util"
 )
 
-type JwtImpersonate string
+type Impersonate string
 
-func (this JwtImpersonate) Post(url string, contentType string, body io.Reader) (resp *http.Response, err error) {
+func (this Impersonate) Post(url string, contentType string, body io.Reader) (resp *http.Response, err error) {
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func (this JwtImpersonate) Post(url string, contentType string, body io.Reader) 
 	return
 }
 
-func (this JwtImpersonate) PostJSON(url string, body interface{}, result interface{}) (err error) {
+func (this Impersonate) PostJSON(url string, body interface{}, result interface{}) (err error) {
 	b := new(bytes.Buffer)
 	err = json.NewEncoder(b).Encode(body)
 	if err != nil {
@@ -73,7 +73,7 @@ func (this JwtImpersonate) PostJSON(url string, body interface{}, result interfa
 	return
 }
 
-func (this JwtImpersonate) Get(url string) (resp *http.Response, err error) {
+func (this Impersonate) Get(url string) (resp *http.Response, err error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func (this JwtImpersonate) Get(url string) (resp *http.Response, err error) {
 	return
 }
 
-func (this JwtImpersonate) GetJSON(url string, result interface{}) (err error) {
+func (this Impersonate) GetJSON(url string, result interface{}) (err error) {
 	resp, err := this.Get(url)
 	if err != nil {
 		return err
@@ -112,43 +112,43 @@ type OpenidToken struct {
 
 var openid *OpenidToken
 
-func EnsureAccess() (token JwtImpersonate, err error) {
+func EnsureAccess(config util.ConfigType) (token Impersonate, err error) {
 	if openid == nil {
 		openid = &OpenidToken{}
 	}
 	duration := time.Now().Sub(openid.RequestTime).Seconds()
 
-	if openid.AccessToken != "" && openid.ExpiresIn-util.Config.AuthExpirationTimeBuffer > duration {
-		token = JwtImpersonate("Bearer " + openid.AccessToken)
+	if openid.AccessToken != "" && openid.ExpiresIn-config.AuthExpirationTimeBuffer > duration {
+		token = Impersonate("Bearer " + openid.AccessToken)
 		return
 	}
 
-	if openid.RefreshToken != "" && openid.RefreshExpiresIn-util.Config.AuthExpirationTimeBuffer < duration {
+	if openid.RefreshToken != "" && openid.RefreshExpiresIn-config.AuthExpirationTimeBuffer < duration {
 		log.Println("refresh token", openid.RefreshExpiresIn, duration)
-		err = refreshOpenidToken(openid)
+		err = refreshOpenidToken(openid, config)
 		if err != nil {
 			log.Println("WARNING: unable to use refreshtoken", err)
 		} else {
-			token = JwtImpersonate("Bearer " + openid.AccessToken)
+			token = Impersonate("Bearer " + openid.AccessToken)
 			return
 		}
 	}
 
 	log.Println("get new access token")
-	err = getOpenidToken(openid)
+	err = getOpenidToken(openid, config)
 	if err != nil {
 		log.Println("ERROR: unable to get new access token", err)
 		openid = &OpenidToken{}
 	}
-	token = JwtImpersonate("Bearer " + openid.AccessToken)
+	token = Impersonate("Bearer " + openid.AccessToken)
 	return
 }
 
-func getOpenidToken(token *OpenidToken) (err error) {
+func getOpenidToken(token *OpenidToken, config util.ConfigType) (err error) {
 	requesttime := time.Now()
-	resp, err := http.PostForm(util.Config.AuthEndpoint+"/auth/realms/master/protocol/openid-connect/token", url.Values{
-		"client_id":     {util.Config.AuthClientId},
-		"client_secret": {util.Config.AuthClientSecret},
+	resp, err := http.PostForm(config.AuthEndpoint+"/auth/realms/master/protocol/openid-connect/token", url.Values{
+		"client_id":     {config.AuthClientId},
+		"client_secret": {config.AuthClientSecret},
 		"grant_type":    {"client_credentials"},
 	})
 
@@ -168,11 +168,11 @@ func getOpenidToken(token *OpenidToken) (err error) {
 	return
 }
 
-func refreshOpenidToken(token *OpenidToken) (err error) {
+func refreshOpenidToken(token *OpenidToken, config util.ConfigType) (err error) {
 	requesttime := time.Now()
-	resp, err := http.PostForm(util.Config.AuthEndpoint+"/auth/realms/master/protocol/openid-connect/token", url.Values{
-		"client_id":     {util.Config.AuthClientId},
-		"client_secret": {util.Config.AuthClientSecret},
+	resp, err := http.PostForm(config.AuthEndpoint+"/auth/realms/master/protocol/openid-connect/token", url.Values{
+		"client_id":     {config.AuthClientId},
+		"client_secret": {config.AuthClientSecret},
 		"refresh_token": {token.RefreshToken},
 		"grant_type":    {"refresh_token"},
 	})

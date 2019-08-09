@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
+	"github.com/SENERGY-Platform/external-task-worker/lib/repo"
 	"log"
 	"reflect"
 	"strconv"
@@ -34,20 +35,21 @@ import (
 
 const CAMUNDA_VARIABLES_PAYLOAD = "payload"
 
-func CamundaWorker(factory kafka.FactoryInterface) {
+func CamundaWorker(kafkaFactory kafka.FactoryInterface, repoFactory repo.FactoryInterface) {
 	log.Println("start camunda worker")
-	consumer, err := factory.NewConsumer(util.Config, CompleteCamundaTask)
+	consumer, err := kafkaFactory.NewConsumer(util.Config, CompleteCamundaTask)
 	if err != nil {
-		log.Fatal("ERROR: factory.NewConsumer", err)
+		log.Fatal("ERROR: kafkaFactory.NewConsumer", err)
 	}
 	defer consumer.Stop()
-	producer, err := factory.NewProducer(util.Config)
+	producer, err := kafkaFactory.NewProducer(util.Config)
 	if err != nil {
-		log.Fatal("ERROR: factory.NewProducer", err)
+		log.Fatal("ERROR: kafkaFactory.NewProducer", err)
 	}
 	defer producer.Close()
+	repository := repoFactory.Get(util.Config)
 	for {
-		wait := ExecuteNextCamundaTask(producer)
+		wait := ExecuteNextCamundaTask(producer, repository)
 		if wait {
 			duration := time.Duration(util.Config.CamundaWorkerTimeout) * time.Millisecond
 			time.Sleep(duration)
@@ -55,7 +57,7 @@ func CamundaWorker(factory kafka.FactoryInterface) {
 	}
 }
 
-func ExecuteNextCamundaTask(producer kafka.ProducerInterface) (wait bool) {
+func ExecuteNextCamundaTask(producer kafka.ProducerInterface, repository repo.RepoInterface) (wait bool) {
 	tasks, err := GetCamundaTask()
 	if err != nil {
 		log.Println("error on ExecuteNextCamundaTask getTask", err)
@@ -69,14 +71,14 @@ func ExecuteNextCamundaTask(producer kafka.ProducerInterface) (wait bool) {
 		wg.Add(1)
 		go func(asyncTask messages.CamundaTask) {
 			defer wg.Done()
-			ExecuteCamundaTask(asyncTask, producer)
+			ExecuteCamundaTask(asyncTask, producer, repository)
 		}(task)
 	}
 	wg.Wait()
 	return false
 }
 
-func ExecuteCamundaTask(task messages.CamundaTask, producer kafka.ProducerInterface) {
+func ExecuteCamundaTask(task messages.CamundaTask, producer kafka.ProducerInterface, repository repo.RepoInterface) {
 	log.Println("Start", task.Id, time.Now().Second())
 	log.Println("Get new Task: ", task)
 	if task.Error != "" {
@@ -93,7 +95,7 @@ func ExecuteCamundaTask(task messages.CamundaTask, producer kafka.ProducerInterf
 		return
 	}
 
-	protocolTopic, message, err := CreateProtocolMessage(request, task)
+	protocolTopic, message, err := CreateProtocolMessage(request, task, repository)
 	if err != nil {
 		log.Println("error on ExecuteCamundaTask CreateProtocolMessage", err)
 		CamundaError(task, err.Error())

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
+	"github.com/SENERGY-Platform/external-task-worker/lib/repo"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	formatter_lib "github.com/SENERGY-Platform/formatter-lib"
 	"github.com/SENERGY-Platform/iot-device-repository/lib/model"
@@ -13,8 +14,8 @@ import (
 )
 
 
-func CreateProtocolMessage(request messages.SenergyTask, task messages.CamundaTask) (protocolTopic string, message string, err error) {
-	instance, service, err := GetDeviceInfo(request.InstanceId, request.ServiceId, task.TenantId)
+func CreateProtocolMessage(request messages.SenergyTask, task messages.CamundaTask, repository repo.RepoInterface) (protocolTopic string, message string, err error) {
+	instance, service, err := repository.GetDeviceInfo(request.InstanceId, request.ServiceId, task.TenantId)
 	if err != nil {
 		log.Println("error on CreateProtocolMessage getDeviceInfo: ", err)
 		err = errors.New("unable to find device or service")
@@ -45,8 +46,8 @@ func createMessageForProtocolHandler(instance model.DeviceInstance, service mode
 	result = messages.ProtocolMsg{
 		WorkerId:           GetWorkerId(),
 		CompletionStrategy: util.Config.CompletionStrategy,
-		DeviceUrl:          formatter_lib.UseDeviceConfig(instance.Config, instance.Url),
-		ServiceUrl:         formatter_lib.UseDeviceConfig(instance.Config, service.Url),
+		DeviceUrl:          instance.Url,
+		ServiceUrl:         service.Url,
 		TaskId:             task.Id,
 		DeviceInstanceId:   instance.Id,
 		ServiceId:          service.Id,

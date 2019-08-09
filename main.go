@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
+	"github.com/SENERGY-Platform/external-task-worker/lib/repo"
 	"log"
 	"os"
 	"os/signal"
@@ -27,7 +28,6 @@ import (
 
 	"github.com/SENERGY-Platform/external-task-worker/lib"
 	"github.com/SENERGY-Platform/external-task-worker/util"
-	"github.com/Shopify/sarama"
 )
 
 func main() {
@@ -40,11 +40,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if util.Config.SaramaLog == "true" {
-		sarama.Logger = log.New(os.Stderr, "[Sarama] ", log.LstdFlags)
-	}
-
-	go lib.CamundaWorker(kafka.Factory)
+	go lib.CamundaWorker(kafka.Factory, repo.Factory)
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)

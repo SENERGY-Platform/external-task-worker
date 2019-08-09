@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package lib
+package repo
 
 import (
+	"github.com/SENERGY-Platform/external-task-worker/util"
 	"strings"
 
 	"crypto/x509"
@@ -27,23 +28,26 @@ import (
 	"log"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/SENERGY-Platform/external-task-worker/util"
 )
 
 type RoleMapping struct {
 	Name string `json:"name"`
 }
 
-func getUserRoles(user string) (roles []string, err error) {
-	clientToken, err := EnsureAccess()
+type Keycloak struct {
+	config util.ConfigType
+}
+
+func (this Keycloak) getUserRoles(user string) (roles []string, err error) {
+	clientToken, err := EnsureAccess(this.config)
 	if err != nil {
 		log.Println("ERROR: getUserRoles::EnsureAccess()", err)
 		return roles, err
 	}
 	roleMappings := []RoleMapping{}
-	err = clientToken.GetJSON(util.Config.AuthEndpoint+"/auth/admin/realms/master/users/"+user+"/role-mappings/realm", &roleMappings)
+	err = clientToken.GetJSON(this.config.AuthEndpoint+"/auth/admin/realms/master/users/"+user+"/role-mappings/realm", &roleMappings)
 	if err != nil {
-		log.Println("ERROR: getUserRoles::GetJSON()", err, util.Config.AuthEndpoint+"/auth/admin/realms/master/users/"+user+"/role-mappings/realm", string(clientToken))
+		log.Println("ERROR: getUserRoles::GetJSON()", err, this.config.AuthEndpoint+"/auth/admin/realms/master/users/"+user+"/role-mappings/realm", string(clientToken))
 		return roles, err
 	}
 	for _, role := range roleMappings {
@@ -61,8 +65,8 @@ type RealmAccess struct {
 	Roles []string `json:"roles"`
 }
 
-func GetUserToken(user string) (token JwtImpersonate, err error) {
-	roles, err := getUserRoles(user)
+func (this Keycloak) GetUserToken(user string) (token Impersonate, err error) {
+	roles, err := this.getUserRoles(user)
 	if err != nil {
 		log.Println("ERROR: GetUserToken::getUserRoles()", err)
 		return token, err
@@ -72,24 +76,24 @@ func GetUserToken(user string) (token JwtImpersonate, err error) {
 	claims := KeycloakClaims{
 		RealmAccess{Roles: roles},
 		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Duration(util.Config.JwtExpiration)).Unix(),
-			Issuer:    util.Config.JwtIssuer,
+			ExpiresAt: time.Now().Add(time.Duration(this.config.JwtExpiration)).Unix(),
+			Issuer:    this.config.JwtIssuer,
 			Subject:   user,
 		},
 	}
 
 	jwtoken := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	if util.Config.JwtPrivateKey == "" {
+	if this.config.JwtPrivateKey == "" {
 		unsignedTokenString, err := jwtoken.SigningString()
 		if err != nil {
 			log.Println("ERROR: GetUserToken::SigningString()", err)
 			return token, err
 		}
 		tokenString := strings.Join([]string{unsignedTokenString, ""}, ".")
-		token = JwtImpersonate("Bearer " + tokenString)
+		token = Impersonate("Bearer " + tokenString)
 	} else {
 		//decode key base64 string to []byte
-		b, err := base64.StdEncoding.DecodeString(util.Config.JwtPrivateKey)
+		b, err := base64.StdEncoding.DecodeString(this.config.JwtPrivateKey)
 		if err != nil {
 			log.Println("ERROR: GetUserToken::DecodeString()", err)
 			return token, err
@@ -101,7 +105,7 @@ func GetUserToken(user string) (token JwtImpersonate, err error) {
 			log.Println("ERROR: GetUserToken::SignedString()", err)
 			return token, err
 		}
-		token = JwtImpersonate("Bearer " + tokenString)
+		token = Impersonate("Bearer " + tokenString)
 	}
 	return token, err
 }

@@ -15,7 +15,7 @@
  */
 
 
-package lib
+package repo
 
 import (
 	"encoding/json"
@@ -34,9 +34,9 @@ func TestGetDeviceInfo(t *testing.T) {
 	defer authcloser()
 	permcloser, permUrl := PermsearchMock()
 	defer permcloser()
-	util.Config = &util.ConfigStruct{DeviceRepoUrl: deviceRepoUrl, AuthEndpoint:authUrl, PermissionsUrl:permUrl}
+	config := &util.ConfigStruct{DeviceRepoUrl: deviceRepoUrl, AuthEndpoint:authUrl, PermissionsUrl:permUrl}
 
-	device, service, err := GetDeviceInfo("device1", "service1", "user1")
+	device, service, err := Factory.Get(config).GetDeviceInfo("device1", "service1", "user1")
 	if err != nil {
 		t.Fatal(err)
 	}

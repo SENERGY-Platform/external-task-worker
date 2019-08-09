@@ -19,6 +19,7 @@ package kafka
 import (
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"log"
+	"os"
 	"runtime/debug"
 	"time"
 
@@ -32,6 +33,10 @@ type Producer struct {
 }
 
 func InitProducer(config util.ConfigType) (producer *Producer, err error) {
+	if util.Config.SaramaLog == "true" {
+		sarama.Logger = log.New(os.Stderr, "[Sarama] ", log.LstdFlags)
+	}
+
 	producer = &Producer{}
 	var kz *kazoo.Kazoo
 	kz, err = kazoo.NewKazooFromConnectionString(config.ZookeeperUrl, nil)
