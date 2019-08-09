@@ -47,10 +47,10 @@ func CamundaError(task messages.CamundaTask, msg string) {
 	errorMsg := messages.CamundaError{WorkerId: GetWorkerId(), ErrorMessage: msg, Retries: 0, ErrorDetails: msg}
 	log.Println("Send Error to Camunda: ", msg)
 	log.Println(request.Post(util.Config.CamundaUrl+"/external-task/"+task.Id+"/failure", errorMsg, nil))
-	//this.completeCamundaTask(taskid, this.GetWorkerId(), "error", messages.BpmnMsg{ErrorMsg:msg})
+	//this.completeCamundaTask(taskid, this.GetWorkerId(), "error", messages.SenergyTask{ErrorMsg:msg})
 }
 
-func completeCamundaTask(taskId string, workerId string, outputName string, output messages.BpmnMsg) (err error) {
+func completeCamundaTask(taskId string, workerId string, outputName string, output messages.SenergyTask) (err error) {
 	var completeRequest messages.CamundaCompleteRequest
 
 	if workerId == "" {

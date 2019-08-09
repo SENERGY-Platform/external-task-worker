@@ -14,58 +14,57 @@
  * limitations under the License.
  */
 
-package lib
+package kafka
 
 import (
+	"github.com/SENERGY-Platform/external-task-worker/util"
 	"log"
+	"runtime/debug"
 	"time"
 
-	"github.com/SENERGY-Platform/external-task-worker/util"
-
-	"sync"
 
 	"github.com/Shopify/sarama"
 	"github.com/wvanbergen/kazoo-go"
 )
 
-var onceProducer sync.Once
-var producer sarama.AsyncProducer
+type Producer struct {
+	producer sarama.AsyncProducer
+}
 
-func InitProducer() sarama.AsyncProducer {
+func InitProducer(config util.ConfigType) (producer *Producer, err error) {
+	producer = &Producer{}
 	var kz *kazoo.Kazoo
-	kz, err := kazoo.NewKazooFromConnectionString(util.Config.ZookeeperUrl, nil)
+	kz, err = kazoo.NewKazooFromConnectionString(config.ZookeeperUrl, nil)
 	if err != nil {
-		log.Fatal("error in kazoo.NewKazooFromConnectionString()", err)
+		debug.PrintStack()
+		return producer, err
 	}
 	broker, err := kz.BrokerList()
 	kz.Close()
 
 	if err != nil {
-		log.Fatal("error in kz.BrokerList()", err)
+		debug.PrintStack()
+		return producer, err
 	}
 
 	sarama_conf := sarama.NewConfig()
 	sarama_conf.Version = sarama.V0_10_0_1
-	producer, err = sarama.NewAsyncProducer(broker, sarama_conf)
+	producer.producer, err = sarama.NewAsyncProducer(broker, sarama_conf)
 	if err != nil {
-		log.Fatal("error in sarama.NewAsyncProducer()", broker, err)
+		debug.PrintStack()
+		return producer, err
 	}
-	return producer
+
+	return producer, nil
 }
 
-func Produce(topic string, message string) {
-	onceProducer.Do(func() {
-		producer = InitProducer()
-	})
+func (this *Producer) Produce(topic string, message string) {
 	if message != "topic_init" {
 		log.Println("produce kafka msg: ", topic, message)
 	}
-	producer.Input() <- &sarama.ProducerMessage{Topic: topic, Key: nil, Value: sarama.StringEncoder(message), Timestamp: time.Now()}
+	this.producer.Input() <- &sarama.ProducerMessage{Topic: topic, Key: nil, Value: sarama.StringEncoder(message), Timestamp: time.Now()}
 }
 
-func CloseProducer() {
-	onceProducer.Do(func() {
-		producer = InitProducer()
-	})
-	producer.Close()
+func (this *Producer)  Close() {
+	this.producer.Close()
 }

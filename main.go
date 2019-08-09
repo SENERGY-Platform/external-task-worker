@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
 	"log"
 	"os"
 	"os/signal"
@@ -43,8 +44,7 @@ func main() {
 		sarama.Logger = log.New(os.Stderr, "[Sarama] ", log.LstdFlags)
 	}
 
-	go lib.CamundaWorker()
-	go lib.InitConsumer()
+	go lib.CamundaWorker(kafka.Factory)
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)

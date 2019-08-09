@@ -20,23 +20,42 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
 	"log"
 	"reflect"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/SENERGY-Platform/external-task-worker/util"
 
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
-	"github.com/SENERGY-Platform/formatter-lib"
-	"github.com/SENERGY-Platform/iot-device-repository/lib/model"
 )
 
 const CAMUNDA_VARIABLES_PAYLOAD = "payload"
 
-func ExecuteNextCamundaTask() (wait bool) {
+func CamundaWorker(factory kafka.FactoryInterface) {
+	log.Println("start camunda worker")
+	consumer, err := factory.NewConsumer(util.Config, CompleteCamundaTask)
+	if err != nil {
+		log.Fatal("ERROR: factory.NewConsumer", err)
+	}
+	defer consumer.Stop()
+	producer, err := factory.NewProducer(util.Config)
+	if err != nil {
+		log.Fatal("ERROR: factory.NewProducer", err)
+	}
+	defer producer.Close()
+	for {
+		wait := ExecuteNextCamundaTask(producer)
+		if wait {
+			duration := time.Duration(util.Config.CamundaWorkerTimeout) * time.Millisecond
+			time.Sleep(duration)
+		}
+	}
+}
+
+func ExecuteNextCamundaTask(producer kafka.ProducerInterface) (wait bool) {
 	tasks, err := GetCamundaTask()
 	if err != nil {
 		log.Println("error on ExecuteNextCamundaTask getTask", err)
@@ -50,37 +69,87 @@ func ExecuteNextCamundaTask() (wait bool) {
 		wg.Add(1)
 		go func(asyncTask messages.CamundaTask) {
 			defer wg.Done()
-			ExecuteCamundaTask(asyncTask)
+			ExecuteCamundaTask(asyncTask, producer)
 		}(task)
 	}
 	wg.Wait()
 	return false
 }
 
-func getPayloadParameter(task messages.CamundaTask) (result map[string]interface{}) {
-	result = map[string]interface{}{}
-	for key, value := range task.Variables {
-		path := strings.SplitN(key, ".", 2)
-		if len(path) == 2 && path[0] == "inputs" && path[1] != "" {
-			result[path[1]] = value.Value
+func ExecuteCamundaTask(task messages.CamundaTask, producer kafka.ProducerInterface) {
+	log.Println("Start", task.Id, time.Now().Second())
+	log.Println("Get new Task: ", task)
+	if task.Error != "" {
+		log.Println("WARNING: existing failure in camunda task", task.Error)
+	}
+	if util.Config.QosStrategy == "<=" && task.Retries == 1 {
+		CamundaError(task, "communication timeout")
+		return
+	}
+	request, err := SenergyRequestTask(task)
+	if err != nil {
+		log.Println("error on SenergyRequestTask(): ", err)
+		CamundaError(task, "invalid task format (json)")
+		return
+	}
+
+	protocolTopic, message, err := CreateProtocolMessage(request, task)
+	if err != nil {
+		log.Println("error on ExecuteCamundaTask CreateProtocolMessage", err)
+		CamundaError(task, err.Error())
+		return
+	}
+	if util.Config.QosStrategy == "<=" && task.Retries != 1 {
+		SetCamundaRetry(task.Id)
+	}
+	producer.Produce(protocolTopic, message)
+
+	if util.Config.CompletionStrategy == "optimistic" {
+		err = completeCamundaTask(task.Id, "", "", messages.SenergyTask{})
+		if err != nil {
+			log.Println("error on completeCamundaTask(): ", err)
+			return
+		} else {
+			log.Println("Completed task optimistic.")
 		}
 	}
+}
+
+func CompleteCamundaTask(msg string) (err error) {
+	var nrMsg messages.ProtocolMsg
+	err = json.Unmarshal([]byte(msg), &nrMsg)
+	if err != nil {
+		return err
+	}
+
+	if nrMsg.CompletionStrategy == "optimistic" {
+		return
+	}
+
+	if util.Config.QosStrategy == ">=" && missesCamundaDuration(nrMsg) {
+		return
+	}
+	response, err := SenergyResultTask(nrMsg)
+	if err != nil {
+		return err
+	}
+	err = completeCamundaTask(nrMsg.TaskId, nrMsg.WorkerId, nrMsg.OutputName, response)
+	log.Println("Complete", nrMsg.TaskId, time.Now().Second())
 	return
 }
 
-func ToBpmnRequest(task messages.CamundaTask) (request messages.BpmnMsg, err error) {
-	payload, ok := task.Variables[CAMUNDA_VARIABLES_PAYLOAD].Value.(string)
-	if !ok {
-		return request, errors.New(fmt.Sprint("ERROR: payload is not a string, ", task.Variables))
+func missesCamundaDuration(msg messages.ProtocolMsg) bool {
+	if msg.Time == "" {
+		return true
 	}
-	err = json.Unmarshal([]byte(payload), &request)
+	unixTime, err := strconv.ParseInt(msg.Time, 10, 64)
 	if err != nil {
-		return request, err
+		return true
 	}
-	parameter := getPayloadParameter(task)
-	err = setPayloadParameter(&request, parameter)
-	return
+	taskTime := time.Unix(unixTime, 0)
+	return time.Since(taskTime) >= time.Duration(util.Config.CamundaFetchLockDuration)*time.Millisecond
 }
+
 
 func setVarOnPath(element interface{}, path []string, value interface{}) (result interface{}, err error) {
 	defer func() {
@@ -191,197 +260,6 @@ func setVarOnPath(element interface{}, path []string, value interface{}) (result
 		reflect.ValueOf(result).Index(index).Set(reflect.ValueOf(val))
 	default:
 		err = errors.New(fmt.Sprintf("ERROR: getSubelement(), unknown result type %T", element))
-	}
-	return
-}
-
-func setPayloadParameter(msg *messages.BpmnMsg, parameter map[string]interface{}) (err error) {
-	for paramName, value := range parameter {
-		_, err := setVarOnPath(msg.Inputs, strings.Split(paramName, "."), value)
-		if err != nil {
-			log.Println("ERROR: setPayloadParameter() -> ignore param", paramName, value, err)
-			//return err
-		}
-	}
-	return
-}
-
-func ExecuteCamundaTask(task messages.CamundaTask) {
-	log.Println("Start", task.Id, time.Now().Second())
-	log.Println("Get new Task: ", task)
-	if task.Error != "" {
-		log.Println("WARNING: existing failure in camunda task", task.Error)
-	}
-	if util.Config.QosStrategy == "<=" && task.Retries == 1 {
-		CamundaError(task, "communication timeout")
-		return
-	}
-	request, err := ToBpmnRequest(task)
-	if err != nil {
-		log.Println("error on ToBpmnRequest(): ", err)
-		CamundaError(task, "invalid task format (json)")
-		return
-	}
-
-	protocolTopic, message, err := createKafkaCommandMessage(request, task)
-	if err != nil {
-		log.Println("error on ExecuteCamundaTask createKafkaCommandMessage", err)
-		CamundaError(task, err.Error())
-		return
-	}
-	if util.Config.QosStrategy == "<=" && task.Retries != 1 {
-		SetCamundaRetry(task.Id)
-	}
-	Produce(protocolTopic, message)
-
-	if util.Config.CompletionStrategy == "optimistic" {
-		err = completeCamundaTask(task.Id, "", "", messages.BpmnMsg{})
-		if err != nil {
-			log.Println("error on completeCamundaTask(): ", err)
-			return
-		} else {
-			log.Println("Completed task optimistic.")
-		}
-	}
-}
-
-type Envelope struct {
-	DeviceId  string      `json:"device_id"`
-	ServiceId string      `json:"service_id"`
-	Value     interface{} `json:"value"`
-}
-
-func (envelope Envelope) Validate() error {
-	if envelope.DeviceId == "" {
-		return errors.New("missing device id")
-	}
-	if envelope.ServiceId == "" {
-		return errors.New("missing service id")
-	}
-	return nil
-}
-
-func createKafkaCommandMessage(request messages.BpmnMsg, task messages.CamundaTask) (protocolTopic string, message string, err error) {
-	instance, service, err := GetDeviceInfo(request.InstanceId, request.ServiceId, task.TenantId)
-	if err != nil {
-		log.Println("error on createKafkaCommandMessage getDeviceInfo: ", err)
-		err = errors.New("unable to find device or service")
-		return
-	}
-	value, err := createMessageForProtocolHandler(instance, service, request.Inputs, task)
-	if err != nil {
-		log.Println("ERROR: on createKafkaCommandMessage createMessageForProtocolHandler(): ", err)
-		err = errors.New("internal format error (inconsistent data?) (time: " + time.Now().String() + ")")
-		return
-	}
-	protocolTopic = service.Protocol.ProtocolHandlerUrl
-	if protocolTopic == "" {
-		log.Println("ERROR: empty protocol topic")
-		log.Println("DEBUG: ", instance, service)
-		err = errors.New("empty protocol topic")
-		return
-	}
-	envelope := Envelope{ServiceId: service.Id, DeviceId: instance.Id, Value: value}
-	if err := envelope.Validate(); err != nil {
-		return protocolTopic, message, err
-	}
-	msg, err := json.Marshal(envelope)
-	return protocolTopic, string(msg), err
-}
-
-func createMessageForProtocolHandler(instance model.DeviceInstance, service model.Service, inputs map[string]interface{}, task messages.CamundaTask) (result messages.ProtocolMsg, err error) {
-	result = messages.ProtocolMsg{
-		WorkerId:           GetWorkerId(),
-		CompletionStrategy: util.Config.CompletionStrategy,
-		DeviceUrl:          formatter_lib.UseDeviceConfig(instance.Config, instance.Url),
-		ServiceUrl:         formatter_lib.UseDeviceConfig(instance.Config, service.Url),
-		TaskId:             task.Id,
-		DeviceInstanceId:   instance.Id,
-		ServiceId:          service.Id,
-		OutputName:         "result", //task.ActivityId,
-		Time:               strconv.FormatInt(time.Now().Unix(), 10),
-		Service:            service,
-	}
-	for _, serviceInput := range service.Input {
-		for name, inputInterface := range inputs {
-			if serviceInput.Name == name {
-				input, err := formatter_lib.ParseFromJsonInterface(serviceInput.Type, inputInterface)
-				if err != nil {
-					return result, err
-				}
-				input.Name = name
-				if err := formatter_lib.UseLiterals(&input, serviceInput.Type); err != nil {
-					return result, err
-				}
-				formatedInput, err := formatter_lib.GetFormatedValue(instance.Config, serviceInput.Format, input, serviceInput.AdditionalFormatinfo)
-				if err != nil {
-					return result, err
-				}
-				result.ProtocolParts = append(result.ProtocolParts, messages.ProtocolPart{
-					Name:  serviceInput.MsgSegment.Name,
-					Value: formatedInput,
-				})
-			}
-		}
-	}
-	return
-}
-
-func CompleteCamundaTask(msg string) (err error) {
-	var nrMsg messages.ProtocolMsg
-	err = json.Unmarshal([]byte(msg), &nrMsg)
-	if err != nil {
-		return err
-	}
-
-	if nrMsg.CompletionStrategy == "optimistic" {
-		return
-	}
-
-	if util.Config.QosStrategy == ">=" && missesCamundaDuration(nrMsg) {
-		return
-	}
-	response, err := createBpmnResponse(nrMsg)
-	if err != nil {
-		return err
-	}
-	err = completeCamundaTask(nrMsg.TaskId, nrMsg.WorkerId, nrMsg.OutputName, response)
-	log.Println("Complete", nrMsg.TaskId, time.Now().Second())
-	return
-}
-
-func missesCamundaDuration(msg messages.ProtocolMsg) bool {
-	if msg.Time == "" {
-		return true
-	}
-	unixTime, err := strconv.ParseInt(msg.Time, 10, 64)
-	if err != nil {
-		return true
-	}
-	taskTime := time.Unix(unixTime, 0)
-	return time.Since(taskTime) >= time.Duration(util.Config.CamundaFetchLockDuration)*time.Millisecond
-}
-
-func createBpmnResponse(nrMsg messages.ProtocolMsg) (result messages.BpmnMsg, err error) {
-	result.Outputs = map[string]interface{}{}
-	result.ServiceId = nrMsg.ServiceId
-	service := nrMsg.Service
-	for _, output := range nrMsg.ProtocolParts {
-		for _, serviceOutput := range service.Output {
-			if serviceOutput.MsgSegment.Name == output.Name {
-				parsedOutput, err := formatter_lib.ParseFormat(serviceOutput.Type, serviceOutput.Format, output.Value, serviceOutput.AdditionalFormatinfo)
-				if err != nil {
-					log.Println("error on parsing")
-					return result, err
-				}
-				outputInterface, err := formatter_lib.FormatToJsonStruct([]model.ConfigField{}, parsedOutput)
-				if err != nil {
-					return result, err
-				}
-				parsedOutput.Name = serviceOutput.Name
-				result.Outputs[serviceOutput.Name] = outputInterface
-			}
-		}
 	}
 	return
 }

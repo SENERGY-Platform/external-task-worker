@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package lib
+package kafka
 
 import (
 	"context"
@@ -196,19 +196,4 @@ func InitTopicWithConfig(zkUrl string, numPartitions int, replicationFactor int,
 		}
 	}
 	return nil
-}
-
-var consumer *Consumer
-
-func InitConsumer() {
-	var err error
-	consumer, err = NewConsumer(util.Config.ZookeeperUrl, util.Config.KafkaConsumerGroup, util.Config.ResponseTopic, func(topic string, msg []byte) error {
-		return CompleteCamundaTask(string(msg))
-	}, func(err error, consumer *Consumer) {
-		log.Println("FATAL ERROR: kafka", err)
-		log.Fatal(err)
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
 }

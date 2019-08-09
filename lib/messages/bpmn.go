@@ -33,14 +33,6 @@ type BpmnValueSkeleton struct {
 	Outputs map[string]interface{} `json:"outputs,omitempty"`
 }
 
-type BpmnMsg struct {
-	InstanceId string                 `json:"instance_id,omitempty"`
-	ServiceId  string                 `json:"service_id,omitempty"`
-	Inputs     map[string]interface{} `json:"inputs,omitempty"`
-	Outputs    map[string]interface{} `json:"outputs,omitempty"`
-	ErrorMsg   string                 `json:"error_msg,omitempty"`
-}
-
 type InputOutput struct {
 	Name    string        `json:"name,omitempty"`
 	FieldId string        `json:"field_id"`
