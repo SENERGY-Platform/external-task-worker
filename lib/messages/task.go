@@ -1,7 +1,7 @@
 package messages
 
 
-type SenergyTask struct {
+type Command struct {
 	InstanceId string                 `json:"instance_id,omitempty"`
 	ServiceId  string                 `json:"service_id,omitempty"`
 	Inputs     map[string]interface{} `json:"inputs,omitempty"`

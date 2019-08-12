@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func SenergyRequestTask(task messages.CamundaTask) (request messages.SenergyTask, err error) {
+func CreateCommandRequest(task messages.CamundaTask) (request messages.Command, err error) {
 	payload, ok := task.Variables[CAMUNDA_VARIABLES_PAYLOAD].Value.(string)
 	if !ok {
 		return request, errors.New(fmt.Sprint("ERROR: payload is not a string, ", task.Variables))
@@ -25,7 +25,7 @@ func SenergyRequestTask(task messages.CamundaTask) (request messages.SenergyTask
 	return
 }
 
-func SenergyResultTask(nrMsg messages.ProtocolMsg) (result messages.SenergyTask, err error) {
+func CreateCommandResult(nrMsg messages.ProtocolMsg) (result messages.Command, err error) {
 	result.Outputs = map[string]interface{}{}
 	result.ServiceId = nrMsg.ServiceId
 	service := nrMsg.Service
@@ -61,7 +61,7 @@ func getPayloadParameter(task messages.CamundaTask) (result map[string]interface
 	return
 }
 
-func setPayloadParameter(msg *messages.SenergyTask, parameter map[string]interface{}) (err error) {
+func setPayloadParameter(msg *messages.Command, parameter map[string]interface{}) (err error) {
 	for paramName, value := range parameter {
 		_, err := setVarOnPath(msg.Inputs, strings.Split(paramName, "."), value)
 		if err != nil {

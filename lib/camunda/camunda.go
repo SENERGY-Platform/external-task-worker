@@ -31,7 +31,7 @@ func (this *Camunda) GetTask() (tasks []messages.CamundaTask, err error) {
 
 
 
-func (this *Camunda) CompleteTask(taskId string, workerId string, outputName string, output messages.SenergyTask) (err error) {
+func (this *Camunda) CompleteTask(taskId string, workerId string, outputName string, output messages.Command) (err error) {
 	var completeRequest messages.CamundaCompleteRequest
 
 	if workerId == "" {
@@ -75,7 +75,7 @@ func (this *Camunda) Error(task messages.CamundaTask, msg string) {
 	errorMsg := messages.CamundaError{WorkerId: this.workerId, ErrorMessage: msg, Retries: 0, ErrorDetails: msg}
 	log.Println("Send Error to Camunda: ", msg)
 	log.Println(request.Post(this.config.CamundaUrl+"/external-task/"+task.Id+"/failure", errorMsg, nil))
-	//this.completeCamundaTask(taskid, this.GetWorkerId(), "error", messages.SenergyTask{ErrorMsg:msg})
+	//this.completeCamundaTask(taskid, this.GetWorkerId(), "error", messages.Command{ErrorMsg:msg})
 }
 
 func (this *Camunda) GetWorkerId()(string) {

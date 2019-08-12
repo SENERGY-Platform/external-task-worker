@@ -23,7 +23,7 @@ type CamundaVariable struct {
 
 type CamundaOutput struct {
 	Type  string  `json:"type,omitempty"`
-	Value SenergyTask `json:"value,omitempty"`
+	Value Command `json:"value,omitempty"`
 }
 
 //https://github.com/camunda/camunda-docs-manual/blob/master/content/reference/rest/external-task/fetch.md

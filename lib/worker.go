@@ -101,9 +101,9 @@ func (this *worker) ExecuteTask(task messages.CamundaTask) {
 		this.camunda.Error(task, "communication timeout")
 		return
 	}
-	request, err := SenergyRequestTask(task)
+	request, err := CreateCommandRequest(task)
 	if err != nil {
-		log.Println("error on SenergyRequestTask(): ", err)
+		log.Println("error on CreateCommandRequest(): ", err)
 		this.camunda.Error(task, "invalid task format (json)")
 		return
 	}
@@ -120,7 +120,7 @@ func (this *worker) ExecuteTask(task messages.CamundaTask) {
 	this.producer.Produce(protocolTopic, message)
 
 	if this.config.CompletionStrategy == "optimistic" {
-		err = this.camunda.CompleteTask(task.Id, this.camunda.GetWorkerId(), "", messages.SenergyTask{})
+		err = this.camunda.CompleteTask(task.Id, this.camunda.GetWorkerId(), "", messages.Command{})
 		if err != nil {
 			log.Println("error on completeCamundaTask(): ", err)
 			return
@@ -144,7 +144,7 @@ func (this *worker) CompleteTask(msg string) (err error) {
 	if util.Config.QosStrategy == ">=" && missesCamundaDuration(nrMsg) {
 		return
 	}
-	response, err := SenergyResultTask(nrMsg)
+	response, err := CreateCommandResult(nrMsg)
 	if err != nil {
 		return err
 	}

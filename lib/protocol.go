@@ -13,7 +13,7 @@ import (
 )
 
 
-func (this *worker) CreateProtocolMessage(request messages.SenergyTask, task messages.CamundaTask) (protocolTopic string, message string, err error) {
+func (this *worker) CreateProtocolMessage(request messages.Command, task messages.CamundaTask) (protocolTopic string, message string, err error) {
 	instance, service, err := this.repository.GetDeviceInfo(request.InstanceId, request.ServiceId, task.TenantId)
 	if err != nil {
 		log.Println("error on CreateProtocolMessage getDeviceInfo: ", err)
