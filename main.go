@@ -17,6 +17,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
 	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
@@ -36,15 +37,21 @@ func main() {
 	configLocation := flag.String("config", "config.json", "configuration file")
 	flag.Parse()
 
-	err := util.LoadConfig(*configLocation)
+	config, err := util.LoadConfig(*configLocation)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	go lib.Worker(util.Config, kafka.Factory, repo.Factory, camunda.Factory)
+	ctx, cancel := context.WithCancel(context.Background())
 
-	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
-	sig := <-shutdown
-	log.Println("received shutdown signal", sig)
+	go func() {
+		shutdown := make(chan os.Signal, 1)
+		signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+		sig := <-shutdown
+		log.Println("received shutdown signal", sig)
+		cancel()
+	}()
+
+	lib.Worker(ctx, config, kafka.Factory, repo.Factory, camunda.Factory)
+	log.Println("worker stopped")
 }

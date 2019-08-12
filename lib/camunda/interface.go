@@ -6,7 +6,7 @@ import (
 )
 
 type FactoryInterface interface {
-	Get(configType util.ConfigType)CamundaInterface
+	Get(configType util.Config)CamundaInterface
 }
 
 type CamundaInterface interface{

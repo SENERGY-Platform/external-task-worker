@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
+	"github.com/SENERGY-Platform/external-task-worker/util"
 	formatter_lib "github.com/SENERGY-Platform/formatter-lib"
 	"github.com/SENERGY-Platform/iot-device-repository/lib/model"
 	"log"
@@ -12,7 +13,7 @@ import (
 )
 
 func CreateCommandRequest(task messages.CamundaTask) (request messages.Command, err error) {
-	payload, ok := task.Variables[CAMUNDA_VARIABLES_PAYLOAD].Value.(string)
+	payload, ok := task.Variables[util.CAMUNDA_VARIABLES_PAYLOAD].Value.(string)
 	if !ok {
 		return request, errors.New(fmt.Sprint("ERROR: payload is not a string, ", task.Variables))
 	}
@@ -48,7 +49,6 @@ func CreateCommandResult(nrMsg messages.ProtocolMsg) (result messages.Command, e
 	}
 	return
 }
-
 
 func getPayloadParameter(task messages.CamundaTask) (result map[string]interface{}) {
 	result = map[string]interface{}{}

@@ -7,35 +7,35 @@ import (
 	"github.com/SENERGY-Platform/iot-device-repository/lib/model"
 )
 
-type RepoMockFactory struct {
-	devices map[string]model.DeviceInstance
+var Repo = &RepoMock{}
+
+type RepoMock struct {
+	devices  map[string]model.DeviceInstance
 	services map[string]model.Service
 }
 
-func NewRepoMock()  repo.FactoryInterface {
-	return &RepoMockFactory{devices: map[string]model.DeviceInstance{}, services: map[string]model.Service{}}
-}
-
-func (this *RepoMockFactory) Get(configType util.ConfigType) repo.RepoInterface {
+func (this *RepoMock) Get(configType util.Config) repo.RepoInterface {
+	this.devices = map[string]model.DeviceInstance{}
+	this.services = map[string]model.Service{}
 	return this
 }
 
-func (this *RepoMockFactory) GetDeviceInfo(instanceId string, serviceId string, user string) (instance model.DeviceInstance, service model.Service, err error) {
+func (this *RepoMock) GetDeviceInfo(instanceId string, serviceId string, user string) (instance model.DeviceInstance, service model.Service, err error) {
 	instance, ok := this.devices[instanceId]
 	if !ok {
 		return instance, service, errors.New("device not found")
 	}
-	service, ok = this.services[instanceId]
+	service, ok = this.services[serviceId]
 	if !ok {
 		return instance, service, errors.New("service not found")
 	}
 	return instance, service, nil
 }
 
-func (this *RepoMockFactory) RegisterDevice(device model.DeviceInstance){
+func (this *RepoMock) RegisterDevice(device model.DeviceInstance) {
 	this.devices[device.Id] = device
 }
 
-func (this *RepoMockFactory) RegisterService(service model.Service){
+func (this *RepoMock) RegisterService(service model.Service) {
 	this.services[service.Id] = service
 }

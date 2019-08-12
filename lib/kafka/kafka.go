@@ -5,12 +5,12 @@ import (
 	"log"
 )
 
-type FactoryType struct {}
+type FactoryType struct{}
 
 var Factory = FactoryType{}
 
-func (FactoryType) NewConsumer(config util.ConfigType, listener func(msg string) error) (consumer ConsumerInterface, err error){
-	consumer, err = NewConsumer(util.Config.ZookeeperUrl, util.Config.KafkaConsumerGroup, util.Config.ResponseTopic, func(topic string, msg []byte) error {
+func (FactoryType) NewConsumer(config util.Config, listener func(msg string) error) (consumer ConsumerInterface, err error) {
+	consumer, err = NewConsumer(config, config.ResponseTopic, func(topic string, msg []byte) error {
 		return listener(string(msg))
 	}, func(err error, consumer *Consumer) {
 		log.Println("FATAL ERROR: kafka", err)
@@ -19,6 +19,6 @@ func (FactoryType) NewConsumer(config util.ConfigType, listener func(msg string)
 	return
 }
 
-func (FactoryType) NewProducer(config util.ConfigType) (ProducerInterface, error){
+func (FactoryType) NewProducer(config util.Config) (ProducerInterface, error) {
 	return InitProducer(config)
 }

@@ -33,7 +33,7 @@ type Iot struct {
 	keycloak Keycloak
 }
 
-func NewIot(config util.ConfigType) (*Iot){
+func NewIot(config util.Config) (*Iot){
 	return &Iot{repoUrl: config.DeviceRepoUrl, cache:NewCache(), permsearchUrl: config.PermissionsUrl, keycloak:Keycloak{config:config}}
 }
 

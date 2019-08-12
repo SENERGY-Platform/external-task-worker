@@ -14,14 +14,13 @@ import (
 )
 
 type Camunda struct {
-	config util.ConfigType
+	config   util.Config
 	workerId string
 }
 
-func NewCamunda(config util.ConfigType) CamundaInterface {
+func NewCamunda(config util.Config) CamundaInterface {
 	return &Camunda{config: config, workerId: uuid.NewV4().String()}
 }
-
 
 func (this *Camunda) GetTask() (tasks []messages.CamundaTask, err error) {
 	fetchRequest := messages.CamundaFetchRequest{
@@ -44,8 +43,6 @@ func (this *Camunda) GetTask() (tasks []messages.CamundaTask, err error) {
 	return
 }
 
-
-
 func (this *Camunda) CompleteTask(taskId string, workerId string, outputName string, output messages.Command) (err error) {
 	var completeRequest messages.CamundaCompleteRequest
 
@@ -53,7 +50,7 @@ func (this *Camunda) CompleteTask(taskId string, workerId string, outputName str
 		workerId = this.workerId
 	}
 
-	if this.config.CompletionStrategy == "pessimistic" {
+	if this.config.CompletionStrategy == util.PESSIMISTIC {
 		variables := map[string]messages.CamundaOutput{
 			outputName: {
 				Value: output,
@@ -91,7 +88,6 @@ func (this *Camunda) CompleteTask(taskId string, workerId string, outputName str
 	}
 	return
 }
-
 
 func (this *Camunda) SetRetry(taskid string) {
 	retry := messages.CamundaRetrySetRequest{Retries: 1}
@@ -156,6 +152,6 @@ func (this *Camunda) Error(task messages.CamundaTask, msg string) {
 	}
 }
 
-func (this *Camunda) GetWorkerId()(string) {
+func (this *Camunda) GetWorkerId() string {
 	return this.workerId
 }

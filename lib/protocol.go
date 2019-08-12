@@ -4,14 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
-	"github.com/SENERGY-Platform/external-task-worker/util"
 	formatter_lib "github.com/SENERGY-Platform/formatter-lib"
 	"github.com/SENERGY-Platform/iot-device-repository/lib/model"
 	"log"
 	"strconv"
 	"time"
 )
-
 
 func (this *worker) CreateProtocolMessage(request messages.Command, task messages.CamundaTask) (protocolTopic string, message string, err error) {
 	instance, service, err := this.repository.GetDeviceInfo(request.InstanceId, request.ServiceId, task.TenantId)
@@ -44,7 +42,7 @@ func (this *worker) CreateProtocolMessage(request messages.Command, task message
 func (this *worker) createMessageForProtocolHandler(instance model.DeviceInstance, service model.Service, inputs map[string]interface{}, task messages.CamundaTask) (result messages.ProtocolMsg, err error) {
 	result = messages.ProtocolMsg{
 		WorkerId:           this.camunda.GetWorkerId(),
-		CompletionStrategy: util.Config.CompletionStrategy,
+		CompletionStrategy: this.config.CompletionStrategy,
 		DeviceUrl:          instance.Url,
 		ServiceUrl:         service.Url,
 		TaskId:             task.Id,

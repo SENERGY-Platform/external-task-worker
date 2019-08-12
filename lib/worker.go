@@ -17,6 +17,7 @@
 package lib
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -34,20 +35,18 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 )
 
-const CAMUNDA_VARIABLES_PAYLOAD = "payload"
-
 type worker struct {
-	consumer kafka.ConsumerInterface
-	producer kafka.ProducerInterface
+	consumer   kafka.ConsumerInterface
+	producer   kafka.ProducerInterface
 	repository repo.RepoInterface
-	camunda camunda.CamundaInterface
-	config util.ConfigType
+	camunda    camunda.CamundaInterface
+	config     util.Config
 }
 
-func Worker(config util.ConfigType, kafkaFactory kafka.FactoryInterface, repoFactory repo.FactoryInterface, camundaFactory camunda.FactoryInterface) {
+func Worker(ctx context.Context, config util.Config, kafkaFactory kafka.FactoryInterface, repoFactory repo.FactoryInterface, camundaFactory camunda.FactoryInterface) {
 	log.Println("start camunda worker")
 	var err error
-	w := worker{config:config}
+	w := worker{config: config}
 
 	w.consumer, err = kafkaFactory.NewConsumer(config, w.CompleteTask)
 	if err != nil {
@@ -62,10 +61,15 @@ func Worker(config util.ConfigType, kafkaFactory kafka.FactoryInterface, repoFac
 	w.repository = repoFactory.Get(config)
 	w.camunda = camundaFactory.Get(config)
 	for {
-		wait := w.ExecuteNextTask()
-		if wait {
-			duration := time.Duration(config.CamundaWorkerTimeout) * time.Millisecond
-			time.Sleep(duration)
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			wait := w.ExecuteNextTask()
+			if wait {
+				duration := time.Duration(config.CamundaWorkerTimeout) * time.Millisecond
+				time.Sleep(duration)
+			}
 		}
 	}
 }
@@ -119,7 +123,7 @@ func (this *worker) ExecuteTask(task messages.CamundaTask) {
 	}
 	this.producer.Produce(protocolTopic, message)
 
-	if this.config.CompletionStrategy == "optimistic" {
+	if this.config.CompletionStrategy == util.OPTIMISTIC {
 		err = this.camunda.CompleteTask(task.Id, this.camunda.GetWorkerId(), "", messages.Command{})
 		if err != nil {
 			log.Println("error on completeCamundaTask(): ", err)
@@ -137,11 +141,11 @@ func (this *worker) CompleteTask(msg string) (err error) {
 		return err
 	}
 
-	if nrMsg.CompletionStrategy == "optimistic" {
+	if nrMsg.CompletionStrategy == util.OPTIMISTIC {
 		return
 	}
 
-	if util.Config.QosStrategy == ">=" && missesCamundaDuration(nrMsg) {
+	if this.config.QosStrategy == ">=" && this.missesCamundaDuration(nrMsg) {
 		return
 	}
 	response, err := CreateCommandResult(nrMsg)
@@ -153,7 +157,7 @@ func (this *worker) CompleteTask(msg string) (err error) {
 	return
 }
 
-func missesCamundaDuration(msg messages.ProtocolMsg) bool {
+func (this *worker) missesCamundaDuration(msg messages.ProtocolMsg) bool {
 	if msg.Time == "" {
 		return true
 	}
@@ -162,9 +166,8 @@ func missesCamundaDuration(msg messages.ProtocolMsg) bool {
 		return true
 	}
 	taskTime := time.Unix(unixTime, 0)
-	return time.Since(taskTime) >= time.Duration(util.Config.CamundaFetchLockDuration)*time.Millisecond
+	return time.Since(taskTime) >= time.Duration(this.config.CamundaFetchLockDuration)*time.Millisecond
 }
-
 
 func setVarOnPath(element interface{}, path []string, value interface{}) (result interface{}, err error) {
 	defer func() {

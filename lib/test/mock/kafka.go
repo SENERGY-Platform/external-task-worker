@@ -6,40 +6,39 @@ import (
 	"sync"
 )
 
-func NewKafkaMock() *KafkaMockFactory{
-	return &KafkaMockFactory{
-		Produced: map[string][]string{},
-	}
-}
+var Kafka = &KafkaMock{}
 
-type KafkaMockFactory struct {
+type KafkaMock struct {
 	mux       sync.Mutex
 	Produced  map[string][]string
 	listeners []func(msg string) error
 }
 
-func (this *KafkaMockFactory) NewConsumer(config util.ConfigType, listener func(msg string) error) (consumer kafka.ConsumerInterface, err error) {
+func (this *KafkaMock) NewConsumer(config util.Config, listener func(msg string) error) (consumer kafka.ConsumerInterface, err error) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	this.listeners = append(this.listeners, listener)
 	return this, nil
 }
 
-func (this *KafkaMockFactory) NewProducer(config util.ConfigType) (kafka.ProducerInterface, error) {
+func (this *KafkaMock) NewProducer(config util.Config) (kafka.ProducerInterface, error) {
+	this.mux.Lock()
+	defer this.mux.Unlock()
+	this.Produced = map[string][]string{}
 	return this, nil
 }
 
-func (this *KafkaMockFactory) Produce(topic string, message string) {
+func (this *KafkaMock) Produce(topic string, message string) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	this.Produced[topic] = append(this.Produced[topic], message)
 }
 
-func (this *KafkaMockFactory) Close() {}
+func (this *KafkaMock) Close() {}
 
-func (this *KafkaMockFactory) Stop() {}
+func (this *KafkaMock) Stop() {}
 
-func (this *KafkaMockFactory) SendToConsumer(msg string)(error){
+func (this *KafkaMock) SendToConsumer(msg string) error {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	for _, l := range this.listeners {
@@ -49,4 +48,10 @@ func (this *KafkaMockFactory) SendToConsumer(msg string)(error){
 		}
 	}
 	return nil
+}
+
+func (this *KafkaMock) GetProduced(topic string) []string {
+	this.mux.Lock()
+	defer this.mux.Unlock()
+	return this.Produced[topic]
 }

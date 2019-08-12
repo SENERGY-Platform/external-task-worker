@@ -23,7 +23,6 @@ import (
 	"runtime/debug"
 	"time"
 
-
 	"github.com/Shopify/sarama"
 	"github.com/wvanbergen/kazoo-go"
 )
@@ -32,8 +31,8 @@ type Producer struct {
 	producer sarama.AsyncProducer
 }
 
-func InitProducer(config util.ConfigType) (producer *Producer, err error) {
-	if util.Config.SaramaLog == "true" {
+func InitProducer(config util.Config) (producer *Producer, err error) {
+	if config.SaramaLog == "true" {
 		sarama.Logger = log.New(os.Stderr, "[Sarama] ", log.LstdFlags)
 	}
 
@@ -70,6 +69,6 @@ func (this *Producer) Produce(topic string, message string) {
 	this.producer.Input() <- &sarama.ProducerMessage{Topic: topic, Key: nil, Value: sarama.StringEncoder(message), Timestamp: time.Now()}
 }
 
-func (this *Producer)  Close() {
+func (this *Producer) Close() {
 	this.producer.Close()
 }

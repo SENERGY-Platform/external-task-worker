@@ -6,7 +6,7 @@ import (
 )
 
 type FactoryInterface interface {
-	Get(configType util.ConfigType)RepoInterface
+	Get(configType util.Config)RepoInterface
 }
 
 type RepoInterface interface{

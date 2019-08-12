@@ -32,17 +32,14 @@ import (
 	"github.com/wvanbergen/kazoo-go"
 )
 
-
-func NewConsumer(zk string, groupid string, topic string, listener func(topic string, msg []byte) error, errorhandler func(err error, consumer *Consumer)) (consumer *Consumer, err error) {
-	consumer = &Consumer{groupId: groupid, zkUrl: zk, topic: topic, listener: listener, errorhandler: errorhandler}
+func NewConsumer(config util.Config, topic string, listener func(topic string, msg []byte) error, errorhandler func(err error, consumer *Consumer)) (consumer *Consumer, err error) {
+	consumer = &Consumer{config: config, topic: topic, listener: listener, errorhandler: errorhandler}
 	err = consumer.start()
 	return
 }
 
 type Consumer struct {
-	count        int
-	zkUrl        string
-	groupId      string
+	config       util.Config
 	topic        string
 	ctx          context.Context
 	cancel       context.CancelFunc
@@ -58,12 +55,12 @@ func (this *Consumer) Stop() {
 func (this *Consumer) start() error {
 	log.Println("DEBUG: consume topic: \"" + this.topic + "\"")
 	this.ctx, this.cancel = context.WithCancel(context.Background())
-	broker, err := GetBroker(this.zkUrl)
+	broker, err := GetBroker(this.config.ZookeeperUrl)
 	if err != nil {
 		log.Println("ERROR: unable to get broker list", err)
 		return err
 	}
-	err = InitTopic(this.zkUrl, this.topic)
+	err = InitTopic(this.config.ZookeeperUrl, this.topic)
 	if err != nil {
 		log.Println("ERROR: unable to create topic", err)
 		return err
@@ -71,7 +68,7 @@ func (this *Consumer) start() error {
 	r := kafka.NewReader(kafka.ReaderConfig{
 		CommitInterval: 0, //synchronous commits
 		Brokers:        broker,
-		GroupID:        this.groupId,
+		GroupID:        this.config.KafkaConsumerGroup,
 		Topic:          this.topic,
 		MaxWait:        1 * time.Second,
 		Logger:         log.New(ioutil.Discard, "", 0),
@@ -94,7 +91,7 @@ func (this *Consumer) start() error {
 					this.errorhandler(err, this)
 					return
 				}
-				if time.Now().Sub(m.Time) > time.Duration(util.Config.CamundaFetchLockDuration)*time.Millisecond {
+				if time.Now().Sub(m.Time) > time.Duration(this.config.CamundaFetchLockDuration)*time.Millisecond {
 					log.Println("DEBUG: kafka message older than CamundaFetchLockDuration --> ignore:", m.Time, string(m.Value))
 					err = r.CommitMessages(this.ctx, m)
 					if err != nil {
@@ -125,7 +122,6 @@ func (this *Consumer) Restart() {
 	this.Stop()
 	this.start()
 }
-
 
 func GetBroker(zk string) (brokers []string, err error) {
 	return getBroker(zk)

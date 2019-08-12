@@ -112,7 +112,7 @@ type OpenidToken struct {
 
 var openid *OpenidToken
 
-func EnsureAccess(config util.ConfigType) (token Impersonate, err error) {
+func EnsureAccess(config util.Config) (token Impersonate, err error) {
 	if openid == nil {
 		openid = &OpenidToken{}
 	}
@@ -144,7 +144,7 @@ func EnsureAccess(config util.ConfigType) (token Impersonate, err error) {
 	return
 }
 
-func getOpenidToken(token *OpenidToken, config util.ConfigType) (err error) {
+func getOpenidToken(token *OpenidToken, config util.Config) (err error) {
 	requesttime := time.Now()
 	resp, err := http.PostForm(config.AuthEndpoint+"/auth/realms/master/protocol/openid-connect/token", url.Values{
 		"client_id":     {config.AuthClientId},
@@ -168,7 +168,7 @@ func getOpenidToken(token *OpenidToken, config util.ConfigType) (err error) {
 	return
 }
 
-func refreshOpenidToken(token *OpenidToken, config util.ConfigType) (err error) {
+func refreshOpenidToken(token *OpenidToken, config util.Config) (err error) {
 	requesttime := time.Now()
 	resp, err := http.PostForm(config.AuthEndpoint+"/auth/realms/master/protocol/openid-connect/token", url.Values{
 		"client_id":     {config.AuthClientId},

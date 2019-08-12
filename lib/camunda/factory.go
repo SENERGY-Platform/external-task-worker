@@ -6,6 +6,6 @@ type FactoryType struct {}
 
 var Factory FactoryType
 
-func (FactoryType) Get(config util.ConfigType) CamundaInterface {
+func (FactoryType) Get(config util.Config) CamundaInterface {
 	return NewCamunda(config)
 }

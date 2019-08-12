@@ -35,7 +35,7 @@ type RoleMapping struct {
 }
 
 type Keycloak struct {
-	config util.ConfigType
+	config util.Config
 }
 
 func (this Keycloak) getUserRoles(user string) (roles []string, err error) {
