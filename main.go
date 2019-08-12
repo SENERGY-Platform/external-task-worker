@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
 	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
 	"github.com/SENERGY-Platform/external-task-worker/lib/repo"
 	"log"
@@ -40,7 +41,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	go lib.CamundaWorker(kafka.Factory, repo.Factory)
+	go lib.Worker(util.Config, kafka.Factory, repo.Factory, camunda.Factory)
 
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)

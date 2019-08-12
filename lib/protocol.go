@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
-	"github.com/SENERGY-Platform/external-task-worker/lib/repo"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	formatter_lib "github.com/SENERGY-Platform/formatter-lib"
 	"github.com/SENERGY-Platform/iot-device-repository/lib/model"
@@ -14,14 +13,14 @@ import (
 )
 
 
-func CreateProtocolMessage(request messages.SenergyTask, task messages.CamundaTask, repository repo.RepoInterface) (protocolTopic string, message string, err error) {
-	instance, service, err := repository.GetDeviceInfo(request.InstanceId, request.ServiceId, task.TenantId)
+func (this *worker) CreateProtocolMessage(request messages.SenergyTask, task messages.CamundaTask) (protocolTopic string, message string, err error) {
+	instance, service, err := this.repository.GetDeviceInfo(request.InstanceId, request.ServiceId, task.TenantId)
 	if err != nil {
 		log.Println("error on CreateProtocolMessage getDeviceInfo: ", err)
 		err = errors.New("unable to find device or service")
 		return
 	}
-	value, err := createMessageForProtocolHandler(instance, service, request.Inputs, task)
+	value, err := this.createMessageForProtocolHandler(instance, service, request.Inputs, task)
 	if err != nil {
 		log.Println("ERROR: on CreateProtocolMessage createMessageForProtocolHandler(): ", err)
 		err = errors.New("internal format error (inconsistent data?) (time: " + time.Now().String() + ")")
@@ -42,9 +41,9 @@ func CreateProtocolMessage(request messages.SenergyTask, task messages.CamundaTa
 	return protocolTopic, string(msg), err
 }
 
-func createMessageForProtocolHandler(instance model.DeviceInstance, service model.Service, inputs map[string]interface{}, task messages.CamundaTask) (result messages.ProtocolMsg, err error) {
+func (this *worker) createMessageForProtocolHandler(instance model.DeviceInstance, service model.Service, inputs map[string]interface{}, task messages.CamundaTask) (result messages.ProtocolMsg, err error) {
 	result = messages.ProtocolMsg{
-		WorkerId:           GetWorkerId(),
+		WorkerId:           this.camunda.GetWorkerId(),
 		CompletionStrategy: util.Config.CompletionStrategy,
 		DeviceUrl:          instance.Url,
 		ServiceUrl:         service.Url,
