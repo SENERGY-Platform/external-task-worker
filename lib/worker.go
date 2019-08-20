@@ -48,11 +48,13 @@ func Worker(ctx context.Context, config util.Config, kafkaFactory kafka.FactoryI
 	var err error
 	w := worker{config: config}
 
-	w.consumer, err = kafkaFactory.NewConsumer(config, w.CompleteTask)
-	if err != nil {
-		log.Fatal("ERROR: kafkaFactory.NewConsumer", err)
+	if config.CompletionStrategy != util.OPTIMISTIC {
+		w.consumer, err = kafkaFactory.NewConsumer(config, w.CompleteTask)
+		if err != nil {
+			log.Fatal("ERROR: kafkaFactory.NewConsumer", err)
+		}
+		defer w.consumer.Stop()
 	}
-	defer w.consumer.Stop()
 	w.producer, err = kafkaFactory.NewProducer(config)
 	if err != nil {
 		log.Fatal("ERROR: kafkaFactory.NewProducer", err)
