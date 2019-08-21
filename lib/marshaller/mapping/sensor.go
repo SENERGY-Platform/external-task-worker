@@ -7,6 +7,28 @@ import (
 	"strconv"
 )
 
+func MapSensors(in map[string]interface{}, contents map[string]model.ContentVariable, category model.Characteristic) (out interface{}, err error) {
+	temp, set, err := CharacteristicToSkeleton(category)
+	if err != nil {
+		return nil, err
+	}
+	for key, value := range in {
+		content, ok := contents[key]
+		if ok {
+			content, err = completeContentVariableCharacteristicId(content, category)
+			if err != nil {
+				return nil, err
+			}
+			err = castToCategory(value, content, set, createCharacteristicIndex(&map[string]model.Characteristic{}, category))
+			if err != nil {
+				return out, err
+			}
+		}
+	}
+	out = *temp
+	return
+}
+
 func MapSensor(in interface{}, content model.ContentVariable, category model.Characteristic) (out interface{}, err error) {
 	content, err = completeContentVariableCharacteristicId(content, category)
 	if err != nil {

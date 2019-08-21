@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/example"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
-	"testing"
 )
 
 func ExampleMarshalInput1() {
@@ -69,7 +68,8 @@ func ExampleMarshalInput1() {
 	fmt.Println(result, err)
 
 	//output:
-	//{"body":"{\"color\":{\"blue\":100,\"green\":0,\"red\":255}}"} <nil>
+	//{"body":"{\"color\":{\"blue\":100,\"green\":0,\"red\":255}}"}
+	//  <nil>
 }
 
 func ExampleMarshalInput2() {
@@ -119,7 +119,8 @@ func ExampleMarshalInput2() {
 	fmt.Println(result, err)
 
 	//output:
-	//{"body":"{\"color\":\"#ff0064\"}"} <nil>
+	//{"body":"{\"color\":\"#ff0064\"}"}
+	//  <nil>
 }
 
 func ExampleMarshalInputMulti() {
@@ -192,8 +193,10 @@ func ExampleMarshalInputMulti() {
 	fmt.Println(MarshalInputs(protocol, service, float64(25), example.Lux))
 
 	//output:
-	//{"body":"{\"bri\":100,\"color\":{\"blue\":100,\"green\":0,\"red\":255}}"} <nil>
-	//{"body":"{\"bri\":25,\"color\":{\"blue\":255,\"green\":255,\"red\":255}}"} <nil>
+	//{"body":"{\"bri\":100,\"color\":{\"blue\":100,\"green\":0,\"red\":255}}"}
+	//  <nil>
+	//{"body":"{\"bri\":25,\"color\":{\"blue\":255,\"green\":255,\"red\":255}}"}
+	//  <nil>
 }
 
 func ExampleMarshalInputMultiXml() {
@@ -270,8 +273,4 @@ func ExampleMarshalInputMultiXml() {
 	//  <nil>
 	//{"body":"<payload><bri>25</bri><color blue=\"255\" green=\"255\" red=\"255\"</color></payload>"}
 	//  <nil>
-}
-
-func TestUnmarshalOutput(t *testing.T) {
-
 }

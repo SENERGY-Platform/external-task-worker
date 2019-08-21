@@ -2,8 +2,8 @@ package xml
 
 import (
 	"fmt"
-	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/marshalling/base"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
+	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/serialization/base"
 )
 
 func ExampleMarshalPrimitiveInt() {
