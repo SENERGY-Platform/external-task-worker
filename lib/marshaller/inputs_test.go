@@ -269,8 +269,8 @@ func ExampleMarshalInputMultiXml() {
 	fmt.Println(MarshalInputs(protocol, service, float64(25), example.Lux))
 
 	//output:
-	//{"body":"<payload><bri>100</bri><color blue=\"100\" green=\"0\" red=\"255\"</color></payload>"}
+	//{"body":"<payload><bri>100</bri><color blue=\"100\" green=\"0\" red=\"255\"/></payload>"}
 	//  <nil>
-	//{"body":"<payload><bri>25</bri><color blue=\"255\" green=\"255\" red=\"255\"</color></payload>"}
+	//{"body":"<payload><bri>25</bri><color blue=\"255\" green=\"255\" red=\"255\"/></payload>"}
 	//  <nil>
 }

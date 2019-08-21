@@ -127,7 +127,7 @@ func castToCategory(in interface{}, variable model.ContentVariable, set map[stri
 		if ok {
 			*ref = in
 		} else {
-			return errors.New("unable to find target exact_match '" + variable.CharacteristicId + "' in setter")
+			//return errors.New("unable to find target exact_match '" + variable.CharacteristicId + "' in setter")
 		}
 	case model.Structure:
 		m, ok := in.(map[string]interface{})
@@ -153,7 +153,7 @@ func castToCategory(in interface{}, variable model.ContentVariable, set map[stri
 			if ok {
 				*ref = temp
 			} else {
-				return errors.New("unable to find target exact_match '" + variable.CharacteristicId + "' in setter")
+				//return errors.New("unable to find target exact_match '" + variable.CharacteristicId + "' in setter")
 			}
 		} else {
 			//as structure
@@ -190,7 +190,7 @@ func castToCategory(in interface{}, variable model.ContentVariable, set map[stri
 			if ok {
 				*ref = temp
 			} else {
-				return errors.New("unable to find target exact_match '" + variable.CharacteristicId + "' in setter")
+				//return errors.New("unable to find target exact_match '" + variable.CharacteristicId + "' in setter")
 			}
 		} else {
 			//as structure

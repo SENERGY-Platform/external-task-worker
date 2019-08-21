@@ -12,7 +12,6 @@ func (Marshaller) Marshal(in interface{}, variable model.ContentVariable) (out s
 		temp, err := mxj.Map(mv).Xml()
 		return string(temp), err
 	} else {
-		mxj.XmlGoEmptyElemSyntax()
 		temp, err := mxj.Map(mv).Xml(variable.Name)
 		return string(temp), err
 	}
