@@ -1,6 +1,7 @@
 package marshaller
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting"
@@ -51,8 +52,11 @@ func MarshalInputsWithRepo(conceptRepo ConceptRepo, protocol model.Protocol, ser
 			}
 		}
 	}
-	resultBuffer, err := json.Marshal(resultObj)
-	return string(resultBuffer), err
+	buffer := bytes.Buffer{}
+	encoder := json.NewEncoder(&buffer)
+	encoder.SetEscapeHTML(false)
+	err = encoder.Encode(resultObj)
+	return buffer.String(), err
 }
 
 func getMatchingVariableRootCharacteristic(repo ConceptRepo, variable model.ContentVariable, matchingId CharacteristicId) (conceptId string, matchingVariableRootCharacteristic CharacteristicId, err error) {
@@ -90,16 +94,8 @@ func MarshalInput(inputCharacteristicValue interface{}, conceptId string, inputC
 		return result, err
 	}
 
-	//normalize
-	temp, err := json.Marshal(serviceCharacteristicValue)
+	normalized, err := normalize(serviceCharacteristicValue)
 	if err != nil {
-		debug.PrintStack()
-		return result, err
-	}
-	var normalized interface{}
-	err = json.Unmarshal(temp, &normalized)
-	if err != nil {
-		debug.PrintStack()
 		return result, err
 	}
 
@@ -112,8 +108,28 @@ func MarshalInput(inputCharacteristicValue interface{}, conceptId string, inputC
 	if !ok {
 		return result, errors.New("unknown serialization " + serialization)
 	}
-	result, err = marshaller.Marshal(serviceVariableValue, serviceVariable)
+
+	normalized, err = normalize(serviceVariableValue)
+	if err != nil {
+		return result, err
+	}
+
+	result, err = marshaller.Marshal(normalized, serviceVariable)
 	return result, err
+}
+
+func normalize(value interface{}) (result interface{}, err error) {
+	temp, err := json.Marshal(value)
+	if err != nil {
+		debug.PrintStack()
+		return result, err
+	}
+	err = json.Unmarshal(temp, &result)
+	if err != nil {
+		debug.PrintStack()
+		return result, err
+	}
+	return
 }
 
 func UnmarshalOutput(serviceCharacteristicValueString string, conceptId string, outputCharacteristic model.Characteristic, serviceCharacteristic model.Characteristic, serviceVariable model.ContentVariable, serialization string) (result interface{}, err error) {
