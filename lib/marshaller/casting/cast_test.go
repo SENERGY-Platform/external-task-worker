@@ -7,7 +7,7 @@ import (
 
 func TestColorHexShortF(t *testing.T) {
 	t.Parallel()
-	out, err := Cast("#FFF", example.Concept, example.Hex, example.Rgb)
+	out, err := Cast("#FFF", example.Color, example.Hex, example.Rgb)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +31,7 @@ func TestColorHexShortF(t *testing.T) {
 
 func TestColorHexF(t *testing.T) {
 	t.Parallel()
-	out, err := Cast("#FFFFFF", example.Concept, example.Hex, example.Rgb)
+	out, err := Cast("#FFFFFF", example.Color, example.Hex, example.Rgb)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +55,7 @@ func TestColorHexF(t *testing.T) {
 
 func TestColorHex0(t *testing.T) {
 	t.Parallel()
-	out, err := Cast("#000000", example.Concept, example.Hex, example.Rgb)
+	out, err := Cast("#000000", example.Color, example.Hex, example.Rgb)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -79,7 +79,7 @@ func TestColorHex0(t *testing.T) {
 
 func TestColorHexShort0(t *testing.T) {
 	t.Parallel()
-	out, err := Cast("#000", example.Concept, example.Hex, example.Rgb)
+	out, err := Cast("#000", example.Color, example.Hex, example.Rgb)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,7 +103,7 @@ func TestColorHexShort0(t *testing.T) {
 
 func TestColorRgb255(t *testing.T) {
 	t.Parallel()
-	out, err := Cast(map[string]int64{"r": 255, "g": 255, "b": 255}, example.Concept, example.Rgb, example.Hex)
+	out, err := Cast(map[string]interface{}{"r": float64(255), "g": float64(255), "b": float64(255)}, example.Color, example.Rgb, example.Hex)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -121,7 +121,7 @@ func TestColorRgb255(t *testing.T) {
 
 func TestColorRgb0(t *testing.T) {
 	t.Parallel()
-	out, err := Cast(map[string]int64{"r": 0, "g": 0, "b": 0}, example.Concept, example.Rgb, example.Hex)
+	out, err := Cast(map[string]interface{}{"r": float64(0), "g": float64(0), "b": float64(0)}, example.Color, example.Rgb, example.Hex)
 	if err != nil {
 		t.Fatal(err)
 	}

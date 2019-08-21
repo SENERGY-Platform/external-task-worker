@@ -17,7 +17,7 @@ func CharacteristicToSkeleton(category model.Characteristic) (out *interface{}, 
 const VAR_LEN_PLACEHOLDER = "*"
 
 func categoryToSkeleton(category model.Characteristic, out *interface{}, idToPtr *map[string]*interface{}) (err error) {
-	switch category.ValueType {
+	switch category.Type {
 	case model.Float, model.Integer:
 		if category.Value != nil {
 			var ok bool
@@ -86,7 +86,7 @@ func categoryToSkeleton(category model.Characteristic, out *interface{}, idToPtr
 			}
 		}
 	default:
-		return errors.New("unknown variable type: " + string(category.ValueType))
+		return errors.New("unknown variable type: " + string(category.Type))
 	}
 	return nil
 }
@@ -100,7 +100,7 @@ func ContentToSkeleton(content model.ContentVariable) (out *interface{}, idToPtr
 }
 
 func contentToSkeleton(content model.ContentVariable, out *interface{}, idToPtr *map[string]*interface{}) (err error) {
-	switch content.ValueType {
+	switch content.Type {
 	case model.Float, model.Integer:
 		if content.Value != nil {
 			var ok bool
@@ -111,7 +111,7 @@ func contentToSkeleton(content model.ContentVariable, out *interface{}, idToPtr 
 		} else {
 			*out = float64(0)
 		}
-		(*idToPtr)[content.ExactMatch] = out
+		(*idToPtr)[content.CharacteristicId] = out
 	case model.String:
 		if content.Value != nil {
 			var ok bool
@@ -122,7 +122,7 @@ func contentToSkeleton(content model.ContentVariable, out *interface{}, idToPtr 
 		} else {
 			*out = ""
 		}
-		(*idToPtr)[content.ExactMatch] = out
+		(*idToPtr)[content.CharacteristicId] = out
 	case model.Boolean:
 		if content.Value != nil {
 			var ok bool
@@ -133,11 +133,11 @@ func contentToSkeleton(content model.ContentVariable, out *interface{}, idToPtr 
 		} else {
 			*out = false
 		}
-		(*idToPtr)[content.ExactMatch] = out
+		(*idToPtr)[content.CharacteristicId] = out
 	case model.Structure:
 		if len(content.SubContentVariables) == 1 && content.SubContentVariables[0].Name == VAR_LEN_PLACEHOLDER {
 			*out = map[string]interface{}{}
-			(*idToPtr)[content.ExactMatch] = out
+			(*idToPtr)[content.CharacteristicId] = out
 		} else {
 			*out = map[string]interface{}{}
 			for _, sub := range content.SubContentVariables {
@@ -152,7 +152,7 @@ func contentToSkeleton(content model.ContentVariable, out *interface{}, idToPtr 
 	case model.List:
 		if len(content.SubContentVariables) == 1 && content.SubContentVariables[0].Name == VAR_LEN_PLACEHOLDER {
 			*out = []interface{}{}
-			(*idToPtr)[content.ExactMatch] = out
+			(*idToPtr)[content.CharacteristicId] = out
 		} else {
 			*out = make([]interface{}, len(content.SubContentVariables))
 			for _, sub := range content.SubContentVariables {
@@ -169,7 +169,7 @@ func contentToSkeleton(content model.ContentVariable, out *interface{}, idToPtr 
 			}
 		}
 	default:
-		return errors.New("unknown variable type: " + string(content.ValueType))
+		return errors.New("unknown variable type: " + string(content.Type))
 	}
 	return nil
 }

@@ -9,7 +9,7 @@ import (
 
 func TestSimpleStringSkeleton(t *testing.T) {
 	t.Parallel()
-	out, set, err := CharacteristicToSkeleton(model.Characteristic{Id: "fid", Name: "foo", ValueType: model.String})
+	out, set, err := CharacteristicToSkeleton(model.Characteristic{Id: "fid", Name: "foo", Type: model.String})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -25,7 +25,7 @@ func TestSimpleStringSkeleton(t *testing.T) {
 
 func TestSimpleIntSkeleton(t *testing.T) {
 	t.Parallel()
-	out, set, err := CharacteristicToSkeleton(model.Characteristic{Id: "fid", Name: "foo", ValueType: model.Integer})
+	out, set, err := CharacteristicToSkeleton(model.Characteristic{Id: "fid", Name: "foo", Type: model.Integer})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,7 +41,7 @@ func TestSimpleIntSkeleton(t *testing.T) {
 
 func TestSimpleFloatSkeleton(t *testing.T) {
 	t.Parallel()
-	out, set, err := CharacteristicToSkeleton(model.Characteristic{Id: "fid", Name: "foo", ValueType: model.Float})
+	out, set, err := CharacteristicToSkeleton(model.Characteristic{Id: "fid", Name: "foo", Type: model.Float})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,7 +57,7 @@ func TestSimpleFloatSkeleton(t *testing.T) {
 
 func TestSimpleBoolSkeleton(t *testing.T) {
 	t.Parallel()
-	out, set, err := CharacteristicToSkeleton(model.Characteristic{Id: "fid", Name: "foo", ValueType: model.Boolean})
+	out, set, err := CharacteristicToSkeleton(model.Characteristic{Id: "fid", Name: "foo", Type: model.Boolean})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,7 +73,7 @@ func TestSimpleBoolSkeleton(t *testing.T) {
 
 func TestSimpleStructSkeleton(t *testing.T) {
 	t.Parallel()
-	out, _, err := CharacteristicToSkeleton(model.Characteristic{Name: "foo", ValueType: model.Structure})
+	out, _, err := CharacteristicToSkeleton(model.Characteristic{Name: "foo", Type: model.Structure})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,13 +85,13 @@ func TestSimpleStructSkeleton(t *testing.T) {
 func TestStructSkeleton(t *testing.T) {
 	t.Parallel()
 	out, set, err := CharacteristicToSkeleton(model.Characteristic{
-		Id:        "rdf",
-		Name:      "rdf",
-		ValueType: model.Structure,
+		Id:   "rdf",
+		Name: "rdf",
+		Type: model.Structure,
 		SubCharacteristics: []model.Characteristic{
-			{Id: "r", Name: "r", ValueType: model.Integer},
-			{Id: "g", Name: "g", ValueType: model.Integer},
-			{Id: "b", Name: "b", ValueType: model.Integer},
+			{Id: "r", Name: "r", Type: model.Integer},
+			{Id: "g", Name: "g", Type: model.Integer},
+			{Id: "b", Name: "b", Type: model.Integer},
 		},
 	})
 	if err != nil {
@@ -156,13 +156,13 @@ func TestStructSkeleton(t *testing.T) {
 func TestStructDefaultSkeleton(t *testing.T) {
 	t.Parallel()
 	out, set, err := CharacteristicToSkeleton(model.Characteristic{
-		Id:        "rdf",
-		Name:      "rdf",
-		ValueType: model.Structure,
+		Id:   "rdf",
+		Name: "rdf",
+		Type: model.Structure,
 		SubCharacteristics: []model.Characteristic{
-			{Id: "r", Name: "r", ValueType: model.Integer, Value: float64(255)}, // value as float because json transforms every number to float64 if target field is interface{}
-			{Id: "g", Name: "g", ValueType: model.Integer, Value: float64(255)},
-			{Id: "b", Name: "b", ValueType: model.Integer, Value: float64(255)},
+			{Id: "r", Name: "r", Type: model.Integer, Value: float64(255)}, // value as float because json transforms every number to float64 if target field is interface{}
+			{Id: "g", Name: "g", Type: model.Integer, Value: float64(255)},
+			{Id: "b", Name: "b", Type: model.Integer, Value: float64(255)},
 		},
 	})
 	if err != nil {
@@ -224,7 +224,7 @@ func TestStructDefaultSkeleton(t *testing.T) {
 
 func TestSimpleListSkeleton(t *testing.T) {
 	t.Parallel()
-	out, _, err := CharacteristicToSkeleton(model.Characteristic{Name: "foo", ValueType: model.List})
+	out, _, err := CharacteristicToSkeleton(model.Characteristic{Name: "foo", Type: model.List})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -235,7 +235,7 @@ func TestSimpleListSkeleton(t *testing.T) {
 
 func TestSimpleStringSkeletonContent(t *testing.T) {
 	t.Parallel()
-	out, set, err := ContentToSkeleton(model.ContentVariable{ExactMatch: "fid", Name: "foo", ValueType: model.String})
+	out, set, err := ContentToSkeleton(model.ContentVariable{CharacteristicId: "fid", Name: "foo", Type: model.String})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -251,7 +251,7 @@ func TestSimpleStringSkeletonContent(t *testing.T) {
 
 func TestSimpleIntSkeletonContent(t *testing.T) {
 	t.Parallel()
-	out, set, err := ContentToSkeleton(model.ContentVariable{ExactMatch: "fid", Name: "foo", ValueType: model.Integer})
+	out, set, err := ContentToSkeleton(model.ContentVariable{CharacteristicId: "fid", Name: "foo", Type: model.Integer})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -267,7 +267,7 @@ func TestSimpleIntSkeletonContent(t *testing.T) {
 
 func TestSimpleFloatSkeletonContent(t *testing.T) {
 	t.Parallel()
-	out, set, err := ContentToSkeleton(model.ContentVariable{ExactMatch: "fid", Name: "foo", ValueType: model.Float})
+	out, set, err := ContentToSkeleton(model.ContentVariable{CharacteristicId: "fid", Name: "foo", Type: model.Float})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -283,7 +283,7 @@ func TestSimpleFloatSkeletonContent(t *testing.T) {
 
 func TestSimpleBoolSkeletonContent(t *testing.T) {
 	t.Parallel()
-	out, set, err := ContentToSkeleton(model.ContentVariable{ExactMatch: "fid", Name: "foo", ValueType: model.Boolean})
+	out, set, err := ContentToSkeleton(model.ContentVariable{CharacteristicId: "fid", Name: "foo", Type: model.Boolean})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -299,7 +299,7 @@ func TestSimpleBoolSkeletonContent(t *testing.T) {
 
 func TestSimpleStructSkeletonContent(t *testing.T) {
 	t.Parallel()
-	out, _, err := ContentToSkeleton(model.ContentVariable{ExactMatch: "foo", ValueType: model.Structure})
+	out, _, err := ContentToSkeleton(model.ContentVariable{CharacteristicId: "foo", Type: model.Structure})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -311,13 +311,13 @@ func TestSimpleStructSkeletonContent(t *testing.T) {
 func TestStructSkeletonContent(t *testing.T) {
 	t.Parallel()
 	out, set, err := ContentToSkeleton(model.ContentVariable{
-		ExactMatch: "rdf",
-		Name:       "rdf",
-		ValueType:  model.Structure,
+		CharacteristicId: "rdf",
+		Name:             "rdf",
+		Type:             model.Structure,
 		SubContentVariables: []model.ContentVariable{
-			{ExactMatch: "r", Name: "r", ValueType: model.Integer},
-			{ExactMatch: "g", Name: "g", ValueType: model.Integer},
-			{ExactMatch: "b", Name: "b", ValueType: model.Integer},
+			{CharacteristicId: "r", Name: "r", Type: model.Integer},
+			{CharacteristicId: "g", Name: "g", Type: model.Integer},
+			{CharacteristicId: "b", Name: "b", Type: model.Integer},
 		},
 	})
 	if err != nil {
@@ -382,13 +382,13 @@ func TestStructSkeletonContent(t *testing.T) {
 func TestStructDefaultSkeletonContent(t *testing.T) {
 	t.Parallel()
 	out, set, err := ContentToSkeleton(model.ContentVariable{
-		ExactMatch: "rdf",
-		Name:       "rdf",
-		ValueType:  model.Structure,
+		CharacteristicId: "rdf",
+		Name:             "rdf",
+		Type:             model.Structure,
 		SubContentVariables: []model.ContentVariable{
-			{ExactMatch: "r", Name: "r", ValueType: model.Integer, Value: float64(255)}, // value as float because json transforms every number to float64 if target field is interface{}
-			{ExactMatch: "g", Name: "g", ValueType: model.Integer, Value: float64(255)},
-			{ExactMatch: "b", Name: "b", ValueType: model.Integer, Value: float64(255)},
+			{CharacteristicId: "r", Name: "r", Type: model.Integer, Value: float64(255)}, // value as float because json transforms every number to float64 if target field is interface{}
+			{CharacteristicId: "g", Name: "g", Type: model.Integer, Value: float64(255)},
+			{CharacteristicId: "b", Name: "b", Type: model.Integer, Value: float64(255)},
 		},
 	})
 	if err != nil {
@@ -450,7 +450,7 @@ func TestStructDefaultSkeletonContent(t *testing.T) {
 
 func TestSimpleListSkeletonContent(t *testing.T) {
 	t.Parallel()
-	out, _, err := ContentToSkeleton(model.ContentVariable{Name: "foo", ValueType: model.List})
+	out, _, err := ContentToSkeleton(model.ContentVariable{Name: "foo", Type: model.List})
 	if err != nil {
 		t.Fatal(err)
 	}

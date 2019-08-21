@@ -3,11 +3,12 @@ package mapping
 import (
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
+	"runtime/debug"
 	"strconv"
 )
 
 func MapSensor(in interface{}, content model.ContentVariable, category model.Characteristic) (out interface{}, err error) {
-	content, err = completeContentVariableExactMatch(content, category)
+	content, err = completeContentVariableCharacteristicId(content, category)
 	if err != nil {
 		return nil, err
 	}
@@ -20,16 +21,16 @@ func MapSensor(in interface{}, content model.ContentVariable, category model.Cha
 	return
 }
 
-func completeContentVariableExactMatch(variable model.ContentVariable, characteristic model.Characteristic) (model.ContentVariable, error) {
+func completeContentVariableCharacteristicId(variable model.ContentVariable, characteristic model.Characteristic) (model.ContentVariable, error) {
 	var err error
-	if (variable.ValueType == model.Structure || variable.ValueType == model.List) && len(variable.SubContentVariables) == 1 && variable.SubContentVariables[0].Name == "*" {
-		if variable.ExactMatch == "" && variable.SubContentVariables[0].ExactMatch == "" {
+	if (variable.Type == model.Structure || variable.Type == model.List) && len(variable.SubContentVariables) == 1 && variable.SubContentVariables[0].Name == "*" {
+		if variable.CharacteristicId == "" && variable.SubContentVariables[0].CharacteristicId == "" {
 			err = errors.New("expect exact_match set in " + variable.Name + " " + variable.Id + " or " + variable.SubContentVariables[0].Name + " " + variable.SubContentVariables[0].Id)
-		} else if variable.ExactMatch == "" {
-			variable.ExactMatch, err = getContentVariableParentExactMatch(variable.SubContentVariables[0], characteristic)
-		} else if variable.SubContentVariables[0].ExactMatch == "" {
+		} else if variable.CharacteristicId == "" {
+			variable.CharacteristicId, err = getContentVariableParentCharacteristicId(variable.SubContentVariables[0], characteristic)
+		} else if variable.SubContentVariables[0].CharacteristicId == "" {
 			sub := variable.SubContentVariables[0]
-			sub.ExactMatch, err = getContentVariableChildExactMatch(variable, characteristic)
+			sub.CharacteristicId, err = getContentVariableChildCharacteristicId(variable, characteristic)
 			variable.SubContentVariables[0] = sub
 		}
 	}
@@ -37,7 +38,7 @@ func completeContentVariableExactMatch(variable model.ContentVariable, character
 		return variable, err
 	}
 	for index, child := range variable.SubContentVariables {
-		variable.SubContentVariables[index], err = completeContentVariableExactMatch(child, characteristic)
+		variable.SubContentVariables[index], err = completeContentVariableCharacteristicId(child, characteristic)
 		if err != nil {
 			return variable, err
 		}
@@ -45,18 +46,18 @@ func completeContentVariableExactMatch(variable model.ContentVariable, character
 	return variable, err
 }
 
-func getContentVariableChildExactMatch(parent model.ContentVariable, characteristic model.Characteristic) (string, error) {
-	if parent.ExactMatch == "" {
+func getContentVariableChildCharacteristicId(parent model.ContentVariable, characteristic model.Characteristic) (string, error) {
+	if parent.CharacteristicId == "" {
 		return "", errors.New("expect exact_match set in " + parent.Name + " " + parent.Id + " or its child")
 	}
-	if parent.ExactMatch == characteristic.Id {
+	if parent.CharacteristicId == characteristic.Id {
 		if len(characteristic.SubCharacteristics) != 1 || characteristic.SubCharacteristics[0].Name != "*" {
 			return "", errors.New(characteristic.Name + " " + characteristic.Id + " is used as variable length characteristic without being one")
 		}
 		return characteristic.SubCharacteristics[0].Id, nil
 	}
 	for _, sub := range characteristic.SubCharacteristics {
-		result, err := getContentVariableChildExactMatch(parent, sub)
+		result, err := getContentVariableChildCharacteristicId(parent, sub)
 		if err != nil {
 			return result, err
 		}
@@ -67,18 +68,18 @@ func getContentVariableChildExactMatch(parent model.ContentVariable, characteris
 	return "", nil
 }
 
-func getContentVariableParentExactMatch(child model.ContentVariable, characteristic model.Characteristic) (string, error) {
-	if child.ExactMatch == "" {
+func getContentVariableParentCharacteristicId(child model.ContentVariable, characteristic model.Characteristic) (string, error) {
+	if child.CharacteristicId == "" {
 		return "", errors.New("expect exact_match set in " + child.Name + " " + child.Id + " or its parent")
 	}
 	parent := characteristic
 	for _, cchild := range characteristic.SubCharacteristics {
-		if cchild.Id == child.ExactMatch {
+		if cchild.Id == child.CharacteristicId {
 			return parent.Id, nil
 		}
 	}
 	for _, cchild := range characteristic.SubCharacteristics {
-		match, err := getContentVariableParentExactMatch(child, cchild)
+		match, err := getContentVariableParentCharacteristicId(child, cchild)
 		if err != nil {
 			return "", err
 		}
@@ -98,24 +99,25 @@ func createCharacteristicIndex(in *map[string]model.Characteristic, characterist
 }
 
 func castToCategory(in interface{}, variable model.ContentVariable, set map[string]*interface{}, characteristics map[string]model.Characteristic) error {
-	switch variable.ValueType {
+	switch variable.Type {
 	case model.String, model.Integer, model.Float, model.Boolean:
-		ref, ok := set[variable.ExactMatch]
+		ref, ok := set[variable.CharacteristicId]
 		if ok {
 			*ref = in
 		} else {
-			return errors.New("unable to find target exact_match '" + variable.ExactMatch + "' in setter")
+			return errors.New("unable to find target exact_match '" + variable.CharacteristicId + "' in setter")
 		}
 	case model.Structure:
 		m, ok := in.(map[string]interface{})
 		if !ok {
+			debug.PrintStack()
 			return errors.New("variable '" + variable.Name + "' is not map/structure")
 		}
-		if len(variable.SubContentVariables) == 1 && variable.SubContentVariables[0].Name == VAR_LEN_PLACEHOLDER && variable.ExactMatch != "" {
+		if len(variable.SubContentVariables) == 1 && variable.SubContentVariables[0].Name == VAR_LEN_PLACEHOLDER && variable.CharacteristicId != "" {
 			//as map
-			category, ok := characteristics[variable.SubContentVariables[0].ExactMatch]
+			category, ok := characteristics[variable.SubContentVariables[0].CharacteristicId]
 			if !ok {
-				return errors.New("unable to find characteristic '" + variable.SubContentVariables[0].ExactMatch + "' (maps need exact match references on the list and element variable)")
+				return errors.New("unable to find characteristic '" + variable.SubContentVariables[0].CharacteristicId + "' (maps need exact match references on the list and element variable)")
 			}
 			temp := map[string]interface{}{}
 			for key, sub := range m {
@@ -125,11 +127,11 @@ func castToCategory(in interface{}, variable model.ContentVariable, set map[stri
 				}
 				temp[key] = out
 			}
-			ref, ok := set[variable.ExactMatch]
+			ref, ok := set[variable.CharacteristicId]
 			if ok {
 				*ref = temp
 			} else {
-				return errors.New("unable to find target exact_match '" + variable.ExactMatch + "' in setter")
+				return errors.New("unable to find target exact_match '" + variable.CharacteristicId + "' in setter")
 			}
 		} else {
 			//as structure
@@ -146,13 +148,13 @@ func castToCategory(in interface{}, variable model.ContentVariable, set map[stri
 	case model.List:
 		l, ok := in.([]interface{})
 		if !ok {
-			return errors.New("variable '" + variable.Name + "' is not map/structure")
+			return errors.New("variable '" + variable.Name + "' is not list")
 		}
-		if len(variable.SubContentVariables) == 1 && variable.SubContentVariables[0].Name == VAR_LEN_PLACEHOLDER && variable.ExactMatch != "" {
+		if len(variable.SubContentVariables) == 1 && variable.SubContentVariables[0].Name == VAR_LEN_PLACEHOLDER && variable.CharacteristicId != "" {
 			//as map
-			category, ok := characteristics[variable.SubContentVariables[0].ExactMatch]
+			category, ok := characteristics[variable.SubContentVariables[0].CharacteristicId]
 			if !ok {
-				return errors.New("unable to find characteristic '" + variable.SubContentVariables[0].ExactMatch + "' (maps need exact match references on the list and element variable)")
+				return errors.New("unable to find characteristic '" + variable.SubContentVariables[0].CharacteristicId + "' (maps need exact match references on the list and element variable)")
 			}
 			temp := []interface{}{}
 			for _, sub := range l {
@@ -162,11 +164,11 @@ func castToCategory(in interface{}, variable model.ContentVariable, set map[stri
 				}
 				temp = append(temp, out)
 			}
-			ref, ok := set[variable.ExactMatch]
+			ref, ok := set[variable.CharacteristicId]
 			if ok {
 				*ref = temp
 			} else {
-				return errors.New("unable to find target exact_match '" + variable.ExactMatch + "' in setter")
+				return errors.New("unable to find target exact_match '" + variable.CharacteristicId + "' in setter")
 			}
 		} else {
 			//as structure

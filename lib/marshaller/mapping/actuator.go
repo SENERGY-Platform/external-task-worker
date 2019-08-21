@@ -3,11 +3,13 @@ package mapping
 import (
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
+	"log"
+	"runtime/debug"
 	"strconv"
 )
 
 func MapActuator(in interface{}, category model.Characteristic, content model.ContentVariable) (out interface{}, err error) {
-	content, err = completeContentVariableExactMatch(content, category)
+	content, err = completeContentVariableCharacteristicId(content, category)
 	if err != nil {
 		return nil, err
 	}
@@ -22,7 +24,7 @@ func MapActuator(in interface{}, category model.Characteristic, content model.Co
 }
 
 func createContentIndex(in *map[string]model.ContentVariable, content model.ContentVariable) map[string]model.ContentVariable {
-	(*in)[content.ExactMatch] = content
+	(*in)[content.CharacteristicId] = content
 	for _, sub := range content.SubContentVariables {
 		createContentIndex(in, sub)
 	}
@@ -30,7 +32,7 @@ func createContentIndex(in *map[string]model.ContentVariable, content model.Cont
 }
 
 func castToContent(in interface{}, variable model.Characteristic, set map[string]*interface{}, content map[string]model.ContentVariable) error {
-	switch variable.ValueType {
+	switch variable.Type {
 	case model.String, model.Integer, model.Float, model.Boolean:
 		ref, ok := set[variable.Id]
 		if ok {
@@ -41,6 +43,8 @@ func castToContent(in interface{}, variable model.Characteristic, set map[string
 	case model.Structure:
 		m, ok := in.(map[string]interface{})
 		if !ok {
+			debug.PrintStack()
+			log.Println(in)
 			return errors.New("variable '" + variable.Name + "' is not map/structure")
 		}
 		if len(variable.SubCharacteristics) == 1 && variable.SubCharacteristics[0].Name == VAR_LEN_PLACEHOLDER && variable.Id != "" {
@@ -78,7 +82,7 @@ func castToContent(in interface{}, variable model.Characteristic, set map[string
 	case model.List:
 		l, ok := in.([]interface{})
 		if !ok {
-			return errors.New("variable '" + variable.Name + "' is not map/structure")
+			return errors.New("variable '" + variable.Name + "' is not list")
 		}
 		if len(variable.SubCharacteristics) == 1 && variable.SubCharacteristics[0].Name == VAR_LEN_PLACEHOLDER && variable.Id != "" {
 			//as map
