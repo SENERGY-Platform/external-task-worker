@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package repo
+package devicerepository
 
 import (
 	"errors"
@@ -22,7 +22,7 @@ import (
 	"log"
 )
 
-var L1Expiration = 60          // 60sec
+var L1Expiration = 60         // 60sec
 var L1Size = 20 * 1024 * 1024 //20MB
 var Debug = false
 
@@ -49,7 +49,7 @@ func (this *Cache) Get(key string) (item Item, err error) {
 	return
 }
 
-func (this *Cache) Set(key string, value []byte, expiration int32) {
+func (this *Cache) Set(key string, value []byte) {
 	err := this.l1.Set([]byte(key), value, L1Expiration)
 	if err != nil {
 		log.Println("ERROR: in Cache::l1.Set()", err)

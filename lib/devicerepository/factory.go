@@ -1,8 +1,8 @@
-package repo
+package devicerepository
 
 import "github.com/SENERGY-Platform/external-task-worker/util"
 
-type FactoryType struct {}
+type FactoryType struct{}
 
 var Factory FactoryType
 

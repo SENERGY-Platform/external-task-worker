@@ -22,8 +22,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
+	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
 	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
-	"github.com/SENERGY-Platform/external-task-worker/lib/repo"
 	"log"
 	"reflect"
 	"strconv"
@@ -38,12 +38,12 @@ import (
 type worker struct {
 	consumer   kafka.ConsumerInterface
 	producer   kafka.ProducerInterface
-	repository repo.RepoInterface
+	repository devicerepository.RepoInterface
 	camunda    camunda.CamundaInterface
 	config     util.Config
 }
 
-func Worker(ctx context.Context, config util.Config, kafkaFactory kafka.FactoryInterface, repoFactory repo.FactoryInterface, camundaFactory camunda.FactoryInterface) {
+func Worker(ctx context.Context, config util.Config, kafkaFactory kafka.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory camunda.FactoryInterface) {
 	log.Println("start camunda worker")
 	var err error
 	w := worker{config: config}
@@ -137,33 +137,29 @@ func (this *worker) ExecuteTask(task messages.CamundaTask) {
 }
 
 func (this *worker) CompleteTask(msg string) (err error) {
-	var nrMsg messages.ProtocolMsg
-	err = json.Unmarshal([]byte(msg), &nrMsg)
+	var message messages.ProtocolMsg
+	err = json.Unmarshal([]byte(msg), &message)
 	if err != nil {
 		return err
 	}
 
-	if nrMsg.CompletionStrategy == util.OPTIMISTIC {
+	if this.config.QosStrategy == ">=" && this.missesCamundaDuration(message) {
 		return
 	}
-
-	if this.config.QosStrategy == ">=" && this.missesCamundaDuration(nrMsg) {
-		return
-	}
-	response, err := CreateCommandResult(nrMsg)
+	response, err := CreateCommandResult(message)
 	if err != nil {
 		return err
 	}
-	err = this.camunda.CompleteTask(nrMsg.TaskId, nrMsg.WorkerId, nrMsg.OutputName, response)
-	log.Println("Complete", nrMsg.TaskId, time.Now().Second())
+	err = this.camunda.CompleteTask(message.TaskInfo.TaskId, message.TaskInfo.WorkerId, this.config.CamundaTaskResultName, response)
+	log.Println("Complete", message.TaskInfo.TaskId, time.Now().Second())
 	return
 }
 
 func (this *worker) missesCamundaDuration(msg messages.ProtocolMsg) bool {
-	if msg.Time == "" {
+	if msg.TaskInfo.Time == "" {
 		return true
 	}
-	unixTime, err := strconv.ParseInt(msg.Time, 10, 64)
+	unixTime, err := strconv.ParseInt(msg.TaskInfo.Time, 10, 64)
 	if err != nil {
 		return true
 	}

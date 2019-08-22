@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package repo
+package devicerepository
 
 import (
 	"github.com/SENERGY-Platform/external-task-worker/util"

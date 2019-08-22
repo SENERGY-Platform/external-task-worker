@@ -41,6 +41,7 @@ type Config struct {
 	CamundaFetchLockDuration        int64
 	CamundaUrl                      string
 	CamundaTopic                    string
+	CamundaTaskResultName           string
 	ZookeeperUrl                    string //host1:2181,host2:2181/chroot
 	KafkaConsumerGroup              string
 	ResponseTopic                   string

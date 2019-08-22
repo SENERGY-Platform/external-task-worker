@@ -3,76 +3,89 @@ package lib
 import (
 	"encoding/json"
 	"errors"
+	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
+	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
+	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
-	formatter_lib "github.com/SENERGY-Platform/formatter-lib"
-	"github.com/SENERGY-Platform/iot-device-repository/lib/model"
 	"log"
 	"strconv"
 	"time"
 )
 
-func (this *worker) CreateProtocolMessage(request messages.Command, task messages.CamundaTask) (protocolTopic string, message string, err error) {
-	instance, service, err := this.repository.GetDeviceInfo(request.InstanceId, request.ServiceId, task.TenantId)
-	if err != nil {
-		log.Println("error on CreateProtocolMessage getDeviceInfo: ", err)
-		err = errors.New("unable to find device or service")
-		return
-	}
-	value, err := this.createMessageForProtocolHandler(instance, service, request.Inputs, task)
+func (this *worker) CreateProtocolMessage(command messages.Command, task messages.CamundaTask) (topic string, message string, err error) {
+	value, err := this.createMessageForProtocolHandler(command, task)
 	if err != nil {
 		log.Println("ERROR: on CreateProtocolMessage createMessageForProtocolHandler(): ", err)
 		err = errors.New("internal format error (inconsistent data?) (time: " + time.Now().String() + ")")
 		return
 	}
-	protocolTopic = service.Protocol.ProtocolHandlerUrl
-	if protocolTopic == "" {
-		log.Println("ERROR: empty protocol topic")
-		log.Println("DEBUG: ", instance, service)
-		err = errors.New("empty protocol topic")
-		return
-	}
-	envelope := messages.Envelope{ServiceId: service.Id, DeviceId: instance.Id, Value: value}
-	if err := envelope.Validate(); err != nil {
-		return protocolTopic, message, err
-	}
-	msg, err := json.Marshal(envelope)
-	return protocolTopic, string(msg), err
+	topic = value.Metadata.Protocol.Handler
+	msg, err := json.Marshal(value)
+	return topic, string(msg), err
 }
 
-func (this *worker) createMessageForProtocolHandler(instance model.DeviceInstance, service model.Service, inputs map[string]interface{}, task messages.CamundaTask) (result messages.ProtocolMsg, err error) {
-	result = messages.ProtocolMsg{
-		WorkerId:           this.camunda.GetWorkerId(),
-		CompletionStrategy: this.config.CompletionStrategy,
-		DeviceUrl:          instance.Url,
-		ServiceUrl:         service.Url,
-		TaskId:             task.Id,
-		DeviceInstanceId:   instance.Id,
-		ServiceId:          service.Id,
-		OutputName:         "result", //task.ActivityId,
-		Time:               strconv.FormatInt(time.Now().Unix(), 10),
-		Service:            service,
-	}
-	for _, serviceInput := range service.Input {
-		for name, inputInterface := range inputs {
-			if serviceInput.Name == name {
-				input, err := formatter_lib.ParseFromJsonInterface(serviceInput.Type, inputInterface)
-				if err != nil {
-					return result, err
-				}
-				input.Name = name
-				if err := formatter_lib.UseLiterals(&input, serviceInput.Type); err != nil {
-					return result, err
-				}
-				formatedInput, err := formatter_lib.GetFormatedValue(instance.Config, serviceInput.Format, input, serviceInput.AdditionalFormatinfo)
-				if err != nil {
-					return result, err
-				}
-				result.ProtocolParts = append(result.ProtocolParts, messages.ProtocolPart{
-					Name:  serviceInput.MsgSegment.Name,
-					Value: formatedInput,
-				})
-			}
+func (this *worker) createMessageForProtocolHandler(command messages.Command, task messages.CamundaTask) (result messages.ProtocolMsg, err error) {
+	device := command.Device
+	service := command.Service
+	protocol := command.Protocol
+	token := devicerepository.Impersonate("")
+	if device.Id == "" || service.Id == "" || protocol.Id == "" {
+		token, err = this.repository.GetToken(task.TenantId)
+		if err != nil {
+			return result, err
 		}
 	}
-	return
+	if device.Id == "" {
+		device, err = this.repository.GetDevice(token, command.DeviceId)
+		if err != nil {
+			return result, err
+		}
+	}
+	if service.Id == "" {
+		service, err = this.repository.GetService(token, device, command.ServiceId)
+		if err != nil {
+			return result, err
+		}
+	}
+	if protocol.Id == "" {
+		protocol, err = this.repository.GetProtocol(token, command.ProtocolId)
+		if err != nil {
+			return result, err
+		}
+	}
+
+	var inputCharacteristicId string
+	var outputCharacteristicId string
+
+	if command.Function.RdfType == model.SES_ONTOLOGY_CONTROLLING_FUNCTION {
+		inputCharacteristicId = command.CharacteristicId
+	} else {
+		outputCharacteristicId = command.CharacteristicId
+	}
+
+	marshalledInput, err := marshaller.MarshalInputs(protocol, service, command.Input, inputCharacteristicId)
+	if err != nil {
+		return result, err
+	}
+
+	result = messages.ProtocolMsg{
+		TaskInfo: messages.TaskInfo{
+			WorkerId:           this.camunda.GetWorkerId(),
+			TaskId:             task.Id,
+			CompletionStrategy: this.config.CompletionStrategy,
+			Time:               strconv.FormatInt(time.Now().Unix(), 10),
+		},
+		Request: messages.ProtocolRequest{
+			Input: marshalledInput,
+		},
+		Metadata: messages.Metadata{
+			Device:               device,
+			Service:              service,
+			Protocol:             protocol,
+			InputCharacteristic:  inputCharacteristicId,
+			OutputCharacteristic: outputCharacteristicId,
+		},
+	}
+
+	return result, err
 }

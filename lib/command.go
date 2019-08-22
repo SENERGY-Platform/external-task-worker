@@ -4,10 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
-	formatter_lib "github.com/SENERGY-Platform/formatter-lib"
-	"github.com/SENERGY-Platform/iot-device-repository/lib/model"
 	"log"
 	"strings"
 )
@@ -26,27 +25,17 @@ func CreateCommandRequest(task messages.CamundaTask) (request messages.Command, 
 	return
 }
 
-func CreateCommandResult(nrMsg messages.ProtocolMsg) (result messages.Command, err error) {
-	result.Outputs = map[string]interface{}{}
-	result.ServiceId = nrMsg.ServiceId
-	service := nrMsg.Service
-	for _, output := range nrMsg.ProtocolParts {
-		for _, serviceOutput := range service.Output {
-			if serviceOutput.MsgSegment.Name == output.Name {
-				parsedOutput, err := formatter_lib.ParseFormat(serviceOutput.Type, serviceOutput.Format, output.Value, serviceOutput.AdditionalFormatinfo)
-				if err != nil {
-					log.Println("error on parsing")
-					return result, err
-				}
-				outputInterface, err := formatter_lib.FormatToJsonStruct([]model.ConfigField{}, parsedOutput)
-				if err != nil {
-					return result, err
-				}
-				parsedOutput.Name = serviceOutput.Name
-				result.Outputs[serviceOutput.Name] = outputInterface
-			}
-		}
+func CreateCommandResult(msg messages.ProtocolMsg) (result messages.Command, err error) {
+	result = messages.Command{
+		DeviceId:         msg.Metadata.Device.Id,
+		Device:           msg.Metadata.Device,
+		ServiceId:        msg.Metadata.Service.Id,
+		Service:          msg.Metadata.Service,
+		Protocol:         msg.Metadata.Protocol,
+		ProtocolId:       msg.Metadata.Protocol.Id,
+		CharacteristicId: msg.Metadata.OutputCharacteristic,
 	}
+	result.Output, err = marshaller.UnmarshalOutputs(result.Protocol, result.Service, msg.Response.Output, result.CharacteristicId)
 	return
 }
 
@@ -63,7 +52,7 @@ func getPayloadParameter(task messages.CamundaTask) (result map[string]interface
 
 func setPayloadParameter(msg *messages.Command, parameter map[string]interface{}) (err error) {
 	for paramName, value := range parameter {
-		_, err := setVarOnPath(msg.Inputs, strings.Split(paramName, "."), value)
+		_, err := setVarOnPath(msg.Input, strings.Split(paramName, "."), value)
 		if err != nil {
 			log.Println("ERROR: setPayloadParameter() -> ignore param", paramName, value, err)
 			//return err

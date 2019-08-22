@@ -71,7 +71,7 @@ func TestExample(t *testing.T) {
 	cmd := messages.Command{
 		InstanceId: "device_1",
 		ServiceId:  "service_1",
-		Inputs: map[string]interface{}{
+		Input: map[string]interface{}{
 			"metrics": map[string]interface{}{
 				"level": 42,
 			},

@@ -2,20 +2,20 @@ package mock
 
 import (
 	"errors"
-	"github.com/SENERGY-Platform/external-task-worker/lib/repo"
+	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
+	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
 	"github.com/SENERGY-Platform/external-task-worker/util"
-	"github.com/SENERGY-Platform/iot-device-repository/lib/model"
 )
 
 var Repo = &RepoMock{}
 
 type RepoMock struct {
-	devices  map[string]model.DeviceInstance
+	devices  map[string]model.Device
 	services map[string]model.Service
 }
 
-func (this *RepoMock) Get(configType util.Config) repo.RepoInterface {
-	this.devices = map[string]model.DeviceInstance{}
+func (this *RepoMock) Get(configType util.Config) devicerepository.RepoInterface {
+	this.devices = map[string]model.Device{}
 	this.services = map[string]model.Service{}
 	return this
 }

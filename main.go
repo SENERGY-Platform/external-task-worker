@@ -20,8 +20,8 @@ import (
 	"context"
 	"flag"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
+	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
 	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
-	"github.com/SENERGY-Platform/external-task-worker/lib/repo"
 	"log"
 	"os"
 	"os/signal"
@@ -52,6 +52,6 @@ func main() {
 		cancel()
 	}()
 
-	lib.Worker(ctx, config, kafka.Factory, repo.Factory, camunda.Factory)
+	lib.Worker(ctx, config, kafka.Factory, devicerepository.Factory, camunda.Factory)
 	log.Println("worker stopped")
 }

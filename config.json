@@ -10,7 +10,6 @@
   "ZookeeperUrl": "zk:2181",
   "KafkaConsumerGroup": "camundaworker",
   "ResponseTopic": "response",
-  "OnChangeTopic": "event",
   "QosStrategy": "<=",
   "SaramaLog": "false",
   "FatalKafkaErrors": "true",
@@ -20,5 +19,6 @@
   "AuthClientSecret": "",
   "JwtExpiration": 30,
   "JwtIssuer": "camundaworker",
-  "PermissionsUrl": "http://permissionsearch:8080"
+  "PermissionsUrl": "http://permissionsearch:8080",
+  "CamundaTaskResultName": "result"
 }

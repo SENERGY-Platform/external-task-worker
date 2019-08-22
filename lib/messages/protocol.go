@@ -1,43 +1,33 @@
 package messages
 
-import (
-	"errors"
-	"github.com/SENERGY-Platform/iot-device-repository/lib/model"
-)
+import "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
 
-type ProtocolPart struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
+type TaskInfo struct {
+	WorkerId           string `json:"worker_id"`
+	TaskId             string `json:"task_id"`
+	CompletionStrategy string `json:"completion_strategy"`
+	Time               string `json:"time"`
+}
+
+type ProtocolRequest struct {
+	Input map[string]string `json:"input"`
+}
+
+type ProtocolResponse struct {
+	Output map[string]string `json:"output"`
+}
+
+type Metadata struct {
+	Device               model.Device   `json:"device"`
+	Service              model.Service  `json:"service"`
+	Protocol             model.Protocol `json:"protocol"`
+	InputCharacteristic  string         `json:"input_characteristic,omitempty"`
+	OutputCharacteristic string         `json:"output_characteristic,omitempty"`
 }
 
 type ProtocolMsg struct {
-	WorkerId           string         `json:"worker_id"`
-	TaskId             string         `json:"task_id"`
-	CompletionStrategy string         `json:"completion_strategy"`
-	DeviceUrl          string         `json:"device_url"`
-	ServiceUrl         string         `json:"service_url"`
-	ProtocolParts      []ProtocolPart `json:"protocol_parts"`
-	DeviceInstanceId   string         `json:"device_instance_id"`
-	ServiceId          string         `json:"service_id"`
-	OutputName         string         `json:"output_name"`
-	Time               string         `json:"time"`
-	Service            model.Service  `json:"service"`
-}
-
-
-type Envelope struct {
-	DeviceId  string      `json:"device_id"`
-	ServiceId string      `json:"service_id"`
-	Value     interface{} `json:"value"`
-}
-
-
-func (envelope Envelope) Validate() error {
-	if envelope.DeviceId == "" {
-		return errors.New("missing device id")
-	}
-	if envelope.ServiceId == "" {
-		return errors.New("missing service id")
-	}
-	return nil
+	Request  ProtocolRequest  `json:"request"`
+	Response ProtocolResponse `json:"response"`
+	TaskInfo TaskInfo         `json:"task_info"`
+	Metadata Metadata         `json:"metadata"`
 }

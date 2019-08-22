@@ -1,11 +1,21 @@
 package messages
 
+import "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
 
 type Command struct {
-	InstanceId string                 `json:"instance_id,omitempty"`
-	ServiceId  string                 `json:"service_id,omitempty"`
-	Inputs     map[string]interface{} `json:"inputs,omitempty"`
-	Outputs    map[string]interface{} `json:"outputs,omitempty"`
-	ErrorMsg   string                 `json:"error_msg,omitempty"`
-}
+	//modeling time
+	Function         model.Function `json:"function"`
+	CharacteristicId string         `json:"characteristic_id"`
 
+	//deployment time
+	DeviceId   string         `json:"device_id,omitempty"`
+	Device     model.Device   `json:"device,omitempty"`
+	ServiceId  string         `json:"service_id,omitempty"`
+	Service    model.Service  `json:"service,omitempty"`
+	Protocol   model.Protocol `json:"protocol,omitempty"`
+	ProtocolId string         `json:"protocol_id,omitempty"`
+
+	//runtime
+	Input  interface{} `json:"input,omitempty"`
+	Output interface{} `json:"output,omitempty"`
+}

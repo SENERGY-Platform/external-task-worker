@@ -8,6 +8,7 @@ require (
 	github.com/clbanning/mxj v1.8.4
 	github.com/coocood/freecache v1.1.0
 	github.com/dgrijalva/jwt-go v3.1.0+incompatible
+	github.com/google/uuid v1.1.1
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/samuel/go-zookeeper v0.0.0-20180130194729-c4fab1ac1bec // indirect
 	github.com/satori/go.uuid v1.2.0
