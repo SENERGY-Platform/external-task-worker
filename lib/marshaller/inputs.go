@@ -5,12 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting"
-	castingbase "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/base"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/mapping"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
-	marshalling "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/serialization/base"
-	_ "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/serialization/json"
-	_ "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/serialization/xml"
+	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/serialization"
 	"runtime/debug"
 )
 
@@ -24,7 +21,7 @@ type CharacteristicId = string
 type ConceptId = string
 
 func MarshalInputs(protocol model.Protocol, service model.Service, input interface{}, inputCharacteristicId CharacteristicId) (result string, err error) {
-	return MarshalInputsWithRepo(castingbase.ConceptRepo, protocol, service, input, inputCharacteristicId)
+	return MarshalInputsWithRepo(casting.ConceptRepo, protocol, service, input, inputCharacteristicId)
 }
 
 func MarshalInputsWithRepo(conceptRepo ConceptRepo, protocol model.Protocol, service model.Service, input interface{}, inputCharacteristicId CharacteristicId) (result string, err error) {
@@ -88,7 +85,7 @@ func getVariableCharacteristics(variable model.ContentVariable) (result []Charac
 	return result
 }
 
-func MarshalInput(inputCharacteristicValue interface{}, conceptId string, inputCharacteristic model.Characteristic, serviceCharacteristic model.Characteristic, serviceVariable model.ContentVariable, serialization string) (result string, err error) {
+func MarshalInput(inputCharacteristicValue interface{}, conceptId string, inputCharacteristic model.Characteristic, serviceCharacteristic model.Characteristic, serviceVariable model.ContentVariable, serializationId string) (result string, err error) {
 	serviceCharacteristicValue, err := casting.Cast(inputCharacteristicValue, conceptId, inputCharacteristic.Id, serviceCharacteristic.Id)
 	if err != nil {
 		return result, err
@@ -104,9 +101,9 @@ func MarshalInput(inputCharacteristicValue interface{}, conceptId string, inputC
 		return result, err
 	}
 
-	marshaller, ok := marshalling.Get(serialization)
+	marshaller, ok := serialization.Get(serializationId)
 	if !ok {
-		return result, errors.New("unknown serialization " + serialization)
+		return result, errors.New("unknown serialization " + serializationId)
 	}
 
 	normalized, err = normalize(serviceVariableValue)

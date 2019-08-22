@@ -3,15 +3,14 @@ package marshaller
 import (
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting"
-	castingbase "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/base"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/mapping"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
-	marshalling "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/serialization/base"
+	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/serialization"
 	"runtime/debug"
 )
 
 func UnmarshalOutputs(protocol model.Protocol, service model.Service, output map[string]string, outputCharacteristicId CharacteristicId) (result interface{}, err error) {
-	return UnmarshalOutputsWithRepo(castingbase.ConceptRepo, protocol, service, output, outputCharacteristicId)
+	return UnmarshalOutputsWithRepo(casting.ConceptRepo, protocol, service, output, outputCharacteristicId)
 }
 
 func UnmarshalOutputsWithRepo(conceptRepo ConceptRepo, protocol model.Protocol, service model.Service, outputMap map[string]string, outputCharacteristicId CharacteristicId) (result interface{}, err error) {
@@ -77,7 +76,7 @@ func serializeOutput(output map[string]string, service model.Service, protocol m
 			if segment.Id == content.ProtocolSegmentId {
 				output, ok := output[segment.Name]
 				if ok {
-					marshaller, ok := marshalling.Get(content.Serialization)
+					marshaller, ok := serialization.Get(content.Serialization)
 					if !ok {
 						debug.PrintStack()
 						return result, errors.New("unknown serialization " + content.Serialization)
