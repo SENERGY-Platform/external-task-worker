@@ -16,8 +16,8 @@ type ConceptRepoType struct {
 }
 
 var ConceptRepo = &ConceptRepoType{
-	concepts:                           map[string]model.Concept{},
-	characteristics:                    map[string]model.Characteristic{},
+	concepts:                           map[string]model.Concept{model.NullConcept.Id: model.NullConcept},
+	characteristics:                    map[string]model.Characteristic{model.NullCharacteristic.Id: model.NullCharacteristic},
 	conceptByCharacteristic:            map[string]model.Concept{},
 	rootCharacteristicByCharacteristic: map[string]model.Characteristic{},
 }
@@ -55,6 +55,9 @@ func (this *ConceptRepoType) GetConceptOfCharacteristic(characteristicId string)
 }
 
 func (this *ConceptRepoType) GetCharacteristic(id string) (characteristic model.Characteristic, err error) {
+	if id == "" {
+		return model.NullCharacteristic, nil
+	}
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	characteristic, ok := this.characteristics[id]

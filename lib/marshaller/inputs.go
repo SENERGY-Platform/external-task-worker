@@ -8,6 +8,7 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/mapping"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/serialization"
+	"reflect"
 	"runtime/debug"
 )
 
@@ -31,21 +32,33 @@ func MarshalInputsWithRepo(conceptRepo ConceptRepo, protocol model.Protocol, ser
 	}
 	resultObj := map[string]string{}
 	for _, content := range service.Inputs {
-		conceptId, variableCharacteristicId, err := getMatchingVariableRootCharacteristic(conceptRepo, content.ContentVariable, inputCharacteristicId)
-		if err != nil {
-			return result, err
-		}
-		variableCharacteristic, err := conceptRepo.GetCharacteristic(variableCharacteristicId)
-		if err != nil {
-			return result, err
-		}
-		resultPart, err := MarshalInput(input, conceptId, inputCharacteristic, variableCharacteristic, content.ContentVariable, content.Serialization)
-		if err != nil {
-			return result, err
-		}
-		for _, segment := range protocol.ProtocolSegments {
-			if segment.Id == content.ProtocolSegmentId {
-				resultObj[segment.Name] = resultPart
+		if !reflect.DeepEqual(inputCharacteristic, model.NullCharacteristic) {
+			conceptId, variableCharacteristicId, err := getMatchingVariableRootCharacteristic(conceptRepo, content.ContentVariable, inputCharacteristicId)
+			if err != nil {
+				return result, err
+			}
+			variableCharacteristic, err := conceptRepo.GetCharacteristic(variableCharacteristicId)
+			if err != nil {
+				return result, err
+			}
+			resultPart, err := MarshalInput(input, conceptId, inputCharacteristic, variableCharacteristic, content.ContentVariable, content.Serialization)
+			if err != nil {
+				return result, err
+			}
+			for _, segment := range protocol.ProtocolSegments {
+				if segment.Id == content.ProtocolSegmentId {
+					resultObj[segment.Name] = resultPart
+				}
+			}
+		} else {
+			resultPart, err := MarshalInput(input, model.NullConcept.Id, inputCharacteristic, model.NullCharacteristic, content.ContentVariable, content.Serialization)
+			if err != nil {
+				return result, err
+			}
+			for _, segment := range protocol.ProtocolSegments {
+				if segment.Id == content.ProtocolSegmentId {
+					resultObj[segment.Name] = resultPart
+				}
 			}
 		}
 	}
@@ -86,7 +99,8 @@ func getVariableCharacteristics(variable model.ContentVariable) (result []Charac
 }
 
 func MarshalInput(inputCharacteristicValue interface{}, conceptId string, inputCharacteristic model.Characteristic, serviceCharacteristic model.Characteristic, serviceVariable model.ContentVariable, serializationId string) (result string, err error) {
-	serviceCharacteristicValue, err := casting.Cast(inputCharacteristicValue, conceptId, inputCharacteristic.Id, serviceCharacteristic.Id)
+	serviceCharacteristicValue := inputCharacteristicValue
+	serviceCharacteristicValue, err = casting.Cast(inputCharacteristicValue, conceptId, inputCharacteristic.Id, serviceCharacteristic.Id)
 	if err != nil {
 		return result, err
 	}

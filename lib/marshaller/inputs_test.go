@@ -274,3 +274,97 @@ func ExampleMarshalInputMultiXml() {
 	//{"body":"<payload><bri>25</bri><color blue=\"255\" green=\"255\" red=\"255\"/></payload>"}
 	//  <nil>
 }
+
+func ExampleMarshalInputNull() {
+	protocol := model.Protocol{
+		Id:      "p1",
+		Name:    "p1",
+		Handler: "p1",
+		ProtocolSegments: []model.ProtocolSegment{
+			{Id: "p1.1", Name: "body"},
+			{Id: "p1.2", Name: "head"},
+		},
+	}
+	service := model.Service{
+		Id:          "s1",
+		LocalId:     "s1l",
+		Name:        "s1n",
+		Description: "s1d",
+		ProtocolId:  "p1",
+		Inputs: []model.Content{
+			{
+				Id: "c1",
+				ContentVariable: model.ContentVariable{
+					Id:   "c1.1",
+					Name: "payload",
+					Type: model.Structure,
+					SubContentVariables: []model.ContentVariable{
+						{
+							Id:   "c1.1.1",
+							Name: "color",
+							Type: model.Structure,
+							SubContentVariables: []model.ContentVariable{
+								{
+									Id:               "sr",
+									Name:             "-red",
+									Type:             model.Integer,
+									CharacteristicId: example.Rgb + ".r",
+									Value:            float64(255),
+								},
+								{
+									Id:               "sg",
+									Name:             "-green",
+									Type:             model.Integer,
+									CharacteristicId: example.Rgb + ".g",
+									Value:            float64(0),
+								},
+								{
+									Id:               "sb",
+									Name:             "-blue",
+									Type:             model.Integer,
+									CharacteristicId: example.Rgb + ".b",
+									Value:            float64(100),
+								},
+							},
+						},
+						{
+							Id:               "c1.1.2",
+							Name:             "bri",
+							Type:             model.Integer,
+							CharacteristicId: example.Lux,
+							Value:            float64(100),
+						},
+					},
+				},
+				Serialization:     "xml",
+				ProtocolSegmentId: "p1.1",
+			},
+		},
+	}
+	fmt.Println(MarshalInputs(protocol, service, nil, ""))
+	fmt.Println(MarshalInputs(protocol, service, nil, model.NullCharacteristic.Id))
+	fmt.Println(MarshalInputs(protocol, service, "something", ""))
+	fmt.Println(MarshalInputs(protocol, service, "something", model.NullCharacteristic.Id))
+	fmt.Println(MarshalInputs(protocol, service, map[string]string{"foo": "bar"}, ""))
+	fmt.Println(MarshalInputs(protocol, service, map[string]string{"foo": "bar"}, model.NullCharacteristic.Id))
+	fmt.Println(MarshalInputs(protocol, service, "#ff0064", ""))
+	fmt.Println(MarshalInputs(protocol, service, "#ff0064", model.NullCharacteristic.Id))
+
+	//output:
+	//{"body":"<payload><bri>100</bri><color blue=\"100\" green=\"0\" red=\"255\"/></payload>"}
+	//  <nil>
+	//{"body":"<payload><bri>100</bri><color blue=\"100\" green=\"0\" red=\"255\"/></payload>"}
+	//  <nil>
+	//{"body":"<payload><bri>100</bri><color blue=\"100\" green=\"0\" red=\"255\"/></payload>"}
+	//  <nil>
+	//{"body":"<payload><bri>100</bri><color blue=\"100\" green=\"0\" red=\"255\"/></payload>"}
+	//  <nil>
+	//{"body":"<payload><bri>100</bri><color blue=\"100\" green=\"0\" red=\"255\"/></payload>"}
+	//  <nil>
+	//{"body":"<payload><bri>100</bri><color blue=\"100\" green=\"0\" red=\"255\"/></payload>"}
+	//  <nil>
+	//{"body":"<payload><bri>100</bri><color blue=\"100\" green=\"0\" red=\"255\"/></payload>"}
+	//  <nil>
+	//{"body":"<payload><bri>100</bri><color blue=\"100\" green=\"0\" red=\"255\"/></payload>"}
+	//  <nil>
+}
