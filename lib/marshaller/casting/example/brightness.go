@@ -21,11 +21,11 @@ func init() {
 	})
 
 	base.Concepts[Brightness] = base.GetConceptCastFunction(brightnessToConcept, brightnessToCharacteristic)
-	base.ConceptRepo.Register(model.Concept{Id: Brightness, Name: "example-bri", Characteristics: []model.Characteristic{
+	base.ConceptRepo.Register(model.Concept{Id: Brightness, Name: "example-bri"}, []model.Characteristic{
 		{
 			Id:   Lux,
 			Name: "lux",
 			Type: model.Integer,
 		},
-	}})
+	})
 }

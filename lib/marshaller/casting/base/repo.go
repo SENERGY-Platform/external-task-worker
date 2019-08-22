@@ -22,17 +22,18 @@ var ConceptRepo = &ConceptRepoType{
 	rootCharacteristicByCharacteristic: map[string]model.Characteristic{},
 }
 
-func (this *ConceptRepoType) Register(concept model.Concept) {
+func (this *ConceptRepoType) Register(concept model.Concept, characteristics []model.Characteristic) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
-	this.concepts[concept.Id] = concept
-	for _, characteristic := range concept.Characteristics {
+	for _, characteristic := range characteristics {
+		concept.Characteristics = append(concept.Characteristics, characteristic.Id)
 		this.characteristics[characteristic.Id] = characteristic
 		this.conceptByCharacteristic[characteristic.Id] = concept
 		for _, descendent := range getCharacteristicDescendents(characteristic) {
 			this.rootCharacteristicByCharacteristic[descendent.Id] = characteristic
 		}
 	}
+	this.concepts[concept.Id] = concept
 }
 
 func getCharacteristicDescendents(characteristic model.Characteristic) (result []model.Characteristic) {

@@ -33,12 +33,6 @@ func (concept *Concept) GenerateId() {
 	if concept.Id == "" {
 		concept.Id = URN_PREFIX + "concept:" + uuid.New().String()
 	}
-	for i, characteristic := range concept.Characteristics {
-		if characteristic.Id == "" {
-			characteristic.GenerateId()
-			concept.Characteristics[i] = characteristic
-		}
-	}
 }
 
 func (device *Device) GenerateId() {

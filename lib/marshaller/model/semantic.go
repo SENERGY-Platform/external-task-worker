@@ -36,10 +36,10 @@ type Aspect struct {
 }
 
 type Concept struct {
-	Id              string           `json:"id"`
-	Name            string           `json:"name"`
-	Characteristics []Characteristic `json:"characteristics"`
-	RdfType         string           `json:"rdf_type"`
+	Id              string   `json:"id"`
+	Name            string   `json:"name"`
+	Characteristics []string `json:"characteristics"`
+	RdfType         string   `json:"rdf_type"`
 }
 
 type Characteristic struct {
