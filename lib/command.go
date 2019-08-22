@@ -43,8 +43,12 @@ func getPayloadParameter(task messages.CamundaTask) (result map[string]interface
 	result = map[string]interface{}{}
 	for key, value := range task.Variables {
 		path := strings.SplitN(key, ".", 2)
-		if len(path) == 2 && path[0] == "inputs" && path[1] != "" {
-			result[path[1]] = value.Value
+		if path[0] == "inputs" {
+			if len(path) == 2 && path[1] != "" {
+				result[path[1]] = value.Value
+			} else {
+				result[""] = value.Value
+			}
 		}
 	}
 	return
@@ -52,7 +56,11 @@ func getPayloadParameter(task messages.CamundaTask) (result map[string]interface
 
 func setPayloadParameter(msg *messages.Command, parameter map[string]interface{}) (err error) {
 	for paramName, value := range parameter {
-		_, err := setVarOnPath(msg.Input, strings.Split(paramName, "."), value)
+		if paramName == "" {
+			msg.Input, err = setVarOnPath(msg.Input, nil, value)
+		} else {
+			_, err = setVarOnPath(msg.Input, strings.Split(paramName, "."), value)
+		}
 		if err != nil {
 			log.Println("ERROR: setPayloadParameter() -> ignore param", paramName, value, err)
 			//return err

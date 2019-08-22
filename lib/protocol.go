@@ -7,16 +7,16 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
+	"github.com/SENERGY-Platform/external-task-worker/util"
 	"log"
 	"strconv"
-	"time"
 )
 
 func (this *worker) CreateProtocolMessage(command messages.Command, task messages.CamundaTask) (topic string, message string, err error) {
 	value, err := this.createMessageForProtocolHandler(command, task)
 	if err != nil {
 		log.Println("ERROR: on CreateProtocolMessage createMessageForProtocolHandler(): ", err)
-		err = errors.New("internal format error (inconsistent data?) (time: " + time.Now().String() + ")")
+		err = errors.New("internal format error (inconsistent data?) (time: " + util.TimeNow().String() + ")")
 		return
 	}
 	topic = value.Metadata.Protocol.Handler
@@ -73,7 +73,7 @@ func (this *worker) createMessageForProtocolHandler(command messages.Command, ta
 			WorkerId:           this.camunda.GetWorkerId(),
 			TaskId:             task.Id,
 			CompletionStrategy: this.config.CompletionStrategy,
-			Time:               strconv.FormatInt(time.Now().Unix(), 10),
+			Time:               strconv.FormatInt(util.TimeNow().Unix(), 10),
 		},
 		Request: messages.ProtocolRequest{
 			Input: marshalledInput,

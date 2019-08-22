@@ -116,7 +116,7 @@ func EnsureAccess(config util.Config) (token Impersonate, err error) {
 	if openid == nil {
 		openid = &OpenidToken{}
 	}
-	duration := time.Now().Sub(openid.RequestTime).Seconds()
+	duration := util.TimeNow().Sub(openid.RequestTime).Seconds()
 
 	if openid.AccessToken != "" && openid.ExpiresIn-config.AuthExpirationTimeBuffer > duration {
 		token = Impersonate("Bearer " + openid.AccessToken)
@@ -145,7 +145,7 @@ func EnsureAccess(config util.Config) (token Impersonate, err error) {
 }
 
 func getOpenidToken(token *OpenidToken, config util.Config) (err error) {
-	requesttime := time.Now()
+	requesttime := util.TimeNow()
 	resp, err := http.PostForm(config.AuthEndpoint+"/auth/realms/master/protocol/openid-connect/token", url.Values{
 		"client_id":     {config.AuthClientId},
 		"client_secret": {config.AuthClientSecret},
@@ -169,7 +169,7 @@ func getOpenidToken(token *OpenidToken, config util.Config) (err error) {
 }
 
 func refreshOpenidToken(token *OpenidToken, config util.Config) (err error) {
-	requesttime := time.Now()
+	requesttime := util.TimeNow()
 	resp, err := http.PostForm(config.AuthEndpoint+"/auth/realms/master/protocol/openid-connect/token", url.Values{
 		"client_id":     {config.AuthClientId},
 		"client_secret": {config.AuthClientSecret},

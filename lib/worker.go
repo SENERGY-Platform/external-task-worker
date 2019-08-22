@@ -98,7 +98,7 @@ func (this *worker) ExecuteNextTask() (wait bool) {
 }
 
 func (this *worker) ExecuteTask(task messages.CamundaTask) {
-	log.Println("Start", task.Id, time.Now().Second())
+	log.Println("Start", task.Id, util.TimeNow().Second())
 	log.Println("Get new Task: ", task)
 	if task.Error != "" {
 		log.Println("WARNING: existing failure in camunda task", task.Error)
@@ -151,7 +151,7 @@ func (this *worker) CompleteTask(msg string) (err error) {
 		return err
 	}
 	err = this.camunda.CompleteTask(message.TaskInfo.TaskId, message.TaskInfo.WorkerId, this.config.CamundaTaskResultName, response)
-	log.Println("Complete", message.TaskInfo.TaskId, time.Now().Second())
+	log.Println("Complete", message.TaskInfo.TaskId, util.TimeNow().Second())
 	return
 }
 

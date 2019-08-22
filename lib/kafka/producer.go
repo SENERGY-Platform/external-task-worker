@@ -21,7 +21,6 @@ import (
 	"log"
 	"os"
 	"runtime/debug"
-	"time"
 
 	"github.com/Shopify/sarama"
 	"github.com/wvanbergen/kazoo-go"
@@ -66,7 +65,7 @@ func (this *Producer) Produce(topic string, message string) {
 	if message != "topic_init" {
 		log.Println("produce kafka msg: ", topic, message)
 	}
-	this.producer.Input() <- &sarama.ProducerMessage{Topic: topic, Key: nil, Value: sarama.StringEncoder(message), Timestamp: time.Now()}
+	this.producer.Input() <- &sarama.ProducerMessage{Topic: topic, Key: nil, Value: sarama.StringEncoder(message), Timestamp: util.TimeNow()}
 }
 
 func (this *Producer) Close() {

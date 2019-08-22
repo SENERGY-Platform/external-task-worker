@@ -91,7 +91,7 @@ func (this *Consumer) start() error {
 					this.errorhandler(err, this)
 					return
 				}
-				if time.Now().Sub(m.Time) > time.Duration(this.config.CamundaFetchLockDuration)*time.Millisecond {
+				if util.TimeNow().Sub(m.Time) > time.Duration(this.config.CamundaFetchLockDuration)*time.Millisecond {
 					log.Println("DEBUG: kafka message older than CamundaFetchLockDuration --> ignore:", m.Time, string(m.Value))
 					err = r.CommitMessages(this.ctx, m)
 					if err != nil {

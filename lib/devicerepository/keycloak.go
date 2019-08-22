@@ -76,7 +76,7 @@ func (this Keycloak) GetUserToken(user string) (token Impersonate, err error) {
 	claims := KeycloakClaims{
 		RealmAccess{Roles: roles},
 		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Duration(this.config.JwtExpiration)).Unix(),
+			ExpiresAt: util.TimeNow().Add(time.Duration(this.config.JwtExpiration)).Unix(),
 			Issuer:    this.config.JwtIssuer,
 			Subject:   user,
 		},

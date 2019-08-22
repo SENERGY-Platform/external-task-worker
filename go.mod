@@ -1,8 +1,6 @@
 module github.com/SENERGY-Platform/external-task-worker
 
 require (
-	github.com/SENERGY-Platform/formatter-lib v0.0.0-20190425141726-82f4aabae873
-	github.com/SENERGY-Platform/iot-device-repository v0.0.0-20190620144749-fa673f457d06
 	github.com/Shopify/sarama v1.22.0
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/clbanning/mxj v1.8.4
