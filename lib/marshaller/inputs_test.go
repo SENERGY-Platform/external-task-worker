@@ -68,8 +68,7 @@ func ExampleMarshalInput1() {
 	fmt.Println(result, err)
 
 	//output:
-	//{"body":"{\"color\":{\"blue\":100,\"green\":0,\"red\":255}}"}
-	//  <nil>
+	//map[body:{"color":{"blue":100,"green":0,"red":255}}] <nil>
 }
 
 func ExampleMarshalInput2() {
@@ -119,8 +118,7 @@ func ExampleMarshalInput2() {
 	fmt.Println(result, err)
 
 	//output:
-	//{"body":"{\"color\":\"#ff0064\"}"}
-	//  <nil>
+	//map[body:{"color":"#ff0064"}] <nil>
 }
 
 func ExampleMarshalInputMulti() {
@@ -193,10 +191,8 @@ func ExampleMarshalInputMulti() {
 	fmt.Println(MarshalInputs(protocol, service, float64(25), example.Lux))
 
 	//output:
-	//{"body":"{\"bri\":100,\"color\":{\"blue\":100,\"green\":0,\"red\":255}}"}
-	//  <nil>
-	//{"body":"{\"bri\":25,\"color\":{\"blue\":255,\"green\":255,\"red\":255}}"}
-	//  <nil>
+	//map[body:{"bri":100,"color":{"blue":100,"green":0,"red":255}}] <nil>
+	//map[body:{"bri":25,"color":{"blue":255,"green":255,"red":255}}] <nil>
 }
 
 func ExampleMarshalInputMultiXml() {
@@ -269,10 +265,8 @@ func ExampleMarshalInputMultiXml() {
 	fmt.Println(MarshalInputs(protocol, service, float64(25), example.Lux))
 
 	//output:
-	//{"body":"<payload><bri>100</bri><color blue=\"100\" green=\"0\" red=\"255\"/></payload>"}
-	//  <nil>
-	//{"body":"<payload><bri>25</bri><color blue=\"255\" green=\"255\" red=\"255\"/></payload>"}
-	//  <nil>
+	//map[body:<payload><bri>100</bri><color blue="100" green="0" red="255"/></payload>] <nil>
+	//map[body:<payload><bri>25</bri><color blue="255" green="255" red="255"/></payload>] <nil>
 }
 
 func ExampleMarshalInputNull() {
@@ -351,22 +345,14 @@ func ExampleMarshalInputNull() {
 	fmt.Println(MarshalInputs(protocol, service, "#ff0064", model.NullCharacteristic.Id))
 
 	//output:
-	//{"body":"<payload><bri>100</bri><color blue=\"100\" green=\"0\" red=\"255\"/></payload>"}
-	//  <nil>
-	//{"body":"<payload><bri>100</bri><color blue=\"100\" green=\"0\" red=\"255\"/></payload>"}
-	//  <nil>
-	//{"body":"<payload><bri>100</bri><color blue=\"100\" green=\"0\" red=\"255\"/></payload>"}
-	//  <nil>
-	//{"body":"<payload><bri>100</bri><color blue=\"100\" green=\"0\" red=\"255\"/></payload>"}
-	//  <nil>
-	//{"body":"<payload><bri>100</bri><color blue=\"100\" green=\"0\" red=\"255\"/></payload>"}
-	//  <nil>
-	//{"body":"<payload><bri>100</bri><color blue=\"100\" green=\"0\" red=\"255\"/></payload>"}
-	//  <nil>
-	//{"body":"<payload><bri>100</bri><color blue=\"100\" green=\"0\" red=\"255\"/></payload>"}
-	//  <nil>
-	//{"body":"<payload><bri>100</bri><color blue=\"100\" green=\"0\" red=\"255\"/></payload>"}
-	//  <nil>
+	//map[body:<payload><bri>100</bri><color blue="100" green="0" red="255"/></payload>] <nil>
+	//map[body:<payload><bri>100</bri><color blue="100" green="0" red="255"/></payload>] <nil>
+	//map[body:<payload><bri>100</bri><color blue="100" green="0" red="255"/></payload>] <nil>
+	//map[body:<payload><bri>100</bri><color blue="100" green="0" red="255"/></payload>] <nil>
+	//map[body:<payload><bri>100</bri><color blue="100" green="0" red="255"/></payload>] <nil>
+	//map[body:<payload><bri>100</bri><color blue="100" green="0" red="255"/></payload>] <nil>
+	//map[body:<payload><bri>100</bri><color blue="100" green="0" red="255"/></payload>] <nil>
+	//map[body:<payload><bri>100</bri><color blue="100" green="0" red="255"/></payload>] <nil>
 }
 
 func ExampleMarshalEmptyService() {
@@ -399,24 +385,14 @@ func ExampleMarshalEmptyService() {
 	fmt.Println(MarshalInputs(protocol, service, map[string]interface{}{"r": float64(255), "g": float64(0), "b": float64(100)}, example.Rgb))
 
 	//output:
-	//{}
-	//  <nil>
-	//{}
-	//  <nil>
-	//{}
-	//  <nil>
-	//{}
-	//  <nil>
-	//{}
-	//  <nil>
-	//{}
-	//  <nil>
-	//{}
-	//  <nil>
-	//{}
-	//  <nil>
-	//{}
-	//  <nil>
-	//{}
-	//  <nil>
+	//map[] <nil>
+	//map[] <nil>
+	//map[] <nil>
+	//map[] <nil>
+	//map[] <nil>
+	//map[] <nil>
+	//map[] <nil>
+	//map[] <nil>
+	//map[] <nil>
+	//map[] <nil>
 }

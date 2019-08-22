@@ -1,7 +1,6 @@
 package marshaller
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting"
@@ -21,16 +20,16 @@ type ConceptRepo interface {
 type CharacteristicId = string
 type ConceptId = string
 
-func MarshalInputs(protocol model.Protocol, service model.Service, input interface{}, inputCharacteristicId CharacteristicId) (result string, err error) {
+func MarshalInputs(protocol model.Protocol, service model.Service, input interface{}, inputCharacteristicId CharacteristicId) (result map[string]string, err error) {
 	return MarshalInputsWithRepo(casting.ConceptRepo, protocol, service, input, inputCharacteristicId)
 }
 
-func MarshalInputsWithRepo(conceptRepo ConceptRepo, protocol model.Protocol, service model.Service, input interface{}, inputCharacteristicId CharacteristicId) (result string, err error) {
+func MarshalInputsWithRepo(conceptRepo ConceptRepo, protocol model.Protocol, service model.Service, input interface{}, inputCharacteristicId CharacteristicId) (result map[string]string, err error) {
 	inputCharacteristic, err := conceptRepo.GetCharacteristic(inputCharacteristicId)
 	if err != nil {
 		return result, err
 	}
-	resultObj := map[string]string{}
+	result = map[string]string{}
 	for _, content := range service.Inputs {
 		if !reflect.DeepEqual(inputCharacteristic, model.NullCharacteristic) {
 			conceptId, variableCharacteristicId, err := getMatchingVariableRootCharacteristic(conceptRepo, content.ContentVariable, inputCharacteristicId)
@@ -47,7 +46,7 @@ func MarshalInputsWithRepo(conceptRepo ConceptRepo, protocol model.Protocol, ser
 			}
 			for _, segment := range protocol.ProtocolSegments {
 				if segment.Id == content.ProtocolSegmentId {
-					resultObj[segment.Name] = resultPart
+					result[segment.Name] = resultPart
 				}
 			}
 		} else {
@@ -57,16 +56,13 @@ func MarshalInputsWithRepo(conceptRepo ConceptRepo, protocol model.Protocol, ser
 			}
 			for _, segment := range protocol.ProtocolSegments {
 				if segment.Id == content.ProtocolSegmentId {
-					resultObj[segment.Name] = resultPart
+					result[segment.Name] = resultPart
 				}
 			}
 		}
 	}
-	buffer := bytes.Buffer{}
-	encoder := json.NewEncoder(&buffer)
-	encoder.SetEscapeHTML(false)
-	err = encoder.Encode(resultObj)
-	return buffer.String(), err
+
+	return result, err
 }
 
 func getMatchingVariableRootCharacteristic(repo ConceptRepo, variable model.ContentVariable, matchingId CharacteristicId) (conceptId string, matchingVariableRootCharacteristic CharacteristicId, err error) {
