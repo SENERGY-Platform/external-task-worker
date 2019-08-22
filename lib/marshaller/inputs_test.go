@@ -368,3 +368,55 @@ func ExampleMarshalInputNull() {
 	//{"body":"<payload><bri>100</bri><color blue=\"100\" green=\"0\" red=\"255\"/></payload>"}
 	//  <nil>
 }
+
+func ExampleMarshalEmptyService() {
+	protocol := model.Protocol{
+		Id:      "p1",
+		Name:    "p1",
+		Handler: "p1",
+		ProtocolSegments: []model.ProtocolSegment{
+			{Id: "p1.1", Name: "body"},
+			{Id: "p1.2", Name: "head"},
+		},
+	}
+	service := model.Service{
+		Id:          "s1",
+		LocalId:     "s1l",
+		Name:        "s1n",
+		Description: "s1d",
+		ProtocolId:  "p1",
+	}
+	fmt.Println(MarshalInputs(protocol, service, nil, ""))
+	fmt.Println(MarshalInputs(protocol, service, nil, model.NullCharacteristic.Id))
+	fmt.Println(MarshalInputs(protocol, service, "something", ""))
+	fmt.Println(MarshalInputs(protocol, service, "something", model.NullCharacteristic.Id))
+	fmt.Println(MarshalInputs(protocol, service, map[string]string{"foo": "bar"}, ""))
+	fmt.Println(MarshalInputs(protocol, service, map[string]string{"foo": "bar"}, model.NullCharacteristic.Id))
+	fmt.Println(MarshalInputs(protocol, service, "#ff0064", ""))
+	fmt.Println(MarshalInputs(protocol, service, "#ff0064", model.NullCharacteristic.Id))
+
+	fmt.Println(MarshalInputs(protocol, service, "#ff0064", example.Hex))
+	fmt.Println(MarshalInputs(protocol, service, map[string]interface{}{"r": float64(255), "g": float64(0), "b": float64(100)}, example.Rgb))
+
+	//output:
+	//{}
+	//  <nil>
+	//{}
+	//  <nil>
+	//{}
+	//  <nil>
+	//{}
+	//  <nil>
+	//{}
+	//  <nil>
+	//{}
+	//  <nil>
+	//{}
+	//  <nil>
+	//{}
+	//  <nil>
+	//{}
+	//  <nil>
+	//{}
+	//  <nil>
+}
