@@ -77,7 +77,7 @@ func (this *CamundaMock) GetWorkerId() string {
 	return "workerid"
 }
 
-func (this *CamundaMock) GetStatus() (map[string]messages.CamundaTask, map[string]messages.Command, map[string]messages.CamundaTask) {
+func (this *CamundaMock) GetStatus() (fetched map[string]messages.CamundaTask, completed map[string]messages.Command, failed map[string]messages.CamundaTask) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	return this.fetchedTasks, this.completedTasks, this.failedTasks

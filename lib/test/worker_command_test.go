@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-func ExampleWorker() {
+func ExampleWorkerCommand() {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
