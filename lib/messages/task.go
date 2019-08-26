@@ -19,3 +19,12 @@ type Command struct {
 	Input  interface{} `json:"input,omitempty"`
 	Output interface{} `json:"output,omitempty"`
 }
+
+type Overwrite struct {
+	DeviceId   string         `json:"device_id,omitempty"`
+	Device     model.Device   `json:"device,omitempty"`
+	ServiceId  string         `json:"service_id,omitempty"`
+	Service    model.Service  `json:"service,omitempty"`
+	Protocol   model.Protocol `json:"protocol,omitempty"`
+	ProtocolId string         `json:"protocol_id,omitempty"`
+}

@@ -8,21 +8,50 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"log"
+	"runtime/debug"
 	"strings"
 )
 
-func CreateCommandRequest(task messages.CamundaTask) (request messages.Command, err error) {
+func CreateCommandRequest(task messages.CamundaTask) (command messages.Command, err error) {
 	payload, ok := task.Variables[util.CAMUNDA_VARIABLES_PAYLOAD].Value.(string)
 	if !ok {
-		return request, errors.New(fmt.Sprint("ERROR: payload is not a string, ", task.Variables))
+		return command, errors.New(fmt.Sprint("ERROR: payload is not a string, ", task.Variables))
 	}
-	err = json.Unmarshal([]byte(payload), &request)
+	err = json.Unmarshal([]byte(payload), &command)
 	if err != nil {
-		return request, err
+		return command, err
+	}
+	err = setDeviceOverwrite(&command, task)
+	if err != nil {
+		return command, err
 	}
 	parameter := getPayloadParameter(task)
-	err = setPayloadParameter(&request, parameter)
+	err = setPayloadParameter(&command, parameter)
 	return
+}
+
+func setDeviceOverwrite(command *messages.Command, task messages.CamundaTask) (err error) {
+	comundaOverwriteVariableString, ok := task.Variables[util.CAMUNDA_VARIABLES_OVERWRITE]
+	if ok {
+		overwriteVariableString, ok := comundaOverwriteVariableString.Value.(string)
+		if !ok {
+			debug.PrintStack()
+			return errors.New(util.CAMUNDA_VARIABLES_OVERWRITE + " variable is not a string")
+		}
+		overwriteVariable := messages.Overwrite{}
+		err = json.Unmarshal([]byte(overwriteVariableString), &overwriteVariable)
+		if err != nil {
+			debug.PrintStack()
+			return err
+		}
+		command.Service = overwriteVariable.Service
+		command.Device = overwriteVariable.Device
+		command.Protocol = overwriteVariable.Protocol
+		command.ServiceId = overwriteVariable.ServiceId
+		command.DeviceId = overwriteVariable.DeviceId
+		command.ProtocolId = overwriteVariable.ProtocolId
+	}
+	return nil
 }
 
 func CreateCommandResult(msg messages.ProtocolMsg) (result messages.Command, err error) {
