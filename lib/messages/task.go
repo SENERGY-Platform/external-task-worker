@@ -7,6 +7,10 @@ type Command struct {
 	Function         model.Function `json:"function"`
 	CharacteristicId string         `json:"characteristic_id"`
 
+	//optional modeling time (used to limit/filter device and service selection in deployment)
+	DeviceClass *model.DeviceClass `json:"device_class,omitempty"`
+	Aspect      *model.Aspect      `json:"aspect,omitempty"`
+
 	//deployment time
 	DeviceId   string         `json:"device_id,omitempty"`
 	Device     model.Device   `json:"device,omitempty"`
