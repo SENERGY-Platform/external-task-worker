@@ -124,7 +124,7 @@ func ExampleWorkerCommand() {
 			util.CAMUNDA_VARIABLES_PAYLOAD: {
 				Value: string(cmdMsg1),
 			},
-			"inputs.b": {Value: float64(255)},
+			"inputs.b": {Value: "255"},
 		},
 	})
 
@@ -147,7 +147,7 @@ func ExampleWorkerCommand() {
 			util.CAMUNDA_VARIABLES_PAYLOAD: {
 				Value: string(cmdMsg2),
 			},
-			"inputs": {Value: "#ff00ff"},
+			"inputs": {Value: "\"#ff00ff\""},
 		},
 	})
 

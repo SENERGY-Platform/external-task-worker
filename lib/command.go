@@ -73,10 +73,22 @@ func getPayloadParameter(task messages.CamundaTask) (result map[string]interface
 	for key, value := range task.Variables {
 		path := strings.SplitN(key, ".", 2)
 		if path[0] == "inputs" {
+			var valueObj interface{}
+			switch v := value.Value.(type) {
+			case string:
+				err := json.Unmarshal([]byte(v), &valueObj)
+				if err != nil {
+					err = nil
+					valueObj = v
+				}
+			default:
+				valueObj = v
+			}
+
 			if len(path) == 2 && path[1] != "" {
-				result[path[1]] = value.Value
+				result[path[1]] = valueObj
 			} else {
-				result[""] = value.Value
+				result[""] = valueObj
 			}
 		}
 	}

@@ -135,7 +135,7 @@ func ExampleWorkerOverwriteCommand() {
 			util.CAMUNDA_VARIABLES_OVERWRITE: {
 				Value: string(cmdOverwriteStr),
 			},
-			"inputs.b": {Value: float64(255)},
+			"inputs.b": {Value: "255"},
 		},
 	})
 
@@ -164,7 +164,7 @@ func ExampleWorkerOverwriteCommand() {
 			util.CAMUNDA_VARIABLES_OVERWRITE: {
 				Value: string(cmdOverwriteStr),
 			},
-			"inputs": {Value: "#ff00ff"},
+			"inputs": {Value: "\"#ff00ff\""},
 		},
 	})
 
