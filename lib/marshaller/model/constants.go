@@ -35,13 +35,3 @@ const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label"
 const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
 const URN_PREFIX = "urn:infai:ses:"
-
-var NullCharacteristic = Characteristic{
-	Id:   "null",
-	Name: "null",
-}
-
-var NullConcept = Concept{
-	Id:   "null",
-	Name: "null",
-}
