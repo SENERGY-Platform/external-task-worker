@@ -57,14 +57,14 @@ func setDeviceOverwrite(command *messages.Command, task messages.CamundaTask) (e
 func CreateCommandResult(msg messages.ProtocolMsg) (result messages.Command, err error) {
 	result = messages.Command{
 		DeviceId:         msg.Metadata.Device.Id,
-		Device:           msg.Metadata.Device,
+		Device:           &msg.Metadata.Device,
 		ServiceId:        msg.Metadata.Service.Id,
-		Service:          msg.Metadata.Service,
-		Protocol:         msg.Metadata.Protocol,
+		Service:          &msg.Metadata.Service,
+		Protocol:         &msg.Metadata.Protocol,
 		ProtocolId:       msg.Metadata.Protocol.Id,
 		CharacteristicId: msg.Metadata.OutputCharacteristic,
 	}
-	result.Output, err = marshaller.UnmarshalOutputs(result.Protocol, result.Service, msg.Response.Output, result.CharacteristicId)
+	result.Output, err = marshaller.UnmarshalOutputs(*result.Protocol, *result.Service, msg.Response.Output, result.CharacteristicId)
 	return
 }
 

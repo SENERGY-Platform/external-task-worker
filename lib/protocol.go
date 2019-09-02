@@ -29,29 +29,32 @@ func (this *worker) createMessageForProtocolHandler(command messages.Command, ta
 	service := command.Service
 	protocol := command.Protocol
 	token := devicerepository.Impersonate("")
-	if device.Id == "" || service.Id == "" || protocol.Id == "" {
+	if device == nil || service == nil || protocol == nil {
 		token, err = this.repository.GetToken(task.TenantId)
 		if err != nil {
 			return result, err
 		}
 	}
-	if device.Id == "" {
-		device, err = this.repository.GetDevice(token, command.DeviceId)
+	if device == nil {
+		temp, err := this.repository.GetDevice(token, command.DeviceId)
 		if err != nil {
 			return result, err
 		}
+		device = &temp
 	}
-	if service.Id == "" {
-		service, err = this.repository.GetService(token, device, command.ServiceId)
+	if service == nil {
+		temp, err := this.repository.GetService(token, *device, command.ServiceId)
 		if err != nil {
 			return result, err
 		}
+		service = &temp
 	}
-	if protocol.Id == "" {
-		protocol, err = this.repository.GetProtocol(token, command.ProtocolId)
+	if protocol == nil {
+		temp, err := this.repository.GetProtocol(token, command.ProtocolId)
 		if err != nil {
 			return result, err
 		}
+		protocol = &temp
 	}
 
 	var inputCharacteristicId string
@@ -63,7 +66,7 @@ func (this *worker) createMessageForProtocolHandler(command messages.Command, ta
 		outputCharacteristicId = command.CharacteristicId
 	}
 
-	marshalledInput, err := marshaller.MarshalInputs(protocol, service, command.Input, inputCharacteristicId)
+	marshalledInput, err := marshaller.MarshalInputs(*protocol, *service, command.Input, inputCharacteristicId)
 	if err != nil {
 		return result, err
 	}
@@ -79,9 +82,9 @@ func (this *worker) createMessageForProtocolHandler(command messages.Command, ta
 			Input: marshalledInput,
 		},
 		Metadata: messages.Metadata{
-			Device:               device,
-			Service:              service,
-			Protocol:             protocol,
+			Device:               *device,
+			Service:              *service,
+			Protocol:             *protocol,
 			InputCharacteristic:  inputCharacteristicId,
 			OutputCharacteristic: outputCharacteristicId,
 		},
