@@ -26,7 +26,7 @@ func (this *ConceptRepoType) Register(concept model.Concept, characteristics []m
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	for _, characteristic := range characteristics {
-		concept.Characteristics = append(concept.Characteristics, characteristic)
+		concept.CharacteristicIds = append(concept.CharacteristicIds, characteristic.Id)
 		this.characteristics[characteristic.Id] = characteristic
 		this.conceptByCharacteristic[characteristic.Id] = concept
 		for _, descendent := range getCharacteristicDescendents(characteristic) {
