@@ -3,6 +3,7 @@ package camunda
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	uuid "github.com/satori/go.uuid"
@@ -16,10 +17,11 @@ import (
 type Camunda struct {
 	config   util.Config
 	workerId string
+	producer kafka.ProducerInterface
 }
 
-func NewCamunda(config util.Config) CamundaInterface {
-	return &Camunda{config: config, workerId: uuid.NewV4().String()}
+func NewCamunda(config util.Config, producer kafka.ProducerInterface) CamundaInterface {
+	return &Camunda{config: config, workerId: uuid.NewV4().String(), producer: producer}
 }
 
 func (this *Camunda) GetTask() (tasks []messages.CamundaTask, err error) {
@@ -131,6 +133,8 @@ func (this *Camunda) Error(task messages.CamundaTask, msg string) {
 	b := new(bytes.Buffer)
 	err := json.NewEncoder(b).Encode(errorMsg)
 	if err != nil {
+		log.Println(err)
+		debug.PrintStack()
 		return
 	}
 	resp, err := client.Post(this.config.CamundaUrl+"/external-task/"+task.Id+"/failure", "application/json", b)
@@ -146,12 +150,26 @@ func (this *Camunda) Error(task messages.CamundaTask, msg string) {
 		debug.PrintStack()
 		return
 	}
-
 	if resp.StatusCode >= 300 {
 		log.Println("ERROR: unexpected camunda.Error() response status", string(pl))
+	}
+	err = this.sendCamundaErrorToKafka(errorMsg)
+	if err != nil {
+		log.Println(err)
+		debug.PrintStack()
+		return
 	}
 }
 
 func (this *Camunda) GetWorkerId() string {
 	return this.workerId
+}
+
+func (this *Camunda) sendCamundaErrorToKafka(camundaError messages.CamundaError) error {
+	b, err := json.Marshal(camundaError)
+	if err != nil {
+		return err
+	}
+	this.producer.Produce(this.config.KafkaIncidentTopic, string(b))
+	return nil
 }

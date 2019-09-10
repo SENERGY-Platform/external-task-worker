@@ -9,6 +9,7 @@
   "CamundaTopic": "execute_in_dose",
   "ZookeeperUrl": "zk:2181",
   "KafkaConsumerGroup": "camundaworker",
+  "KafkaIncidentTopic": "camunda_incident",
   "ResponseTopic": "response",
   "QosStrategy": "<=",
   "SaramaLog": "false",

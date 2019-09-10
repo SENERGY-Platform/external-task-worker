@@ -61,7 +61,7 @@ func Worker(ctx context.Context, config util.Config, kafkaFactory kafka.FactoryI
 	}
 	defer w.producer.Close()
 	w.repository = repoFactory.Get(config)
-	w.camunda = camundaFactory.Get(config)
+	w.camunda = camundaFactory.Get(config, w.producer)
 	for {
 		select {
 		case <-ctx.Done():

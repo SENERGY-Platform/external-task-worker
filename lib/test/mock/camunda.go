@@ -3,6 +3,7 @@ package mock
 import (
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
+	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"sync"
@@ -19,7 +20,7 @@ type CamundaMock struct {
 	mux            sync.Mutex
 }
 
-func (this *CamundaMock) Get(config util.Config) camunda.CamundaInterface {
+func (this *CamundaMock) Get(config util.Config, producer kafka.ProducerInterface) camunda.CamundaInterface {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	this.waitingTasks = []messages.CamundaTask{}
