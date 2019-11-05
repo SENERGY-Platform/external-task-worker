@@ -7,6 +7,7 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"sync"
+	"time"
 )
 
 var Camunda = &CamundaMock{}
@@ -18,6 +19,7 @@ type CamundaMock struct {
 	failedTasks    map[string]messages.CamundaTask
 	config         util.Config
 	mux            sync.Mutex
+	lockTimes      map[string]time.Time
 }
 
 func (this *CamundaMock) Get(config util.Config, producer kafka.ProducerInterface) camunda.CamundaInterface {
@@ -27,6 +29,7 @@ func (this *CamundaMock) Get(config util.Config, producer kafka.ProducerInterfac
 	this.fetchedTasks = map[string]messages.CamundaTask{}
 	this.completedTasks = map[string]messages.Command{}
 	this.failedTasks = map[string]messages.CamundaTask{}
+	this.lockTimes = map[string]time.Time{}
 	this.config = config
 	return this
 }
@@ -40,6 +43,16 @@ func (this *CamundaMock) AddTask(task messages.CamundaTask) {
 func (this *CamundaMock) GetTask() (tasks []messages.CamundaTask, err error) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
+
+	//unlock old tasks
+	for _, task := range this.fetchedTasks {
+		timestamp, ok := this.lockTimes[task.Id]
+		if ok && time.Now().Sub(timestamp) > time.Duration(this.config.CamundaFetchLockDuration)*time.Millisecond {
+			this.waitingTasks = append(this.waitingTasks, task)
+			delete(this.fetchedTasks, task.Id)
+		}
+	}
+
 	size := int(this.config.CamundaWorkerTasks)
 	if size > len(this.waitingTasks) {
 		size = len(this.waitingTasks)
@@ -47,6 +60,7 @@ func (this *CamundaMock) GetTask() (tasks []messages.CamundaTask, err error) {
 	tasks = this.waitingTasks[:size]
 	for _, task := range tasks {
 		this.fetchedTasks[task.Id] = task
+		this.lockTimes[task.Id] = time.Now()
 	}
 	this.waitingTasks = this.waitingTasks[size:]
 	return tasks, nil
@@ -65,13 +79,20 @@ func (this *CamundaMock) CompleteTask(taskId string, workerId string, outputName
 }
 
 func (this *CamundaMock) SetRetry(taskid string) {
-
+	this.mux.Lock()
+	defer this.mux.Unlock()
+	temp, ok := this.fetchedTasks[taskid]
+	if ok {
+		temp.Retries = temp.Retries + 1
+		this.fetchedTasks[taskid] = temp
+	}
 }
 
 func (this *CamundaMock) Error(task messages.CamundaTask, msg string) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	this.failedTasks[task.Id] = task
+	delete(this.fetchedTasks, task.Id)
 }
 
 func (this *CamundaMock) GetWorkerId() string {

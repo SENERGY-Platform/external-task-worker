@@ -62,9 +62,7 @@ func InitProducer(config util.Config) (producer *Producer, err error) {
 }
 
 func (this *Producer) Produce(topic string, message string) {
-	if message != "topic_init" {
-		log.Println("produce kafka msg: ", topic, message)
-	}
+	log.Println("produce kafka msg: ", topic, message)
 	this.producer.Input() <- &sarama.ProducerMessage{Topic: topic, Key: nil, Value: sarama.StringEncoder(message), Timestamp: util.TimeNow()}
 }
 

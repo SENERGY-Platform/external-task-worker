@@ -46,7 +46,6 @@ type Config struct {
 	ZookeeperUrl                    string //host1:2181,host2:2181/chroot
 	KafkaConsumerGroup              string
 	ResponseTopic                   string
-	QosStrategy                     string // <=, >=
 	KafkaTimeout                    int64
 	SaramaLog                       string
 	FatalKafkaErrors                string

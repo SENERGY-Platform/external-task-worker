@@ -103,14 +103,15 @@ func (this *worker) ExecuteTask(task messages.CamundaTask) {
 	if task.Error != "" {
 		log.Println("WARNING: existing failure in camunda task", task.Error)
 	}
-	if this.config.QosStrategy == "<=" && task.Retries == 1 {
-		this.camunda.Error(task, "communication timeout")
-		return
-	}
 	request, err := CreateCommandRequest(task)
 	if err != nil {
 		log.Println("error on CreateCommandRequest(): ", err)
 		this.camunda.Error(task, "invalid task format (json)")
+		return
+	}
+
+	if request.Retries != -1 && request.Retries < task.Retries {
+		this.camunda.Error(task, "communication timeout")
 		return
 	}
 
@@ -120,9 +121,8 @@ func (this *worker) ExecuteTask(task messages.CamundaTask) {
 		this.camunda.Error(task, err.Error())
 		return
 	}
-	if this.config.QosStrategy == "<=" && task.Retries != 1 {
-		this.camunda.SetRetry(task.Id)
-	}
+
+	this.camunda.SetRetry(task.Id)
 	this.producer.Produce(protocolTopic, message)
 
 	if this.config.CompletionStrategy == util.OPTIMISTIC {
@@ -143,9 +143,11 @@ func (this *worker) CompleteTask(msg string) (err error) {
 		return err
 	}
 
-	if this.config.QosStrategy == ">=" && this.missesCamundaDuration(message) {
+	if this.missesCamundaDuration(message) {
+		log.Println("WARNING: drop late response:", msg)
 		return
 	}
+
 	response, err := CreateCommandResult(message)
 	if err != nil {
 		return err
@@ -164,7 +166,7 @@ func (this *worker) missesCamundaDuration(msg messages.ProtocolMsg) bool {
 		return true
 	}
 	taskTime := time.Unix(unixTime, 0)
-	return time.Since(taskTime) >= time.Duration(this.config.CamundaFetchLockDuration)*time.Millisecond
+	return util.TimeNow().Sub(taskTime) >= time.Duration(this.config.CamundaFetchLockDuration)*time.Millisecond
 }
 
 func setVarOnPath(element interface{}, path []string, value interface{}) (result interface{}, err error) {
