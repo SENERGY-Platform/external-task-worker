@@ -91,8 +91,8 @@ func (this *Camunda) CompleteTask(taskId string, workerId string, outputName str
 	return
 }
 
-func (this *Camunda) SetRetry(taskid string) {
-	retry := messages.CamundaRetrySetRequest{Retries: 1}
+func (this *Camunda) SetRetry(taskid string, retries int64) {
+	retry := messages.CamundaRetrySetRequest{Retries: retries}
 
 	client := http.Client{Timeout: 5 * time.Second}
 	b := new(bytes.Buffer)

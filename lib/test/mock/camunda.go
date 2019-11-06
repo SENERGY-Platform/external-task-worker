@@ -6,6 +6,7 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
+	"log"
 	"sync"
 	"time"
 )
@@ -78,12 +79,13 @@ func (this *CamundaMock) CompleteTask(taskId string, workerId string, outputName
 	return
 }
 
-func (this *CamundaMock) SetRetry(taskid string) {
+func (this *CamundaMock) SetRetry(taskid string, number int64) {
+	log.Println("DEBUG: SetRetry", taskid, number)
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	temp, ok := this.fetchedTasks[taskid]
 	if ok {
-		temp.Retries = temp.Retries + 1
+		temp.Retries = number
 		this.fetchedTasks[taskid] = temp
 	}
 }

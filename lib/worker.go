@@ -122,7 +122,7 @@ func (this *worker) ExecuteTask(task messages.CamundaTask) {
 		return
 	}
 
-	this.camunda.SetRetry(task.Id)
+	this.camunda.SetRetry(task.Id, task.Retries+1)
 	this.producer.Produce(protocolTopic, message)
 
 	if this.config.CompletionStrategy == util.OPTIMISTIC {
