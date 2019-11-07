@@ -45,15 +45,15 @@ type CamundaTopic struct {
 }
 
 type CamundaFetchRequest struct {
-	WorkerId string `json:"workerId,omitempty"`
-	MaxTasks int64  `json:"maxTasks,omitempty"`
+	WorkerId string         `json:"workerId,omitempty"`
+	MaxTasks int64          `json:"maxTasks,omitempty"`
 	Topics   []CamundaTopic `json:"topics,omitempty"`
 }
 
 //https://github.com/camunda/camunda-docs-manual/blob/master/content/reference/rest/external-task/post-complete.md
 type CamundaCompleteRequest struct {
 	WorkerId  string                   `json:"workerId,omitempty"`
-	Variables map[string]CamundaOutput `json:"variables,omitempty"`
+	Variables map[string]CamundaOutput `json:"localVariables,omitempty"`
 }
 
 type CamundaRetrySetRequest struct {
