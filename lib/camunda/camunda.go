@@ -159,6 +159,7 @@ func (this *Camunda) Error(task messages.CamundaTask, msg string) {
 		debug.PrintStack()
 		return
 	}
+	_ = this.stopCamundaProcessByTask(task)
 }
 
 func (this *Camunda) GetWorkerId() string {
@@ -172,4 +173,12 @@ func (this *Camunda) sendCamundaErrorToKafka(camundaError messages.CamundaError)
 	}
 	this.producer.Produce(this.config.KafkaIncidentTopic, string(b))
 	return nil
+}
+
+func (this *Camunda) stopCamundaProcessByTask(task messages.CamundaTask) (err error) {
+	if err != nil {
+		log.Println("ERROR:", err)
+		debug.PrintStack()
+		return
+	}
 }
