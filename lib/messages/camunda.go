@@ -66,3 +66,10 @@ type CamundaError struct {
 	ErrorDetails string `json:"errorDetails"`
 	Retries      int64  `json:"retries"`
 }
+
+type KafkaIncidentMessage struct {
+	WorkerId     string      `json:"workerId"`
+	ErrorMessage string      `json:"errorMessage"`
+	Retries      int64       `json:"retries"`
+	Task         CamundaTask `json:"task"`
+}

@@ -58,6 +58,7 @@ type Config struct {
 	JwtIssuer                       string
 	PermissionsUrl                  string
 	KafkaIncidentTopic              string
+	Debug                           bool
 }
 
 //loads config from json in location and used environment variables (e.g ZookeeperUrl --> ZOOKEEPER_URL)

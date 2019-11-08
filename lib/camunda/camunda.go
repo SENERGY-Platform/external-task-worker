@@ -3,6 +3,7 @@ package camunda
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
@@ -10,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"runtime/debug"
 	"time"
 )
@@ -127,58 +129,119 @@ func (this *Camunda) SetRetry(taskid string, retries int64) {
 }
 
 func (this *Camunda) Error(task messages.CamundaTask, msg string) {
+	var err error
+	if task.ProcessInstanceId == "" {
+		task, err = this.readTaskById(task.Id)
+		if err != nil {
+			return
+		}
+	}
+	_ = this.sendErrorToCamunda(msg, task)
+
+	_ = this.sendErrorToKafka(msg, task)
+
+	_ = this.removeProcessInstance(task.ProcessInstanceId)
+
+	return
+}
+
+func (this *Camunda) sendErrorToCamunda(msg string, task messages.CamundaTask) error {
 	errorMsg := messages.CamundaError{WorkerId: this.workerId, ErrorMessage: msg, Retries: 0, ErrorDetails: msg}
-	log.Println("Send Error to Camunda: ", msg)
+	if this.config.Debug {
+		log.Println("Send Error to Camunda: ", msg)
+	}
 	client := http.Client{Timeout: 5 * time.Second}
 	b := new(bytes.Buffer)
 	err := json.NewEncoder(b).Encode(errorMsg)
 	if err != nil {
-		log.Println(err)
+		log.Println("ERROR:", err)
 		debug.PrintStack()
-		return
+		return err
 	}
 	resp, err := client.Post(this.config.CamundaUrl+"/external-task/"+task.Id+"/failure", "application/json", b)
 	if err != nil {
 		log.Println("ERROR: camunda.Error():", err)
 		debug.PrintStack()
-		return
+		return err
 	}
 	defer resp.Body.Close()
-	pl, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Println("ERROR: ReadAll():", err)
-		debug.PrintStack()
-		return
-	}
 	if resp.StatusCode >= 300 {
-		log.Println("ERROR: unexpected camunda.Error() response status", string(pl))
-	}
-	err = this.sendCamundaErrorToKafka(errorMsg)
-	if err != nil {
-		log.Println(err)
+		pl, _ := ioutil.ReadAll(resp.Body)
+		err = errors.New("ERROR: unexpected camunda.Error() response status: " + resp.Status + " " + string(pl))
+		log.Println("ERROR:", err)
 		debug.PrintStack()
-		return
+		return err
 	}
-	_ = this.stopCamundaProcessByTask(task)
+	return err
 }
 
 func (this *Camunda) GetWorkerId() string {
 	return this.workerId
 }
 
-func (this *Camunda) sendCamundaErrorToKafka(camundaError messages.CamundaError) error {
-	b, err := json.Marshal(camundaError)
+func (this *Camunda) sendErrorToKafka(msg string, task messages.CamundaTask) error {
+	b, err := json.Marshal(messages.KafkaIncidentMessage{WorkerId: this.workerId, ErrorMessage: msg, Retries: 0, Task: task})
 	if err != nil {
+		log.Println("ERROR:", err)
+		debug.PrintStack()
 		return err
 	}
 	this.producer.Produce(this.config.KafkaIncidentTopic, string(b))
 	return nil
 }
 
-func (this *Camunda) stopCamundaProcessByTask(task messages.CamundaTask) (err error) {
+func (this *Camunda) removeProcessInstance(id string) (err error) {
+	client := &http.Client{Timeout: 5 * time.Second}
+	request, err := http.NewRequest("DELETE", this.config.CamundaUrl+"/engine-rest/process-instance/"+url.PathEscape(id)+"?skipIoMappings=true", nil)
 	if err != nil {
 		log.Println("ERROR:", err)
 		debug.PrintStack()
-		return
+		return err
 	}
+	resp, err := client.Do(request)
+	if err != nil {
+		log.Println("ERROR:", err)
+		debug.PrintStack()
+		return err
+	}
+	defer resp.Body.Close()
+	if !(resp.StatusCode == 200 || resp.StatusCode == 204) {
+		msg, _ := ioutil.ReadAll(resp.Body)
+		err = errors.New("error on delete in engine for " + this.config.CamundaUrl + "/engine-rest/process-instance/" + url.PathEscape(id) + ": " + resp.Status + " " + string(msg))
+		log.Println("ERROR:", err)
+		debug.PrintStack()
+		return err
+	}
+	return nil
+}
+
+func (this *Camunda) readTaskById(taskId string) (task messages.CamundaTask, err error) {
+	client := &http.Client{Timeout: 5 * time.Second}
+	request, err := http.NewRequest("GET", this.config.CamundaUrl+"/engine-rest/task/"+url.PathEscape(taskId), nil)
+	if err != nil {
+		log.Println("ERROR:", err)
+		debug.PrintStack()
+		return task, err
+	}
+	resp, err := client.Do(request)
+	if err != nil {
+		log.Println("ERROR:", err)
+		debug.PrintStack()
+		return task, err
+	}
+	defer resp.Body.Close()
+	if !(resp.StatusCode == 200 || resp.StatusCode == 204) {
+		msg, _ := ioutil.ReadAll(resp.Body)
+		err = errors.New(resp.Status + " " + string(msg))
+		log.Println("ERROR:", err)
+		debug.PrintStack()
+		return task, err
+	}
+	err = json.NewDecoder(resp.Body).Decode(&task)
+	if err != nil {
+		log.Println("ERROR:", err)
+		debug.PrintStack()
+		return task, err
+	}
+	return task, err
 }
