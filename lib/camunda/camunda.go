@@ -128,6 +128,7 @@ func (this *Camunda) SetRetry(taskid string, retries int64) {
 
 func (this *Camunda) Error(externalTaskId string, msg string) {
 	b, err := json.Marshal(messages.KafkaIncidentMessage{
+		Id:             uuid.NewV4().String(),
 		MsgVersion:     1,
 		ExternalTaskId: externalTaskId,
 		WorkerId:       this.GetWorkerId(),
