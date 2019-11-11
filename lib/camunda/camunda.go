@@ -45,11 +45,11 @@ func (this *Camunda) GetTask() (tasks []messages.CamundaExternalTask, err error)
 	return
 }
 
-func (this *Camunda) CompleteTask(taskId string, workerId string, outputName string, output messages.Command) (err error) {
+func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string, output messages.Command) (err error) {
 	var completeRequest messages.CamundaCompleteRequest
 
-	if workerId == "" {
-		workerId = this.workerId
+	if taskInfo.WorkerId == "" {
+		taskInfo.WorkerId = this.workerId
 	}
 
 	if this.config.CompletionStrategy == util.PESSIMISTIC {
@@ -58,9 +58,9 @@ func (this *Camunda) CompleteTask(taskId string, workerId string, outputName str
 				Value: output,
 			},
 		}
-		completeRequest = messages.CamundaCompleteRequest{WorkerId: workerId, Variables: variables}
+		completeRequest = messages.CamundaCompleteRequest{WorkerId: taskInfo.WorkerId, Variables: variables}
 	} else {
-		completeRequest = messages.CamundaCompleteRequest{WorkerId: workerId}
+		completeRequest = messages.CamundaCompleteRequest{WorkerId: taskInfo.WorkerId}
 		duration := time.Duration(this.config.OptimisticTaskCompletionTimeout) * time.Millisecond
 		time.Sleep(duration)
 	}
@@ -72,7 +72,7 @@ func (this *Camunda) CompleteTask(taskId string, workerId string, outputName str
 	if err != nil {
 		return
 	}
-	resp, err := client.Post(this.config.CamundaUrl+"/external-task/"+taskId+"/complete", "application/json", b)
+	resp, err := client.Post(this.config.CamundaUrl+"/external-task/"+taskInfo.TaskId+"/complete", "application/json", b)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func (this *Camunda) CompleteTask(taskId string, workerId string, outputName str
 	}
 
 	if resp.StatusCode >= 300 {
-		this.Error(taskId, string(pl))
+		this.Error(taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, string(pl))
 		log.Println("Error on completeCamundaTask.")
 	} else {
 		log.Println("complete camunda task: ", completeRequest, string(pl))
@@ -126,14 +126,16 @@ func (this *Camunda) SetRetry(taskid string, retries int64) {
 	}
 }
 
-func (this *Camunda) Error(externalTaskId string, msg string) {
+func (this *Camunda) Error(externalTaskId string, processInstanceId string, processDefinitionId string, msg string) {
 	b, err := json.Marshal(messages.KafkaIncidentMessage{
-		Id:             uuid.NewV4().String(),
-		MsgVersion:     1,
-		ExternalTaskId: externalTaskId,
-		WorkerId:       this.GetWorkerId(),
-		ErrorMessage:   msg,
-		Time:           time.Now(),
+		Id:                  uuid.NewV4().String(),
+		MsgVersion:          1,
+		ExternalTaskId:      externalTaskId,
+		ProcessInstanceId:   processInstanceId,
+		ProcessDefinitionId: processDefinitionId,
+		WorkerId:            this.GetWorkerId(),
+		ErrorMessage:        msg,
+		Time:                time.Now(),
 	})
 	if err != nil {
 		log.Println("ERROR:", err)

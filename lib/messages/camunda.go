@@ -63,10 +63,12 @@ type CamundaRetrySetRequest struct {
 }
 
 type KafkaIncidentMessage struct {
-	Id             string    `json:"id"`
-	MsgVersion     int64     `json:"msg_version"`
-	ExternalTaskId string    `json:"external_task_id"`
-	WorkerId       string    `json:"worker_id"`
-	ErrorMessage   string    `json:"error_message"`
-	Time           time.Time `json:"time"`
+	Id                  string    `json:"id"`
+	MsgVersion          int64     `json:"msg_version"`
+	ExternalTaskId      string    `json:"external_task_id"`
+	ProcessInstanceId   string    `json:"process_instance_id"`
+	ProcessDefinitionId string    `json:"process_definition_id"`
+	WorkerId            string    `json:"worker_id"`
+	ErrorMessage        string    `json:"error_message"`
+	Time                time.Time `json:"time"`
 }

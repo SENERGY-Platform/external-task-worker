@@ -73,10 +73,12 @@ func (this *worker) createMessageForProtocolHandler(command messages.Command, ta
 
 	result = messages.ProtocolMsg{
 		TaskInfo: messages.TaskInfo{
-			WorkerId:           this.camunda.GetWorkerId(),
-			TaskId:             task.Id,
-			CompletionStrategy: this.config.CompletionStrategy,
-			Time:               strconv.FormatInt(util.TimeNow().Unix(), 10),
+			WorkerId:            this.camunda.GetWorkerId(),
+			TaskId:              task.Id,
+			ProcessInstanceId:   task.ProcessInstanceId,
+			ProcessDefinitionId: task.ProcessDefinitionId,
+			CompletionStrategy:  this.config.CompletionStrategy,
+			Time:                strconv.FormatInt(util.TimeNow().Unix(), 10),
 		},
 		Request: messages.ProtocolRequest{
 			Input: marshalledInput,

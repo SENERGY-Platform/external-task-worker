@@ -3,10 +3,12 @@ package messages
 import "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
 
 type TaskInfo struct {
-	WorkerId           string `json:"worker_id"`
-	TaskId             string `json:"task_id"`
-	CompletionStrategy string `json:"completion_strategy"`
-	Time               string `json:"time"`
+	WorkerId            string `json:"worker_id"`
+	TaskId              string `json:"task_id"`
+	ProcessInstanceId   string `json:"process_instance_id"`
+	ProcessDefinitionId string `json:"process_definition_id"`
+	CompletionStrategy  string `json:"completion_strategy"`
+	Time                string `json:"time"`
 }
 
 type ProtocolRequest struct {

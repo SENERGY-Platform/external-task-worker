@@ -108,19 +108,19 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
 	request, err := CreateCommandRequest(task)
 	if err != nil {
 		log.Println("error on CreateCommandRequest(): ", err)
-		this.camunda.Error(task.Id, "invalid task format (json)")
+		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, "invalid task format (json)")
 		return
 	}
 
 	if request.Retries != -1 && request.Retries < task.Retries {
-		this.camunda.Error(task.Id, "communication timeout")
+		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, "communication timeout")
 		return
 	}
 
 	protocolTopic, message, err := this.CreateProtocolMessage(request, task)
 	if err != nil {
 		log.Println("error on ExecuteTask CreateProtocolMessage", err)
-		this.camunda.Error(task.Id, err.Error())
+		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, err.Error())
 		return
 	}
 
@@ -128,7 +128,12 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
 	this.producer.Produce(protocolTopic, message)
 
 	if this.config.CompletionStrategy == util.OPTIMISTIC {
-		err = this.camunda.CompleteTask(task.Id, this.camunda.GetWorkerId(), "", messages.Command{})
+		err = this.camunda.CompleteTask(messages.TaskInfo{
+			WorkerId:            this.camunda.GetWorkerId(),
+			TaskId:              task.Id,
+			ProcessInstanceId:   task.ProcessInstanceId,
+			ProcessDefinitionId: task.ProcessDefinitionId,
+		}, "", messages.Command{})
 		if err != nil {
 			log.Println("error on completeCamundaTask(): ", err)
 			return
@@ -154,7 +159,7 @@ func (this *worker) CompleteTask(msg string) (err error) {
 	if err != nil {
 		return err
 	}
-	err = this.camunda.CompleteTask(message.TaskInfo.TaskId, message.TaskInfo.WorkerId, this.config.CamundaTaskResultName, response)
+	err = this.camunda.CompleteTask(message.TaskInfo, this.config.CamundaTaskResultName, response)
 	log.Println("Complete", message.TaskInfo.TaskId, util.TimeNow().Second())
 	return
 }

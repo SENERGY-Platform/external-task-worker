@@ -67,15 +67,15 @@ func (this *CamundaMock) GetTask() (tasks []messages.CamundaExternalTask, err er
 	return tasks, nil
 }
 
-func (this *CamundaMock) CompleteTask(taskId string, workerId string, outputName string, output messages.Command) (err error) {
+func (this *CamundaMock) CompleteTask(taskInfo messages.TaskInfo, outputName string, output messages.Command) (err error) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
-	_, ok := this.fetchedTasks[taskId]
+	_, ok := this.fetchedTasks[taskInfo.TaskId]
 	if !ok {
-		return errors.New("task not found " + taskId)
+		return errors.New("task not found " + taskInfo.TaskId)
 	}
-	delete(this.fetchedTasks, taskId)
-	this.completedTasks[taskId] = output
+	delete(this.fetchedTasks, taskInfo.TaskId)
+	this.completedTasks[taskInfo.TaskId] = output
 	return
 }
 
@@ -90,11 +90,11 @@ func (this *CamundaMock) SetRetry(taskid string, number int64) {
 	}
 }
 
-func (this *CamundaMock) Error(taskId string, msg string) {
+func (this *CamundaMock) Error(externalTaskId string, processInstanceId string, processDefinitionId string, msg string) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
-	this.failedTasks[taskId] = this.fetchedTasks[taskId]
-	delete(this.fetchedTasks, taskId)
+	this.failedTasks[externalTaskId] = this.fetchedTasks[externalTaskId]
+	delete(this.fetchedTasks, externalTaskId)
 }
 
 func (this *CamundaMock) GetWorkerId() string {
