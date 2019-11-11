@@ -24,7 +24,7 @@ func NewCamunda(config util.Config, producer kafka.ProducerInterface) CamundaInt
 	return &Camunda{config: config, workerId: uuid.NewV4().String(), producer: producer}
 }
 
-func (this *Camunda) GetTask() (tasks []messages.CamundaTask, err error) {
+func (this *Camunda) GetTask() (tasks []messages.CamundaExternalTask, err error) {
 	fetchRequest := messages.CamundaFetchRequest{
 		WorkerId: this.workerId,
 		MaxTasks: this.config.CamundaWorkerTasks,
@@ -126,13 +126,13 @@ func (this *Camunda) SetRetry(taskid string, retries int64) {
 	}
 }
 
-func (this *Camunda) Error(taskId string, msg string) {
+func (this *Camunda) Error(externalTaskId string, msg string) {
 	b, err := json.Marshal(messages.KafkaIncidentMessage{
-		MsgVersion:   1,
-		TaskId:       taskId,
-		WorkerId:     this.GetWorkerId(),
-		ErrorMessage: msg,
-		Time:         time.Now(),
+		MsgVersion:     1,
+		ExternalTaskId: externalTaskId,
+		WorkerId:       this.GetWorkerId(),
+		ErrorMessage:   msg,
+		Time:           time.Now(),
 	})
 	if err != nil {
 		log.Println("ERROR:", err)

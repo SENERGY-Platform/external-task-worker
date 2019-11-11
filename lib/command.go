@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-func CreateCommandRequest(task messages.CamundaTask) (command messages.Command, err error) {
+func CreateCommandRequest(task messages.CamundaExternalTask) (command messages.Command, err error) {
 	payload, ok := task.Variables[util.CAMUNDA_VARIABLES_PAYLOAD].Value.(string)
 	if !ok {
 		return command, errors.New(fmt.Sprint("ERROR: payload is not a string, ", task.Variables))
@@ -30,7 +30,7 @@ func CreateCommandRequest(task messages.CamundaTask) (command messages.Command, 
 	return
 }
 
-func setDeviceOverwrite(command *messages.Command, task messages.CamundaTask) (err error) {
+func setDeviceOverwrite(command *messages.Command, task messages.CamundaExternalTask) (err error) {
 	comundaOverwriteVariableString, ok := task.Variables[util.CAMUNDA_VARIABLES_OVERWRITE]
 	if ok {
 		overwriteVariableString, ok := comundaOverwriteVariableString.Value.(string)
@@ -68,7 +68,7 @@ func CreateCommandResult(msg messages.ProtocolMsg) (result messages.Command, err
 	return
 }
 
-func getPayloadParameter(task messages.CamundaTask) (result map[string]interface{}) {
+func getPayloadParameter(task messages.CamundaExternalTask) (result map[string]interface{}) {
 	result = map[string]interface{}{}
 	for key, value := range task.Variables {
 		path := strings.SplitN(key, ".", 2)

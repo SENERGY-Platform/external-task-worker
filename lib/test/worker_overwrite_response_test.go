@@ -107,7 +107,7 @@ func ExampleWorkerOverwriteResponse() {
 		log.Fatal(err)
 	}
 
-	mock.Camunda.AddTask(messages.CamundaTask{
+	mock.Camunda.AddTask(messages.CamundaExternalTask{
 		Id: "1",
 		Variables: map[string]messages.CamundaVariable{
 			util.CAMUNDA_VARIABLES_PAYLOAD: {
@@ -121,7 +121,7 @@ func ExampleWorkerOverwriteResponse() {
 
 	time.Sleep(1 * time.Second)
 
-	mock.Camunda.AddTask(messages.CamundaTask{
+	mock.Camunda.AddTask(messages.CamundaExternalTask{
 		Id: "2",
 		Variables: map[string]messages.CamundaVariable{
 			util.CAMUNDA_VARIABLES_PAYLOAD: {

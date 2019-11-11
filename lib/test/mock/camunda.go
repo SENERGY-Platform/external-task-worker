@@ -14,10 +14,10 @@ import (
 var Camunda = &CamundaMock{}
 
 type CamundaMock struct {
-	waitingTasks   []messages.CamundaTask
-	fetchedTasks   map[string]messages.CamundaTask
+	waitingTasks   []messages.CamundaExternalTask
+	fetchedTasks   map[string]messages.CamundaExternalTask
 	completedTasks map[string]messages.Command
-	failedTasks    map[string]messages.CamundaTask
+	failedTasks    map[string]messages.CamundaExternalTask
 	config         util.Config
 	mux            sync.Mutex
 	lockTimes      map[string]time.Time
@@ -26,22 +26,22 @@ type CamundaMock struct {
 func (this *CamundaMock) Get(config util.Config, producer kafka.ProducerInterface) camunda.CamundaInterface {
 	this.mux.Lock()
 	defer this.mux.Unlock()
-	this.waitingTasks = []messages.CamundaTask{}
-	this.fetchedTasks = map[string]messages.CamundaTask{}
+	this.waitingTasks = []messages.CamundaExternalTask{}
+	this.fetchedTasks = map[string]messages.CamundaExternalTask{}
 	this.completedTasks = map[string]messages.Command{}
-	this.failedTasks = map[string]messages.CamundaTask{}
+	this.failedTasks = map[string]messages.CamundaExternalTask{}
 	this.lockTimes = map[string]time.Time{}
 	this.config = config
 	return this
 }
 
-func (this *CamundaMock) AddTask(task messages.CamundaTask) {
+func (this *CamundaMock) AddTask(task messages.CamundaExternalTask) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	this.waitingTasks = append(this.waitingTasks, task)
 }
 
-func (this *CamundaMock) GetTask() (tasks []messages.CamundaTask, err error) {
+func (this *CamundaMock) GetTask() (tasks []messages.CamundaExternalTask, err error) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 
@@ -101,7 +101,7 @@ func (this *CamundaMock) GetWorkerId() string {
 	return "workerid"
 }
 
-func (this *CamundaMock) GetStatus() (fetched map[string]messages.CamundaTask, completed map[string]messages.Command, failed map[string]messages.CamundaTask) {
+func (this *CamundaMock) GetStatus() (fetched map[string]messages.CamundaExternalTask, completed map[string]messages.Command, failed map[string]messages.CamundaExternalTask) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	return this.fetchedTasks, this.completedTasks, this.failedTasks

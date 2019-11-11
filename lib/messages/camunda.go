@@ -29,7 +29,7 @@ type CamundaOutput struct {
 }
 
 //https://github.com/camunda/camunda-docs-manual/blob/master/content/reference/rest/external-task/fetch.md
-type CamundaTask struct {
+type CamundaExternalTask struct {
 	Id                  string                     `json:"id,omitempty"`
 	Variables           map[string]CamundaVariable `json:"variables,omitempty"`
 	ActivityId          string                     `json:"activityId,omitempty"`
@@ -63,9 +63,9 @@ type CamundaRetrySetRequest struct {
 }
 
 type KafkaIncidentMessage struct {
-	MsgVersion   int64     `json:"msg_version"`
-	TaskId       string    `json:"task_id"`
-	WorkerId     string    `json:"worker_id"`
-	ErrorMessage string    `json:"error_message"`
-	Time         time.Time `json:"time"`
+	MsgVersion     int64     `json:"msg_version"`
+	ExternalTaskId string    `json:"external_task_id"`
+	WorkerId       string    `json:"worker_id"`
+	ErrorMessage   string    `json:"error_message"`
+	Time           time.Time `json:"time"`
 }

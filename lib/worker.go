@@ -88,7 +88,7 @@ func (this *worker) ExecuteNextTask() (wait bool) {
 	wg := sync.WaitGroup{}
 	for _, task := range tasks {
 		wg.Add(1)
-		go func(asyncTask messages.CamundaTask) {
+		go func(asyncTask messages.CamundaExternalTask) {
 			defer wg.Done()
 			this.ExecuteTask(asyncTask)
 		}(task)
@@ -97,7 +97,7 @@ func (this *worker) ExecuteNextTask() (wait bool) {
 	return false
 }
 
-func (this *worker) ExecuteTask(task messages.CamundaTask) {
+func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
 	if this.config.Debug {
 		log.Println("Start", task.Id, util.TimeNow().Second())
 		log.Println("Get new Task: ", task)
