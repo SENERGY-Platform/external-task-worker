@@ -90,11 +90,11 @@ func (this *CamundaMock) SetRetry(taskid string, number int64) {
 	}
 }
 
-func (this *CamundaMock) Error(task messages.CamundaTask, msg string) {
+func (this *CamundaMock) Error(taskId string, msg string) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
-	this.failedTasks[task.Id] = task
-	delete(this.fetchedTasks, task.Id)
+	this.failedTasks[taskId] = this.fetchedTasks[taskId]
+	delete(this.fetchedTasks, taskId)
 }
 
 func (this *CamundaMock) GetWorkerId() string {

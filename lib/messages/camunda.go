@@ -16,6 +16,8 @@
 
 package messages
 
+import "time"
+
 type CamundaVariable struct {
 	Type  string      `json:"type,omitempty"`
 	Value interface{} `json:"value,omitempty"`
@@ -60,16 +62,10 @@ type CamundaRetrySetRequest struct {
 	Retries int64 `json:"retries"`
 }
 
-type CamundaError struct {
-	WorkerId     string `json:"workerId"`
-	ErrorMessage string `json:"errorMessage"`
-	ErrorDetails string `json:"errorDetails"`
-	Retries      int64  `json:"retries"`
-}
-
 type KafkaIncidentMessage struct {
-	WorkerId     string      `json:"workerId"`
-	ErrorMessage string      `json:"errorMessage"`
-	Retries      int64       `json:"retries"`
-	Task         CamundaTask `json:"task"`
+	MsgVersion   int64     `json:"msg_version"`
+	TaskId       string    `json:"task_id"`
+	WorkerId     string    `json:"worker_id"`
+	ErrorMessage string    `json:"error_message"`
+	Time         time.Time `json:"time"`
 }

@@ -108,19 +108,19 @@ func (this *worker) ExecuteTask(task messages.CamundaTask) {
 	request, err := CreateCommandRequest(task)
 	if err != nil {
 		log.Println("error on CreateCommandRequest(): ", err)
-		this.camunda.Error(task, "invalid task format (json)")
+		this.camunda.Error(task.Id, "invalid task format (json)")
 		return
 	}
 
 	if request.Retries != -1 && request.Retries < task.Retries {
-		this.camunda.Error(task, "communication timeout")
+		this.camunda.Error(task.Id, "communication timeout")
 		return
 	}
 
 	protocolTopic, message, err := this.CreateProtocolMessage(request, task)
 	if err != nil {
 		log.Println("error on ExecuteTask CreateProtocolMessage", err)
-		this.camunda.Error(task, err.Error())
+		this.camunda.Error(task.Id, err.Error())
 		return
 	}
 

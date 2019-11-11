@@ -14,6 +14,6 @@ type CamundaInterface interface {
 	GetTask() (tasks []messages.CamundaTask, err error)
 	CompleteTask(taskId string, workerId string, outputName string, output messages.Command) (err error)
 	SetRetry(taskid string, number int64)
-	Error(task messages.CamundaTask, msg string)
+	Error(taskId string, msg string)
 	GetWorkerId() string
 }
