@@ -1,5 +1,7 @@
 module github.com/SENERGY-Platform/external-task-worker
 
+go 1.13
+
 require (
 	github.com/Shopify/sarama v1.22.0
 	github.com/cespare/xxhash v1.1.0 // indirect

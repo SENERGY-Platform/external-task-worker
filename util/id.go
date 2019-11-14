@@ -14,17 +14,13 @@
  * limitations under the License.
  */
 
-package xml
+package util
 
 import (
-	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/serialization/base"
+	uuid "github.com/satori/go.uuid"
 )
 
-type Marshaller struct {
-}
-
-const Format = "xml"
-
-func init() {
-	base.Register(Format, Marshaller{})
+//to replace when testing
+var GetId = func() string {
+	return uuid.NewV4().String()
 }
