@@ -23,6 +23,7 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/mapping"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/serialization"
+	"log"
 	"reflect"
 	"runtime/debug"
 )
@@ -124,6 +125,7 @@ func MarshalInput(inputCharacteristicValue interface{}, conceptId string, inputC
 
 	serviceVariableValue, err := mapping.MapActuator(normalized, serviceCharacteristic, serviceVariable)
 	if err != nil {
+		log.Println("ERROR: unable to map actuator", serviceCharacteristic.Id, serviceCharacteristic.Value, "-->", serviceVariable.Id, serviceVariable.Name)
 		return result, err
 	}
 
