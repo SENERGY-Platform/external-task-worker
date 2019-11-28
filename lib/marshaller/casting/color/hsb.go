@@ -16,14 +16,17 @@
 
 package example
 
-const Kelvin = "urn:infai:ses:characteristic:7c0b7bf3-7039-4bf2-8e9e-703d19bec0ed"
+const Hsb = "urn:infai:ses:characteristic:64928e9f-98ca-42bb-a1e5-adf2a760a2f9"
+const HsbH = "urn:infai:ses:characteristic:6ec70e99-8c6a-4909-8d5a-7cc12af76b9a"
+const HsbS = "urn:infai:ses:characteristic:a66dc568-c0e0-420f-b513-18e8df405538"
+const HsbB = "urn:infai:ses:characteristic:d840607c-c8f9-45d6-b9bd-2c2d444e2899"
 
 func init() {
-	conceptToCharacteristic.Set(Kelvin, func(concept interface{}) (out interface{}, err error) {
-		return 2700, nil //TODO
+	conceptToCharacteristic.Set(Hsb, func(concept interface{}) (out interface{}, err error) {
+		return map[string]int64{"h": int64(100), "s": int64(100), "b": int64(190)}, nil //TODO
 	})
 
-	characteristicToConcept.Set(Kelvin, func(in interface{}) (concept interface{}, err error) {
+	characteristicToConcept.Set(Hsb, func(in interface{}) (concept interface{}, err error) {
 		return "#32a852", nil //TODO
 	})
 }

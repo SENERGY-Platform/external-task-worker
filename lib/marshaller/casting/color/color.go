@@ -40,14 +40,19 @@ func init() {
 			},
 		},
 		{
-			Id:   Kelvin,
-			Name: "kelvin",
-			Type: model.Integer,
-		},
-		{
 			Id:   Hex,
 			Name: "hex",
 			Type: model.String,
+		},
+		{
+			Id:   Hsb,
+			Name: "HSB",
+			Type: model.Structure,
+			SubCharacteristics: []model.Characteristic{
+				{Id: HsbH, Name: "h", Type: model.Integer},
+				{Id: HsbS, Name: "s", Type: model.Integer},
+				{Id: HsbB, Name: "b", Type: model.Integer},
+			},
 		},
 	})
 }
