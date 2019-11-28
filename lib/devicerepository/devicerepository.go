@@ -18,8 +18,10 @@ package devicerepository
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
 	"github.com/SENERGY-Platform/external-task-worker/util"
+	"log"
 	"net/url"
 )
 
@@ -42,9 +44,9 @@ func (this *Iot) GetDevice(token Impersonate, id string) (result model.Device, e
 	result, err = this.getDeviceFromCache(id)
 	if err != nil {
 		err = token.GetJSON(this.repoUrl+"/devices/"+url.QueryEscape(id), &result)
-	}
-	if err == nil {
-		this.saveDeviceToCache(result)
+		if err == nil {
+			this.saveDeviceToCache(result)
+		}
 	}
 	return
 }
@@ -53,9 +55,9 @@ func (this *Iot) GetProtocol(token Impersonate, id string) (result model.Protoco
 	result, err = this.getProtocolFromCache(id)
 	if err != nil {
 		err = token.GetJSON(this.repoUrl+"/protocols/"+url.QueryEscape(id), &result)
-	}
-	if err == nil {
-		this.saveProtocolToCache(result)
+		if err == nil {
+			this.saveProtocolToCache(result)
+		}
 	}
 	return
 }
@@ -65,17 +67,17 @@ func (this *Iot) GetService(token Impersonate, device model.Device, id string) (
 	if err != nil {
 		dt, err := this.GetDeviceType(token, device.DeviceTypeId)
 		if err != nil {
+			log.Println("ERROR: unable to load device-type", device.DeviceTypeId, token)
 			return result, err
 		}
 		for _, service := range dt.Services {
 			if service.Id == id {
-				result = service
-				break
+				this.saveServiceToCache(service)
+				return service, nil
 			}
 		}
-	}
-	if err == nil {
-		this.saveServiceToCache(result)
+		log.Println("ERROR: unable to find service in device-type", device.DeviceTypeId, id)
+		return result, errors.New("service not found")
 	}
 	return
 }

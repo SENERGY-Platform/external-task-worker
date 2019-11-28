@@ -65,7 +65,7 @@ func (this *worker) createMessageForProtocolHandler(command messages.Command, ta
 	if service == nil {
 		temp, err := this.repository.GetService(token, *device, command.ServiceId)
 		if err != nil {
-			log.Println("ERROR: unable to load device", command.ServiceId, task.TenantId, token)
+			log.Println("ERROR: unable to load service", command.ServiceId, task.TenantId, token)
 			return result, err
 		}
 		service = &temp
@@ -73,7 +73,7 @@ func (this *worker) createMessageForProtocolHandler(command messages.Command, ta
 	if protocol == nil {
 		temp, err := this.repository.GetProtocol(token, command.ProtocolId)
 		if err != nil {
-			log.Println("ERROR: unable to load device", command.ProtocolId, task.TenantId, token)
+			log.Println("ERROR: unable to load protocol", command.ProtocolId, task.TenantId, token)
 			return result, err
 		}
 		protocol = &temp
