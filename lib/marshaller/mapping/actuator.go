@@ -54,6 +54,7 @@ func castToContent(in interface{}, variable model.Characteristic, set map[string
 		if ok {
 			*ref = in
 		} else {
+			debug.PrintStack()
 			return errors.New("unable to find target exact_match '" + variable.Id + "' in setter")
 		}
 	case model.Structure:
@@ -81,6 +82,7 @@ func castToContent(in interface{}, variable model.Characteristic, set map[string
 			if ok {
 				*ref = temp
 			} else {
+				debug.PrintStack()
 				return errors.New("unable to find target exact_match '" + variable.Id + "' in setter")
 			}
 		} else {
@@ -118,6 +120,7 @@ func castToContent(in interface{}, variable model.Characteristic, set map[string
 			if ok {
 				*ref = temp
 			} else {
+				debug.PrintStack()
 				return errors.New("unable to find target exact_match '" + variable.Id + "' in setter")
 			}
 		} else {
