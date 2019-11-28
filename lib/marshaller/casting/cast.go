@@ -19,6 +19,7 @@ package casting
 import (
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/base"
+	_ "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/color"
 	_ "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/example"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
 	"runtime/debug"
