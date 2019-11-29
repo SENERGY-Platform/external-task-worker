@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 
-package example
+package color
+
+import (
+	"errors"
+	"github.com/lucasb-eyer/go-colorful"
+	"log"
+	"runtime/debug"
+)
 
 const Hsb = "urn:infai:ses:characteristic:64928e9f-98ca-42bb-a1e5-adf2a760a2f9"
 const HsbH = "urn:infai:ses:characteristic:6ec70e99-8c6a-4909-8d5a-7cc12af76b9a"
@@ -23,10 +30,58 @@ const HsbB = "urn:infai:ses:characteristic:d840607c-c8f9-45d6-b9bd-2c2d444e2899"
 
 func init() {
 	conceptToCharacteristic.Set(Hsb, func(concept interface{}) (out interface{}, err error) {
-		return map[string]int64{"h": int64(100), "s": int64(100), "b": int64(190)}, nil //TODO
+		hexStr, ok := concept.(string)
+		if !ok {
+			debug.PrintStack()
+			return nil, errors.New("unable to interpret value as string")
+		}
+		hex, err := colorful.Hex(hexStr)
+		if err != nil {
+			debug.PrintStack()
+			return nil, err
+		}
+		h, s, v := hex.Hsv()
+		return map[string]int64{"h": int64(h), "s": int64(s * 100), "b": int64(v * 100)}, nil //TODO
 	})
 
 	characteristicToConcept.Set(Hsb, func(in interface{}) (concept interface{}, err error) {
-		return "#32a852", nil //TODO
+		hsvMap, ok := in.(map[string]interface{})
+		if !ok {
+			log.Println(in)
+			debug.PrintStack()
+			return nil, errors.New("unable to interpret value as map[string]interface{}")
+		}
+		h, ok := hsvMap["h"]
+		if !ok {
+			debug.PrintStack()
+			return nil, errors.New("missing field h")
+		}
+		hue, ok := h.(float64)
+		if !ok {
+			debug.PrintStack()
+			return nil, errors.New("field h is not a number")
+		}
+		s, ok := hsvMap["s"]
+		if !ok {
+			debug.PrintStack()
+			return nil, errors.New("missing field s")
+		}
+		saturation, ok := s.(float64)
+		if !ok {
+			debug.PrintStack()
+			return nil, errors.New("field s is not a number")
+		}
+		v, ok := hsvMap["b"] //hsb vs hsv
+		if !ok {
+			debug.PrintStack()
+			return nil, errors.New("missing field b")
+		}
+		value, ok := v.(float64)
+		if !ok {
+			debug.PrintStack()
+			return nil, errors.New("field b is not a number")
+		}
+		hsv := colorful.Hsv(hue, saturation/100, value/100)
+		return hsv.Hex(), nil
 	})
 }

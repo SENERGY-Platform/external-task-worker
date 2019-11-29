@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package example
+package color
 
 const Hex = "urn:infai:ses:characteristic:0fc343ce-4627-4c88-b1e0-d3ed29754af8"
 
