@@ -41,16 +41,40 @@ func init() {
 	})
 
 	characteristicToConcept.Set(BinaryStatusCode, func(in interface{}) (concept interface{}, err error) {
-		i, ok := in.(int)
-		if !ok {
+		switch v := in.(type) {
+		case int:
+			if v > 0 {
+				return true, nil
+			} else {
+				return false, nil
+			}
+		case int32:
+			if v > 0 {
+				return true, nil
+			} else {
+				return false, nil
+			}
+		case int64:
+			if v > 0 {
+				return true, nil
+			} else {
+				return false, nil
+			}
+		case float32:
+			if v > 0 {
+				return true, nil
+			} else {
+				return false, nil
+			}
+		case float64:
+			if v > 0 {
+				return true, nil
+			} else {
+				return false, nil
+			}
+		default:
 			debug.PrintStack()
-			log.Println("ERROR: ", reflect.TypeOf(in).String(), in)
-			return nil, errors.New("unable to interpret value as int; input type is " + reflect.TypeOf(in).String())
-		}
-		if i > 0 {
-			return true, nil
-		} else {
-			return false, nil
+			return nil, errors.New("unable to interpret value as float; input type is " + reflect.TypeOf(in).String())
 		}
 	})
 }
