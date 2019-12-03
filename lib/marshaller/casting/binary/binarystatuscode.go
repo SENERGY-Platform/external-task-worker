@@ -18,18 +18,20 @@ package binary
 
 import (
 	"errors"
+	"log"
+	"reflect"
 	"runtime/debug"
 )
 
 const BinaryStatusCode = "urn:infai:ses:characteristic:c0353532-a8fb-4553-a00b-418cb8a80a65"
 
-//color concept uses hex -> do nothing
 func init() {
 	conceptToCharacteristic.Set(BinaryStatusCode, func(concept interface{}) (out interface{}, err error) {
 		b, ok := concept.(bool)
 		if !ok {
 			debug.PrintStack()
-			return nil, errors.New("unable to interpret value as string")
+			log.Println("ERROR: ", reflect.TypeOf(concept).String(), concept)
+			return nil, errors.New("unable to interpret value as boolean; input type is " + reflect.TypeOf(concept).String())
 		}
 		if b {
 			return int(1), nil
@@ -42,7 +44,8 @@ func init() {
 		i, ok := in.(int)
 		if !ok {
 			debug.PrintStack()
-			return nil, errors.New("unable to interpret value as string")
+			log.Println("ERROR: ", reflect.TypeOf(in).String(), in)
+			return nil, errors.New("unable to interpret value as int; input type is " + reflect.TypeOf(in).String())
 		}
 		if i > 0 {
 			return true, nil

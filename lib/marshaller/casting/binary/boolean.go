@@ -16,15 +16,33 @@
 
 package binary
 
+import (
+	"errors"
+	"log"
+	"reflect"
+	"runtime/debug"
+)
+
 const Boolean = "urn:infai:ses:characteristic:7dc1bb7e-b256-408a-a6f9-044dc60fdcf5"
 
-//color concept uses hex -> do nothing
 func init() {
 	conceptToCharacteristic.Set(Boolean, func(concept interface{}) (out interface{}, err error) {
-		return concept, nil
+		b, ok := concept.(bool)
+		if !ok {
+			debug.PrintStack()
+			log.Println("ERROR: ", reflect.TypeOf(concept).String(), concept)
+			return nil, errors.New("unable to interpret value as boolean; input type is " + reflect.TypeOf(concept).String())
+		}
+		return b, nil
 	})
 
 	characteristicToConcept.Set(Boolean, func(in interface{}) (concept interface{}, err error) {
-		return in, nil
+		b, ok := in.(bool)
+		if !ok {
+			debug.PrintStack()
+			log.Println("ERROR: ", reflect.TypeOf(in).String(), in)
+			return nil, errors.New("unable to interpret value as boolean; input type is " + reflect.TypeOf(in).String())
+		}
+		return b, nil
 	})
 }
