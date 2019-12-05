@@ -32,7 +32,7 @@ var Camunda = &CamundaMock{}
 type CamundaMock struct {
 	waitingTasks   []messages.CamundaExternalTask
 	fetchedTasks   map[string]messages.CamundaExternalTask
-	completedTasks map[string]messages.Command
+	completedTasks map[string]interface{}
 	failedTasks    map[string]messages.CamundaExternalTask
 	config         util.Config
 	mux            sync.Mutex
@@ -44,7 +44,7 @@ func (this *CamundaMock) Get(config util.Config, producer kafka.ProducerInterfac
 	defer this.mux.Unlock()
 	this.waitingTasks = []messages.CamundaExternalTask{}
 	this.fetchedTasks = map[string]messages.CamundaExternalTask{}
-	this.completedTasks = map[string]messages.Command{}
+	this.completedTasks = map[string]interface{}{}
 	this.failedTasks = map[string]messages.CamundaExternalTask{}
 	this.lockTimes = map[string]time.Time{}
 	this.config = config
@@ -83,15 +83,15 @@ func (this *CamundaMock) GetTask() (tasks []messages.CamundaExternalTask, err er
 	return tasks, nil
 }
 
-func (this *CamundaMock) CompleteTask(taskInfo messages.TaskInfo, outputName string, output messages.Command) (err error) {
+func (this *CamundaMock) CompleteTask(taskInfo messages.TaskInfo, outputName string, output interface{}) (err error) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	_, ok := this.fetchedTasks[taskInfo.TaskId]
 	if !ok {
 		return errors.New("task not found " + taskInfo.TaskId)
 	}
-	delete(this.fetchedTasks, taskInfo.TaskId)
 	this.completedTasks[taskInfo.TaskId] = output
+	delete(this.fetchedTasks, taskInfo.TaskId)
 	return
 }
 
@@ -117,7 +117,7 @@ func (this *CamundaMock) GetWorkerId() string {
 	return "workerid"
 }
 
-func (this *CamundaMock) GetStatus() (fetched map[string]messages.CamundaExternalTask, completed map[string]messages.Command, failed map[string]messages.CamundaExternalTask) {
+func (this *CamundaMock) GetStatus() (fetched map[string]messages.CamundaExternalTask, completed map[string]interface{}, failed map[string]messages.CamundaExternalTask) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	return this.fetchedTasks, this.completedTasks, this.failedTasks

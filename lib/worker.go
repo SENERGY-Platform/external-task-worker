@@ -133,7 +133,7 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
 			TaskId:              task.Id,
 			ProcessInstanceId:   task.ProcessInstanceId,
 			ProcessDefinitionId: task.ProcessDefinitionId,
-		}, "", messages.Command{})
+		}, this.config.CamundaTaskResultName, nil)
 		if err != nil {
 			log.Println("error on completeCamundaTask(): ", err)
 			return
@@ -155,11 +155,11 @@ func (this *worker) CompleteTask(msg string) (err error) {
 		return
 	}
 
-	response, err := CreateCommandResult(message)
+	output, err := CreateCommandResult(message)
 	if err != nil {
 		return err
 	}
-	err = this.camunda.CompleteTask(message.TaskInfo, this.config.CamundaTaskResultName, response)
+	err = this.camunda.CompleteTask(message.TaskInfo, this.config.CamundaTaskResultName, output)
 	log.Println("Complete", message.TaskInfo.TaskId, util.TimeNow().Second())
 	return
 }

@@ -70,18 +70,8 @@ func setDeviceOverwrite(command *messages.Command, task messages.CamundaExternal
 	return nil
 }
 
-func CreateCommandResult(msg messages.ProtocolMsg) (result messages.Command, err error) {
-	result = messages.Command{
-		DeviceId:         msg.Metadata.Device.Id,
-		Device:           &msg.Metadata.Device,
-		ServiceId:        msg.Metadata.Service.Id,
-		Service:          &msg.Metadata.Service,
-		Protocol:         &msg.Metadata.Protocol,
-		ProtocolId:       msg.Metadata.Protocol.Id,
-		CharacteristicId: msg.Metadata.OutputCharacteristic,
-	}
-	result.Output, err = marshaller.UnmarshalOutputs(*result.Protocol, *result.Service, msg.Response.Output, result.CharacteristicId)
-	return
+func CreateCommandResult(msg messages.ProtocolMsg) (result interface{}, err error) {
+	return marshaller.UnmarshalOutputs(msg.Metadata.Protocol, msg.Metadata.Service, msg.Response.Output, msg.Metadata.OutputCharacteristic)
 }
 
 func getPayloadParameter(task messages.CamundaExternalTask) (result map[string]interface{}) {

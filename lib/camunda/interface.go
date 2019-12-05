@@ -28,7 +28,7 @@ type FactoryInterface interface {
 
 type CamundaInterface interface {
 	GetTask() (tasks []messages.CamundaExternalTask, err error)
-	CompleteTask(taskInfo messages.TaskInfo, outputName string, output messages.Command) (err error)
+	CompleteTask(taskInfo messages.TaskInfo, outputName string, output interface{}) (err error)
 	SetRetry(taskid string, number int64)
 	Error(externalTaskId string, processInstanceId string, processDefinitionId string, msg string)
 	GetWorkerId() string

@@ -60,14 +60,14 @@ func (this *Camunda) GetTask() (tasks []messages.CamundaExternalTask, err error)
 	return
 }
 
-func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string, output messages.Command) (err error) {
+func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string, output interface{}) (err error) {
 	var completeRequest messages.CamundaCompleteRequest
 
 	if taskInfo.WorkerId == "" {
 		taskInfo.WorkerId = this.workerId
 	}
 
-	if this.config.CompletionStrategy == util.PESSIMISTIC {
+	if this.config.CompletionStrategy == util.PESSIMISTIC && output != nil {
 		variables := map[string]messages.CamundaOutput{
 			outputName: {
 				Value: output,
