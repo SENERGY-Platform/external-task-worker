@@ -39,5 +39,10 @@ func init() {
 			Name: "binary status code",
 			Type: model.Integer,
 		},
+		{
+			Id:   OnOff,
+			Name: "on/off",
+			Type: model.String,
+		},
 	})
 }
