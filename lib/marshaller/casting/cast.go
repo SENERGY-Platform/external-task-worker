@@ -22,6 +22,7 @@ import (
 	_ "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/binary"
 	_ "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/color"
 	_ "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/example"
+	_ "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/temperature"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
 	"runtime/debug"
 )
