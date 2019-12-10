@@ -128,6 +128,7 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
 	this.producer.Produce(protocolTopic, message)
 
 	if this.config.CompletionStrategy == util.OPTIMISTIC {
+		time.Sleep(time.Duration(this.config.OptimisticTaskCompletionTimeout) * time.Millisecond) //prevent completes that are to fast
 		err = this.camunda.CompleteTask(messages.TaskInfo{
 			WorkerId:            this.camunda.GetWorkerId(),
 			TaskId:              task.Id,

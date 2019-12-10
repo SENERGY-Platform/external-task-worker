@@ -26,6 +26,12 @@ import (
 )
 
 func UnmarshalOutputs(protocol model.Protocol, service model.Service, output map[string]string, outputCharacteristicId CharacteristicId) (result interface{}, err error) {
+	if outputCharacteristicId == "" {
+		return nil, nil
+	}
+	if len(output) == 0 {
+		return nil, nil
+	}
 	return UnmarshalOutputsWithRepo(casting.ConceptRepo, protocol, service, output, outputCharacteristicId)
 }
 

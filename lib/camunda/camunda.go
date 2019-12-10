@@ -66,8 +66,7 @@ func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string,
 	if taskInfo.WorkerId == "" {
 		taskInfo.WorkerId = this.workerId
 	}
-
-	if this.config.CompletionStrategy == util.PESSIMISTIC && output != nil {
+	if output != nil {
 		variables := map[string]messages.CamundaOutput{
 			outputName: {
 				Value: output,
@@ -76,8 +75,6 @@ func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string,
 		completeRequest = messages.CamundaCompleteRequest{WorkerId: taskInfo.WorkerId, Variables: variables}
 	} else {
 		completeRequest = messages.CamundaCompleteRequest{WorkerId: taskInfo.WorkerId}
-		duration := time.Duration(this.config.OptimisticTaskCompletionTimeout) * time.Millisecond
-		time.Sleep(duration)
 	}
 
 	log.Println("Start complete Request")
