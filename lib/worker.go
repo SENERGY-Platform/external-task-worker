@@ -161,7 +161,9 @@ func (this *worker) CompleteTask(msg string) (err error) {
 		return err
 	}
 	err = this.camunda.CompleteTask(message.TaskInfo, this.config.CamundaTaskResultName, output)
-	log.Println("Complete", message.TaskInfo.TaskId, util.TimeNow().Second())
+	if this.config.Debug {
+		log.Println("Complete", message.TaskInfo.TaskId, util.TimeNow().Second(), output, msg, err)
+	}
 	return
 }
 
