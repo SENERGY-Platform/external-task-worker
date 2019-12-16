@@ -23,6 +23,8 @@ import (
 	"sync"
 )
 
+var DEBUG = false
+
 type ConceptRepoType struct {
 	concepts                           map[string]model.Concept
 	characteristics                    map[string]model.Characteristic

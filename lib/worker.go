@@ -24,6 +24,7 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
 	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
+	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/base"
 	"log"
 	"reflect"
 	"strconv"
@@ -45,6 +46,7 @@ type worker struct {
 
 func Worker(ctx context.Context, config util.Config, kafkaFactory kafka.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory camunda.FactoryInterface) {
 	log.Println("start camunda worker")
+	base.DEBUG = config.Debug
 	var err error
 	w := worker{config: config}
 

@@ -18,6 +18,7 @@ package color
 
 import (
 	"errors"
+	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/base"
 	"gopkg.in/go-playground/colors.v1"
 	"log"
 	"runtime/debug"
@@ -38,6 +39,9 @@ func init() {
 			return nil, err
 		}
 		rgb := hex.ToRGB()
+		if base.DEBUG {
+			log.Println("hex to rgb:", hexStr, map[string]int64{"r": int64(rgb.R), "g": int64(rgb.G), "b": int64(rgb.B)})
+		}
 		return map[string]int64{"r": int64(rgb.R), "g": int64(rgb.G), "b": int64(rgb.B)}, nil
 	})
 
@@ -82,6 +86,9 @@ func init() {
 		if err != nil {
 			debug.PrintStack()
 			return nil, err
+		}
+		if base.DEBUG {
+			log.Println("hsb to hex:", red, green, blue, rgb.ToHEX().String())
 		}
 		return rgb.ToHEX().String(), nil
 	})

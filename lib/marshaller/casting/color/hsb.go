@@ -18,6 +18,7 @@ package color
 
 import (
 	"errors"
+	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/base"
 	"github.com/lucasb-eyer/go-colorful"
 	"log"
 	"runtime/debug"
@@ -41,6 +42,9 @@ func init() {
 			return nil, err
 		}
 		h, s, v := hex.Hsv()
+		if base.DEBUG {
+			log.Println("hex to hsb:", hexStr, h, s, v)
+		}
 		return map[string]int64{"h": int64(h), "s": int64(s * 100), "b": int64(v * 100)}, nil //TODO
 	})
 
@@ -82,6 +86,9 @@ func init() {
 			return nil, errors.New("field b is not a number")
 		}
 		hsv := colorful.Hsv(hue, saturation/100, value/100)
+		if base.DEBUG {
+			log.Println("hsb to hex:", h, s, v, hsv.Hex())
+		}
 		return hsv.Hex(), nil
 	})
 }
