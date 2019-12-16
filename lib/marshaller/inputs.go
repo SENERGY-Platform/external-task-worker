@@ -26,6 +26,7 @@ import (
 	"log"
 	"reflect"
 	"runtime/debug"
+	"strings"
 )
 
 type ConceptRepo interface {
@@ -98,7 +99,7 @@ func getMatchingVariableRootCharacteristic(repo ConceptRepo, variable model.Cont
 			return conceptId, candidate, nil
 		}
 	}
-	return conceptId, matchingVariableRootCharacteristic, errors.New("no match found")
+	return conceptId, matchingVariableRootCharacteristic, errors.New("no match found between " + matchingId + " and characteristics of " + variable.Id + " (" + strings.Join(variableCharacteristics, ",") + ") => (" + strings.Join(rootCharacteristics, ",") + ")")
 }
 
 func getVariableCharacteristics(variable model.ContentVariable) (result []CharacteristicId) {
