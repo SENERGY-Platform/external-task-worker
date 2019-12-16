@@ -88,7 +88,7 @@ func init() {
 			return nil, err
 		}
 		if base.DEBUG {
-			log.Println("hsb to hex:", red, green, blue, rgb.ToHEX().String())
+			log.Println("rgb to hex:", red, green, blue, rgb.ToHEX().String())
 		}
 		return rgb.ToHEX().String(), nil
 	})
