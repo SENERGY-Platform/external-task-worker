@@ -25,6 +25,9 @@ import (
 )
 
 const Rgb = "urn:infai:ses:characteristic:5b4eea52-e8e5-4e80-9455-0382f81a1b43"
+const RgbR = "urn:infai:ses:characteristic:dfe6be4a-650c-4411-8d87-062916b48951"
+const RgbG = "urn:infai:ses:characteristic:5ef27837-4aca-43ad-b8f6-4d95cf9ed99e"
+const RgbB = "urn:infai:ses:characteristic:590af9ef-3a5e-4edb-abab-177cb1320b17"
 
 func init() {
 	conceptToCharacteristic.Set(Rgb, func(concept interface{}) (out interface{}, err error) {

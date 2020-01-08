@@ -28,7 +28,7 @@ const Color = "example_color"
 
 func init() {
 	base.Concepts[Color] = base.GetConceptCastFunction(characteristicToConcept, conceptToCharacteristic)
-	base.ConceptRepo.Register(model.Concept{Id: Color, Name: "example"}, []model.Characteristic{
+	base.ConceptRepo.Register(model.Concept{Id: Color, Name: "example", BaseCharacteristicId: Rgb}, []model.Characteristic{
 		{
 			Id:   Rgb,
 			Name: "rgb",

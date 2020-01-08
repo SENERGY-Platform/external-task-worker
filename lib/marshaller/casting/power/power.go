@@ -29,7 +29,7 @@ const ConceptName = "power"
 
 func init() {
 	base.Concepts[ConceptId] = base.GetConceptCastFunction(characteristicToConcept, conceptToCharacteristic)
-	base.ConceptRepo.Register(model.Concept{Id: ConceptId, Name: ConceptName}, []model.Characteristic{
+	base.ConceptRepo.Register(model.Concept{Id: ConceptId, Name: ConceptName, BaseCharacteristicId: WattId}, []model.Characteristic{
 		{
 			Id:   WattId,
 			Name: WattName,

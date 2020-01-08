@@ -47,11 +47,23 @@ func (this *ConceptRepoType) Register(concept model.Concept, characteristics []m
 		concept.CharacteristicIds = append(concept.CharacteristicIds, characteristic.Id)
 		this.characteristics[characteristic.Id] = characteristic
 		this.conceptByCharacteristic[characteristic.Id] = concept
+		this.rootCharacteristicByCharacteristic[characteristic.Id] = characteristic
 		for _, descendent := range getCharacteristicDescendents(characteristic) {
 			this.rootCharacteristicByCharacteristic[descendent.Id] = characteristic
 		}
 	}
 	this.concepts[concept.Id] = concept
+}
+
+func (this *ConceptRepoType) GetConcept(id string) (concept model.Concept, err error) {
+	this.mux.Lock()
+	defer this.mux.Unlock()
+	concept, ok := this.concepts[id]
+	if !ok {
+		debug.PrintStack()
+		return concept, errors.New("no concept found for id " + id)
+	}
+	return concept, nil
 }
 
 func getCharacteristicDescendents(characteristic model.Characteristic) (result []model.Characteristic) {
@@ -65,7 +77,7 @@ func getCharacteristicDescendents(characteristic model.Characteristic) (result [
 func (this *ConceptRepoType) GetConceptOfCharacteristic(characteristicId string) (conceptId string, err error) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
-	concept, ok := this.conceptByCharacteristic[characteristicId]
+	concept, ok := this.conceptByCharacteristic[this.rootCharacteristicByCharacteristic[characteristicId].Id]
 	if !ok {
 		debug.PrintStack()
 		return conceptId, errors.New("no concept found for characteristic id " + characteristicId)

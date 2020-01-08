@@ -81,7 +81,7 @@ func TestCastToCharacteristic_simpleStructMapping(t *testing.T) {
 				Type:             model.Integer,
 			},
 		},
-	})
+	}, nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -194,7 +194,7 @@ func TestCastToCharacteristic_MapOfStructsMapping(t *testing.T) {
 				},
 			},
 		},
-	})
+	}, nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -313,7 +313,7 @@ func TestCastToCharacteristic_MapOfStructsMapping2(t *testing.T) {
 				},
 			},
 		},
-	})
+	}, nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -432,7 +432,7 @@ func TestCastToCharacteristic_MapOfStructsMapping3(t *testing.T) {
 				},
 			},
 		},
-	})
+	}, nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -546,7 +546,7 @@ func TestCastToCharacteristic_IndexListOfStructsMapping(t *testing.T) {
 				},
 			},
 		},
-	})
+	}, nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -660,7 +660,7 @@ func TestCastToCharacteristic_ListOfStructsMapping(t *testing.T) {
 				},
 			},
 		},
-	})
+	}, nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -779,7 +779,7 @@ func TestCastToCharacteristic_ListOfStructsMapping2(t *testing.T) {
 				},
 			},
 		},
-	})
+	}, nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -898,7 +898,7 @@ func TestCastToCharacteristic_ListOfStructsMapping3(t *testing.T) {
 				},
 			},
 		},
-	})
+	}, nil)
 
 	if err != nil {
 		t.Fatal(err)

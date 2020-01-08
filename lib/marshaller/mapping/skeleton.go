@@ -19,61 +19,62 @@ package mapping
 import (
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
+	"reflect"
 	"strconv"
 )
 
-func CharacteristicToSkeleton(category model.Characteristic) (out *interface{}, idToPtr map[string]*interface{}, err error) {
+func CharacteristicToSkeleton(characteristic model.Characteristic) (out *interface{}, idToPtr map[string]*interface{}, err error) {
 	idToPtr = map[string]*interface{}{}
 	var t interface{}
 	out = &t
-	err = categoryToSkeleton(category, out, &idToPtr)
+	err = categoryToSkeleton(characteristic, out, &idToPtr)
 	return
 }
 
 const VAR_LEN_PLACEHOLDER = "*"
 
-func categoryToSkeleton(category model.Characteristic, out *interface{}, idToPtr *map[string]*interface{}) (err error) {
-	switch category.Type {
+func categoryToSkeleton(characteristic model.Characteristic, out *interface{}, idToPtr *map[string]*interface{}) (err error) {
+	switch characteristic.Type {
 	case model.Float, model.Integer:
-		if category.Value != nil {
+		if characteristic.Value != nil {
 			var ok bool
-			*out, ok = category.Value.(float64)
+			*out, ok = characteristic.Value.(float64)
 			if !ok {
-				return errors.New("unable to interpret value in " + category.Id)
+				return errors.New("unable to interpret value in " + characteristic.Id)
 			}
 		} else {
 			*out = float64(0)
 		}
-		(*idToPtr)[category.Id] = out
+		(*idToPtr)[characteristic.Id] = out
 	case model.String:
-		if category.Value != nil {
+		if characteristic.Value != nil {
 			var ok bool
-			*out, ok = category.Value.(string)
+			*out, ok = characteristic.Value.(string)
 			if !ok {
-				return errors.New("unable to interpret value in " + category.Id)
+				return errors.New("unable to interpret value in " + characteristic.Id)
 			}
 		} else {
 			*out = ""
 		}
-		(*idToPtr)[category.Id] = out
+		(*idToPtr)[characteristic.Id] = out
 	case model.Boolean:
-		if category.Value != nil {
+		if characteristic.Value != nil {
 			var ok bool
-			*out, ok = category.Value.(bool)
+			*out, ok = characteristic.Value.(bool)
 			if !ok {
-				return errors.New("unable to interpret value in " + category.Id)
+				return errors.New("unable to interpret value in " + characteristic.Id)
 			}
 		} else {
 			*out = false
 		}
-		(*idToPtr)[category.Id] = out
+		(*idToPtr)[characteristic.Id] = out
 	case model.Structure:
-		if len(category.SubCharacteristics) == 1 && category.SubCharacteristics[0].Name == VAR_LEN_PLACEHOLDER {
+		if len(characteristic.SubCharacteristics) == 1 && characteristic.SubCharacteristics[0].Name == VAR_LEN_PLACEHOLDER {
 			*out = map[string]interface{}{}
-			(*idToPtr)[category.Id] = out
+			(*idToPtr)[characteristic.Id] = out
 		} else {
 			*out = map[string]interface{}{}
-			for _, sub := range category.SubCharacteristics {
+			for _, sub := range characteristic.SubCharacteristics {
 				var subvar interface{}
 				err = categoryToSkeleton(sub, &subvar, idToPtr)
 				if err != nil {
@@ -83,12 +84,12 @@ func categoryToSkeleton(category model.Characteristic, out *interface{}, idToPtr
 			}
 		}
 	case model.List:
-		if len(category.SubCharacteristics) == 1 && category.SubCharacteristics[0].Name == VAR_LEN_PLACEHOLDER {
+		if len(characteristic.SubCharacteristics) == 1 && characteristic.SubCharacteristics[0].Name == VAR_LEN_PLACEHOLDER {
 			*out = []interface{}{}
-			(*idToPtr)[category.Id] = out
+			(*idToPtr)[characteristic.Id] = out
 		} else {
-			*out = make([]interface{}, len(category.SubCharacteristics))
-			for _, sub := range category.SubCharacteristics {
+			*out = make([]interface{}, len(characteristic.SubCharacteristics))
+			for _, sub := range characteristic.SubCharacteristics {
 				var subvar interface{}
 				err = categoryToSkeleton(sub, &subvar, idToPtr)
 				if err != nil {
@@ -102,86 +103,121 @@ func categoryToSkeleton(category model.Characteristic, out *interface{}, idToPtr
 			}
 		}
 	default:
-		return errors.New("unknown variable type: " + string(category.Type))
+		return errors.New("unknown variable type: " + string(characteristic.Type))
 	}
 	return nil
 }
 
-func ContentToSkeleton(content model.ContentVariable) (out *interface{}, idToPtr map[string]*interface{}, err error) {
-	idToPtr = map[string]*interface{}{}
-	var t interface{}
-	out = &t
-	err = contentToSkeleton(content, out, &idToPtr)
+func ContentToSkeleton(content model.ContentVariable, partial Partial) (out *interface{}, idToPtr map[string][]*interface{}, err error) {
+	idToPtr = map[string][]*interface{}{}
+	if partial == nil {
+		partial = NewPartial()
+	}
+	err = contentToSkeleton(content, partial, &idToPtr)
+	out = partial.Value
 	return
 }
 
-func contentToSkeleton(content model.ContentVariable, out *interface{}, idToPtr *map[string]*interface{}) (err error) {
+func contentToSkeleton(content model.ContentVariable, partial Partial, idToPtr *map[string][]*interface{}) (err error) {
+	if partial == nil {
+		partial = NewPartial()
+	}
+	var temp interface{}
 	switch content.Type {
 	case model.Float, model.Integer:
-		if content.Value != nil {
-			var ok bool
-			*out, ok = content.Value.(float64)
-			if !ok {
-				return errors.New("unable to interpret value in " + content.Id)
+		if partial.Value == nil {
+			if content.Value != nil {
+				var ok bool
+				temp, ok = content.Value.(float64)
+				if !ok {
+					return errors.New("unable to interpret value in " + content.Id)
+				}
+			} else {
+				temp = float64(0)
 			}
-		} else {
-			*out = float64(0)
+			partial.Value = &temp
 		}
-		(*idToPtr)[content.CharacteristicId] = out
+		(*idToPtr)[content.CharacteristicId] = append((*idToPtr)[content.CharacteristicId], partial.Value)
 	case model.String:
-		if content.Value != nil {
-			var ok bool
-			*out, ok = content.Value.(string)
-			if !ok {
-				return errors.New("unable to interpret value in " + content.Id)
+		if partial.Value == nil {
+			if content.Value != nil {
+				var ok bool
+				temp, ok = content.Value.(string)
+				if !ok {
+					return errors.New("unable to interpret value in " + content.Id)
+				}
+			} else {
+				temp = ""
 			}
-		} else {
-			*out = ""
+			partial.Value = &temp
 		}
-		(*idToPtr)[content.CharacteristicId] = out
+		(*idToPtr)[content.CharacteristicId] = append((*idToPtr)[content.CharacteristicId], partial.Value)
 	case model.Boolean:
-		if content.Value != nil {
-			var ok bool
-			*out, ok = content.Value.(bool)
-			if !ok {
-				return errors.New("unable to interpret value in " + content.Id)
+		if partial.Value == nil || reflect.TypeOf(partial.Value).Kind() != reflect.Bool {
+			if content.Value != nil {
+				var ok bool
+				temp, ok = content.Value.(bool)
+				if !ok {
+					return errors.New("unable to interpret value in " + content.Id)
+				}
+			} else {
+				temp = false
 			}
-		} else {
-			*out = false
 		}
-		(*idToPtr)[content.CharacteristicId] = out
+		partial.Value = &temp
+		(*idToPtr)[content.CharacteristicId] = append((*idToPtr)[content.CharacteristicId], partial.Value)
 	case model.Structure:
 		if len(content.SubContentVariables) == 1 && content.SubContentVariables[0].Name == VAR_LEN_PLACEHOLDER {
-			*out = map[string]interface{}{}
-			(*idToPtr)[content.CharacteristicId] = out
+			if partial.Value == nil || *partial.Value == nil {
+				temp = map[string]*interface{}{}
+				partial.Value = &temp
+			}
+			(*idToPtr)[content.CharacteristicId] = append((*idToPtr)[content.CharacteristicId], partial.Value)
 		} else {
-			*out = map[string]interface{}{}
+			if partial.Value == nil {
+				temp = map[string]*interface{}{}
+				partial.Value = &temp
+			}
 			for _, sub := range content.SubContentVariables {
-				var subvar interface{}
-				err = contentToSkeleton(sub, &subvar, idToPtr)
+				subvar := NewPartial()
+				ok := true
+				subvar.Value, ok = (*partial.Value).(map[string]*interface{})[sub.Name]
+				err = contentToSkeleton(sub, subvar, idToPtr)
 				if err != nil {
 					return err
 				}
-				(*out).(map[string]interface{})[sub.Name] = &subvar
+				if !ok {
+					(*partial.Value).(map[string]*interface{})[sub.Name] = subvar.Value
+				}
 			}
 		}
 	case model.List:
 		if len(content.SubContentVariables) == 1 && content.SubContentVariables[0].Name == VAR_LEN_PLACEHOLDER {
-			*out = []interface{}{}
-			(*idToPtr)[content.CharacteristicId] = out
+			if partial.Value == nil || *partial.Value == nil {
+				temp = []*interface{}{}
+				partial.Value = &temp
+			}
+			(*idToPtr)[content.CharacteristicId] = append((*idToPtr)[content.CharacteristicId], partial.Value)
 		} else {
-			*out = make([]interface{}, len(content.SubContentVariables))
+			if partial.Value == nil {
+				temp = make([]*interface{}, len(content.SubContentVariables))
+				partial.Value = &temp
+			}
 			for _, sub := range content.SubContentVariables {
-				var subvar interface{}
-				err = contentToSkeleton(sub, &subvar, idToPtr)
-				if err != nil {
-					return err
-				}
+				subvar := NewPartial()
 				index, err := strconv.Atoi(sub.Name)
 				if err != nil {
 					return errors.New("unable to interpret '" + sub.Name + "' as index for list: " + err.Error())
 				}
-				(*out).([]interface{})[index] = &subvar
+				subvar.Value = (*partial.Value).([]*interface{})[index]
+				ok := subvar.Value != nil
+				err = contentToSkeleton(sub, subvar, idToPtr)
+				if err != nil {
+					return err
+				}
+				if !ok {
+					(*partial.Value).([]*interface{})[index] = subvar.Value
+				}
 			}
 		}
 	default:

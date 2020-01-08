@@ -28,7 +28,7 @@ const Binary = "urn:infai:ses:concept:ebfeabb3-50f0-44bd-b06e-95eb52df484e"
 
 func init() {
 	base.Concepts[Binary] = base.GetConceptCastFunction(characteristicToConcept, conceptToCharacteristic)
-	base.ConceptRepo.Register(model.Concept{Id: Binary, Name: "binary state"}, []model.Characteristic{
+	base.ConceptRepo.Register(model.Concept{Id: Binary, Name: "binary state", BaseCharacteristicId: Boolean}, []model.Characteristic{
 		{
 			Id:   Boolean,
 			Name: "boolean",

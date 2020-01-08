@@ -20,6 +20,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting"
+	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/base"
+	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/configurables"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/mapping"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/serialization"
@@ -38,44 +40,38 @@ type ConceptRepo interface {
 type CharacteristicId = string
 type ConceptId = string
 
-func MarshalInputs(protocol model.Protocol, service model.Service, input interface{}, inputCharacteristicId CharacteristicId) (result map[string]string, err error) {
-	return MarshalInputsWithRepo(casting.ConceptRepo, protocol, service, input, inputCharacteristicId)
+func MarshalInputs(protocol model.Protocol, service model.Service, input interface{}, inputCharacteristicId CharacteristicId, configurables ...configurables.Configurable) (result map[string]string, err error) {
+	return MarshalInputsWithRepo(casting.ConceptRepo, protocol, service, input, inputCharacteristicId, configurables...)
 }
 
-func MarshalInputsWithRepo(conceptRepo ConceptRepo, protocol model.Protocol, service model.Service, input interface{}, inputCharacteristicId CharacteristicId) (result map[string]string, err error) {
-	inputCharacteristic, err := conceptRepo.GetCharacteristic(inputCharacteristicId)
-	if err != nil {
-		return result, err
-	}
+func MarshalInputsWithRepo(conceptRepo ConceptRepo, protocol model.Protocol, service model.Service, input interface{}, inputCharacteristicId CharacteristicId, configurables ...configurables.Configurable) (result map[string]string, err error) {
 	result = map[string]string{}
 	for _, content := range service.Inputs {
-		if !reflect.DeepEqual(inputCharacteristic, model.NullCharacteristic) {
-			conceptId, variableCharacteristicId, err := getMatchingVariableRootCharacteristic(conceptRepo, content.ContentVariable, inputCharacteristicId)
+		partial := mapping.NewPartial()
+		var resultPart = ""
+		for _, configurable := range configurables {
+			characteristic, err := base.ConceptRepo.GetCharacteristic(configurable.CharacteristicId)
 			if err != nil {
 				return result, err
 			}
-			variableCharacteristic, err := conceptRepo.GetCharacteristic(variableCharacteristicId)
+			skeleton, setter, err := mapping.CharacteristicToSkeleton(characteristic)
 			if err != nil {
 				return result, err
 			}
-			resultPart, err := MarshalInput(input, conceptId, inputCharacteristic, variableCharacteristic, content.ContentVariable, content.Serialization)
+			assignConfigurableValues(setter, characteristic, configurable.Values)
+			value, err := normalize(skeleton)
 			if err != nil {
 				return result, err
 			}
-			for _, segment := range protocol.ProtocolSegments {
-				if segment.Id == content.ProtocolSegmentId {
-					result[segment.Name] = resultPart
-				}
-			}
-		} else {
-			resultPart, err := MarshalInput(input, model.NullConcept.Id, inputCharacteristic, model.NullCharacteristic, content.ContentVariable, content.Serialization)
-			if err != nil {
-				return result, err
-			}
-			for _, segment := range protocol.ProtocolSegments {
-				if segment.Id == content.ProtocolSegmentId {
-					result[segment.Name] = resultPart
-				}
+			resultPart, err = partialInputMarshalling(conceptRepo, content.ContentVariable, partial, configurable.CharacteristicId, value, content.Serialization)
+		}
+		resultPart, err = partialInputMarshalling(conceptRepo, content.ContentVariable, partial, inputCharacteristicId, input, content.Serialization)
+		if err != nil {
+			return result, err
+		}
+		for _, segment := range protocol.ProtocolSegments {
+			if segment.Id == content.ProtocolSegmentId {
+				result[segment.Name] = resultPart
 			}
 		}
 	}
@@ -83,23 +79,78 @@ func MarshalInputsWithRepo(conceptRepo ConceptRepo, protocol model.Protocol, ser
 	return result, err
 }
 
-func getMatchingVariableRootCharacteristic(repo ConceptRepo, variable model.ContentVariable, matchingId CharacteristicId) (conceptId string, matchingVariableRootCharacteristic CharacteristicId, err error) {
+func partialInputMarshalling(repo ConceptRepo, variable model.ContentVariable, partial mapping.Partial, inputCharacteristicId string, input interface{}, serializationId string) (result string, err error) {
+	inputCharacteristic, err := repo.GetCharacteristic(inputCharacteristicId)
+	if err != nil {
+		return result, err
+	}
+	if !reflect.DeepEqual(inputCharacteristic, model.NullCharacteristic) {
+		conceptId, variableCharacteristicIds, err := getMatchingVariableRootCharacteristic(repo, variable, inputCharacteristicId)
+		if err != nil {
+			return result, err
+		}
+		for _, variableCharacteristicId := range variableCharacteristicIds {
+			variableCharacteristic, err := repo.GetCharacteristic(variableCharacteristicId)
+			if err != nil {
+				return result, err
+			}
+			result, err = MarshalInput(partial, input, conceptId, inputCharacteristic, variableCharacteristic, variable, serializationId)
+			if err != nil {
+				return result, err
+			}
+		}
+	} else {
+		result, err = MarshalInput(partial, input, model.NullConcept.Id, inputCharacteristic, model.NullCharacteristic, variable, serializationId)
+	}
+	return
+}
+
+func assignConfigurableValues(setter map[string]*interface{}, characteristic model.Characteristic, values []configurables.ConfigurableCharacteristicValue) {
+	for _, value := range values {
+		assignConfigurableValue(setter, characteristic, strings.Split(value.Path, "."), value.Value)
+	}
+}
+
+func assignConfigurableValue(setter map[string]*interface{}, characteristic model.Characteristic, path []string, value interface{}) {
+	if len(path) == 0 || (len(path) == 1 && path[0] == "") {
+		set, ok := setter[characteristic.Id]
+		if ok {
+			*set = value
+		}
+	} else {
+		next, rest := path[0], path[1:]
+		for _, sub := range characteristic.SubCharacteristics {
+			if sub.Name == next {
+				assignConfigurableValue(setter, sub, rest, value)
+			}
+		}
+	}
+}
+
+func getMatchingVariableRootCharacteristic(repo ConceptRepo, variable model.ContentVariable, matchingId CharacteristicId) (conceptId string, matchingVariableRootCharacteristic []CharacteristicId, err error) {
 	conceptId, err = repo.GetConceptOfCharacteristic(matchingId)
 	if err != nil {
 		return
 	}
 	variableCharacteristics := getVariableCharacteristics(variable)
 	rootCharacteristics := repo.GetRootCharacteristics(variableCharacteristics)
+	resultSet := map[string]bool{}
 	for _, candidate := range rootCharacteristics {
 		conceptA, err := repo.GetConceptOfCharacteristic(candidate)
 		if err != nil {
 			return conceptId, matchingVariableRootCharacteristic, err
 		}
 		if conceptA == conceptId {
-			return conceptId, candidate, nil
+			resultSet[candidate] = true
 		}
 	}
-	return conceptId, matchingVariableRootCharacteristic, errors.New("no match found between " + matchingId + " and characteristics of " + variable.Id + " (" + strings.Join(variableCharacteristics, ",") + ") => (" + strings.Join(rootCharacteristics, ",") + ")")
+	for characteristic, _ := range resultSet {
+		matchingVariableRootCharacteristic = append(matchingVariableRootCharacteristic, characteristic)
+	}
+	if len(matchingVariableRootCharacteristic) == 0 {
+		return conceptId, matchingVariableRootCharacteristic, errors.New("no match found between " + matchingId + " and characteristics of " + variable.Id + " (" + strings.Join(variableCharacteristics, ",") + ") => (" + strings.Join(rootCharacteristics, ",") + ")")
+	}
+	return conceptId, matchingVariableRootCharacteristic, nil
 }
 
 func getVariableCharacteristics(variable model.ContentVariable) (result []CharacteristicId) {
@@ -112,7 +163,7 @@ func getVariableCharacteristics(variable model.ContentVariable) (result []Charac
 	return result
 }
 
-func MarshalInput(inputCharacteristicValue interface{}, conceptId string, inputCharacteristic model.Characteristic, serviceCharacteristic model.Characteristic, serviceVariable model.ContentVariable, serializationId string) (result string, err error) {
+func MarshalInput(partial mapping.Partial, inputCharacteristicValue interface{}, conceptId string, inputCharacteristic model.Characteristic, serviceCharacteristic model.Characteristic, serviceVariable model.ContentVariable, serializationId string) (result string, err error) {
 	serviceCharacteristicValue := inputCharacteristicValue
 	serviceCharacteristicValue, err = casting.Cast(inputCharacteristicValue, conceptId, inputCharacteristic.Id, serviceCharacteristic.Id)
 	if err != nil {
@@ -124,7 +175,7 @@ func MarshalInput(inputCharacteristicValue interface{}, conceptId string, inputC
 		return result, err
 	}
 
-	serviceVariableValue, err := mapping.MapActuator(normalized, serviceCharacteristic, serviceVariable)
+	serviceVariableValue, err := mapping.MapActuator(normalized, serviceCharacteristic, serviceVariable, partial)
 	if err != nil {
 		log.Println("ERROR: unable to map actuator", serviceCharacteristic.Id, serviceCharacteristic.Value, "-->", serviceVariable.Id, serviceVariable.Name)
 		return result, err

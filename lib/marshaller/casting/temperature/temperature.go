@@ -28,7 +28,7 @@ const Temperature = "urn:infai:ses:concept:0bc81398-3ed6-4e2b-a6c4-b754583aac37"
 
 func init() {
 	base.Concepts[Temperature] = base.GetConceptCastFunction(characteristicToConcept, conceptToCharacteristic)
-	base.ConceptRepo.Register(model.Concept{Id: Temperature, Name: "temperature"}, []model.Characteristic{
+	base.ConceptRepo.Register(model.Concept{Id: Temperature, Name: "temperature", BaseCharacteristicId: Celcius}, []model.Characteristic{
 		{
 			Id:   Celcius,
 			Name: "celcius",
