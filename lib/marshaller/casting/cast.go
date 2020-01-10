@@ -29,6 +29,7 @@ import (
 	_ "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/luminiscence"
 	_ "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/particleamount"
 	_ "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/power"
+	_ "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/speedlevel"
 	_ "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/temperature"
 	_ "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/time"
 	_ "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/ultraviolet"
