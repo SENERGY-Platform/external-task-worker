@@ -47,8 +47,8 @@ func ExampleIncidents() {
 		return
 	}
 	camunda := camunda.Factory.Get(config, kafka)
-	camunda.Error("task_id_1", "piid_1", "pdid_1", "error message")
-	camunda.Error("task_id_2", "piid_2", "pdid_2", "error message")
+	camunda.Error("task_id_1", "piid_1", "pdid_1", "error message", "user1")
+	camunda.Error("task_id_2", "piid_2", "pdid_2", "error message", "user1")
 
 	incidents := mock.Kafka.GetProduced(config.KafkaIncidentTopic)
 
@@ -57,7 +57,7 @@ func ExampleIncidents() {
 	}
 
 	//output:
-	//{"id":"2","msg_version":1,"external_task_id":"task_id_1","process_instance_id":"piid_1","process_definition_id":"pdid_1","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z"}
-	//{"id":"3","msg_version":1,"external_task_id":"task_id_2","process_instance_id":"piid_2","process_definition_id":"pdid_2","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z"}
+	//{"id":"2","msg_version":2,"external_task_id":"task_id_1","process_instance_id":"piid_1","process_definition_id":"pdid_1","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1"}
+	//{"id":"3","msg_version":2,"external_task_id":"task_id_2","process_instance_id":"piid_2","process_definition_id":"pdid_2","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1"}
 
 }

@@ -101,6 +101,7 @@ func (this *worker) createMessageForProtocolHandler(command messages.Command, ta
 			ProcessDefinitionId: task.ProcessDefinitionId,
 			CompletionStrategy:  this.config.CompletionStrategy,
 			Time:                strconv.FormatInt(util.TimeNow().Unix(), 10),
+			TenantId:            task.TenantId,
 		},
 		Request: messages.ProtocolRequest{
 			Input: marshalledInput,

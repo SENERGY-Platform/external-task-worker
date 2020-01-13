@@ -71,4 +71,5 @@ type KafkaIncidentMessage struct {
 	WorkerId            string    `json:"worker_id"`
 	ErrorMessage        string    `json:"error_message"`
 	Time                time.Time `json:"time"`
+	TenantId            string    `json:"tenant_id"`
 }

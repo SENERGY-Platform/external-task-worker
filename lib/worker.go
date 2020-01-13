@@ -110,19 +110,19 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
 	request, err := CreateCommandRequest(task)
 	if err != nil {
 		log.Println("error on CreateCommandRequest(): ", err)
-		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, "invalid task format (json)")
+		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, "invalid task format (json)", task.TenantId)
 		return
 	}
 
 	if request.Retries != -1 && request.Retries < task.Retries {
-		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, "communication timeout")
+		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, "communication timeout", task.TenantId)
 		return
 	}
 
 	protocolTopic, message, err := this.CreateProtocolMessage(request, task)
 	if err != nil {
 		log.Println("error on ExecuteTask CreateProtocolMessage", err)
-		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, err.Error())
+		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, err.Error(), task.TenantId)
 		return
 	}
 
@@ -136,6 +136,7 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
 			TaskId:              task.Id,
 			ProcessInstanceId:   task.ProcessInstanceId,
 			ProcessDefinitionId: task.ProcessDefinitionId,
+			TenantId:            task.TenantId,
 		}, this.config.CamundaTaskResultName, nil)
 		if err != nil {
 			log.Println("error on completeCamundaTask(): ", err)

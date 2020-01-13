@@ -106,7 +106,7 @@ func (this *CamundaMock) SetRetry(taskid string, number int64) {
 	}
 }
 
-func (this *CamundaMock) Error(externalTaskId string, processInstanceId string, processDefinitionId string, msg string) {
+func (this *CamundaMock) Error(externalTaskId string, processInstanceId string, processDefinitionId string, msg string, tenantId string) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	this.failedTasks[externalTaskId] = this.fetchedTasks[externalTaskId]

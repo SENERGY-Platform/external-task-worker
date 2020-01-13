@@ -95,7 +95,7 @@ func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string,
 	}
 
 	if resp.StatusCode >= 300 {
-		this.Error(taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, string(pl))
+		this.Error(taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, string(pl), taskInfo.TenantId)
 		log.Println("Error on completeCamundaTask.")
 	} else {
 		log.Println("complete camunda task: ", completeRequest, string(pl))
@@ -138,16 +138,17 @@ func (this *Camunda) SetRetry(taskid string, retries int64) {
 	}
 }
 
-func (this *Camunda) Error(externalTaskId string, processInstanceId string, processDefinitionId string, msg string) {
+func (this *Camunda) Error(externalTaskId string, processInstanceId string, processDefinitionId string, msg string, tenantId string) {
 	b, err := json.Marshal(messages.KafkaIncidentMessage{
 		Id:                  util.GetId(),
-		MsgVersion:          1,
+		MsgVersion:          2,
 		ExternalTaskId:      externalTaskId,
 		ProcessInstanceId:   processInstanceId,
 		ProcessDefinitionId: processDefinitionId,
 		WorkerId:            this.GetWorkerId(),
 		ErrorMessage:        msg,
 		Time:                util.TimeNow(),
+		TenantId:            tenantId,
 	})
 	if err != nil {
 		log.Println("ERROR:", err)
