@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"log"
@@ -68,10 +67,6 @@ func setDeviceOverwrite(command *messages.Command, task messages.CamundaExternal
 		command.ProtocolId = overwriteVariable.ProtocolId
 	}
 	return nil
-}
-
-func CreateCommandResult(msg messages.ProtocolMsg) (result interface{}, err error) {
-	return marshaller.UnmarshalOutputs(msg.Metadata.Protocol, msg.Metadata.Service, msg.Response.Output, msg.Metadata.OutputCharacteristic)
 }
 
 func getPayloadParameter(task messages.CamundaExternalTask) (result map[string]interface{}) {

@@ -20,8 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
-	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
-	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
+	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"log"
@@ -88,7 +87,7 @@ func (this *worker) createMessageForProtocolHandler(command messages.Command, ta
 		outputCharacteristicId = command.CharacteristicId
 	}
 
-	marshalledInput, err := marshaller.MarshalInputs(*protocol, *service, command.Input, inputCharacteristicId)
+	marshalledInput, err := this.marshaller.MarshalFromServiceAndProtocol(inputCharacteristicId, *service, *protocol, command.Input, nil)
 	if err != nil {
 		return result, err
 	}

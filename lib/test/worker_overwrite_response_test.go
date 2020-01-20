@@ -21,8 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/SENERGY-Platform/external-task-worker/lib"
-	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/example"
-	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
+	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/lib/test/mock"
 	"github.com/SENERGY-Platform/external-task-worker/util"
@@ -46,7 +45,7 @@ func ExampleWorkerOverwriteResponse() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mock.Camunda)
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mock.Camunda, mock.Marshaller)
 
 	time.Sleep(1 * time.Second)
 

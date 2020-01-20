@@ -21,10 +21,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/SENERGY-Platform/converter/lib/converter/base"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
 	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
-	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/casting/base"
+	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
 	"log"
 	"reflect"
 	"strconv"
@@ -42,13 +43,14 @@ type worker struct {
 	repository devicerepository.RepoInterface
 	camunda    camunda.CamundaInterface
 	config     util.Config
+	marshaller marshaller.Interface
 }
 
-func Worker(ctx context.Context, config util.Config, kafkaFactory kafka.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory camunda.FactoryInterface) {
+func Worker(ctx context.Context, config util.Config, kafkaFactory kafka.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory camunda.FactoryInterface, marshallerFactory marshaller.FactoryInterface) {
 	log.Println("start camunda worker")
 	base.DEBUG = config.Debug
 	var err error
-	w := worker{config: config}
+	w := worker{config: config, marshaller: marshallerFactory.New(config.MarshallerUrl)}
 
 	if config.CompletionStrategy != util.OPTIMISTIC {
 		w.consumer, err = kafkaFactory.NewConsumer(config, w.CompleteTask)
@@ -159,7 +161,7 @@ func (this *worker) CompleteTask(msg string) (err error) {
 		return
 	}
 
-	output, err := CreateCommandResult(message)
+	output, err := this.marshaller.UnmarshalFromServiceAndProtocol(message.Metadata.OutputCharacteristic, message.Metadata.Service, message.Metadata.Protocol, message.Response.Output)
 	if err != nil {
 		return err
 	}

@@ -17,7 +17,7 @@
 package devicerepository
 
 import (
-	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
+	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 )
 

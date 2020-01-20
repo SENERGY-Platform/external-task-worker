@@ -16,7 +16,7 @@
 
 package messages
 
-import "github.com/SENERGY-Platform/external-task-worker/lib/marshaller/model"
+import "github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 
 type TaskInfo struct {
 	WorkerId            string `json:"worker_id"`

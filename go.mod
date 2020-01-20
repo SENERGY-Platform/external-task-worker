@@ -3,8 +3,9 @@ module github.com/SENERGY-Platform/external-task-worker
 go 1.13
 
 require (
+	github.com/SENERGY-Platform/converter v0.0.0-20200114152115-63d2a698b3c4
+	github.com/SENERGY-Platform/marshaller v0.0.0-20200116101840-c971c70fb3c3
 	github.com/Shopify/sarama v1.22.0
-	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/clbanning/mxj v1.8.4
 	github.com/coocood/freecache v1.1.0
 	github.com/dgrijalva/jwt-go v3.1.0+incompatible
