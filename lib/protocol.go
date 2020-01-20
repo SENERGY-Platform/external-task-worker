@@ -87,7 +87,7 @@ func (this *worker) createMessageForProtocolHandler(command messages.Command, ta
 		outputCharacteristicId = command.CharacteristicId
 	}
 
-	marshalledInput, err := this.marshaller.MarshalFromServiceAndProtocol(inputCharacteristicId, *service, *protocol, command.Input, nil)
+	marshalledInput, err := this.marshaller.MarshalFromServiceAndProtocol(inputCharacteristicId, *service, *protocol, command.Input, command.Configurables)
 	if err != nil {
 		return result, err
 	}

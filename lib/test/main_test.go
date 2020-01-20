@@ -30,6 +30,12 @@ var example = struct {
 	Hex:        "example_hex",
 }
 
+var duration = struct {
+	Seconds string
+}{
+	Seconds: "urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c",
+}
+
 var temperature = struct {
 	Celcius string
 }{
