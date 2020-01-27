@@ -123,7 +123,7 @@ func EnsureAccess(config util.Config) (token Impersonate, err error) {
 		return
 	}
 
-	if openid.RefreshToken != "" && openid.RefreshExpiresIn-config.AuthExpirationTimeBuffer < duration {
+	if openid.RefreshToken != "" && openid.RefreshExpiresIn-config.AuthExpirationTimeBuffer > duration {
 		log.Println("refresh token", openid.RefreshExpiresIn, duration)
 		err = refreshOpenidToken(openid, config)
 		if err != nil {
