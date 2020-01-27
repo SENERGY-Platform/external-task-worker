@@ -21,5 +21,6 @@
   "JwtExpiration": 30,
   "JwtIssuer": "camundaworker",
   "PermissionsUrl": "http://permissionsearch:8080",
-  "CamundaTaskResultName": "result"
+  "CamundaTaskResultName": "result",
+  "MarshallerUrl": "http://marshaller:8080"
 }
