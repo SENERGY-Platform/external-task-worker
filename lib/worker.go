@@ -24,6 +24,7 @@ import (
 	"github.com/SENERGY-Platform/converter/lib/converter/base"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
+	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
 	"log"
@@ -161,9 +162,12 @@ func (this *worker) CompleteTask(msg string) (err error) {
 		return
 	}
 
-	output, err := this.marshaller.UnmarshalFromServiceAndProtocol(message.Metadata.OutputCharacteristic, message.Metadata.Service, message.Metadata.Protocol, message.Response.Output)
-	if err != nil {
-		return err
+	var output interface{}
+	if message.Metadata.OutputCharacteristic != model.NullCharacteristic.Id {
+		output, err = this.marshaller.UnmarshalFromServiceAndProtocol(message.Metadata.OutputCharacteristic, message.Metadata.Service, message.Metadata.Protocol, message.Response.Output)
+		if err != nil {
+			return err
+		}
 	}
 	err = this.camunda.CompleteTask(message.TaskInfo, this.config.CamundaTaskResultName, output)
 	if this.config.Debug {
