@@ -42,7 +42,7 @@ func (this *Marshaller) UnmarshalFromService(characteristicId string, service mo
 }
 
 func (this *Marshaller) UnmarshalFromServiceAndProtocol(characteristicId string, service model.Service, protocol model.Protocol, message map[string]string) (characteristicData interface{}, err error) {
-	return SendUnmarshalRequest(this.url, UnmarshallingRequest{
+	return SendUnmarshalRequest(this.url+"/unmarshal", UnmarshallingRequest{
 		CharacteristicId: characteristicId,
 		Service:          service,
 		Protocol:         &protocol,
