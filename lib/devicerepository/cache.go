@@ -23,7 +23,7 @@ import (
 )
 
 var L1Expiration = 60         // 60sec
-var L1Size = 40 * 1024 * 1024 //20MB
+var L1Size = 40 * 1024 * 1024 //40MB
 var Debug = false
 
 type Cache struct {
