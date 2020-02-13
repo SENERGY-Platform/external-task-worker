@@ -158,8 +158,7 @@ func getOpenidToken(token *OpenidToken, config util.Config) (err error) {
 	}
 	if resp.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(resp.Body)
-		log.Println("ERROR: getOpenidToken()", resp.StatusCode, string(body))
-		err = errors.New("access denied")
+		err = errors.New(string(body))
 		resp.Body.Close()
 		return
 	}
@@ -182,8 +181,7 @@ func refreshOpenidToken(token *OpenidToken, config util.Config) (err error) {
 	}
 	if resp.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(resp.Body)
-		log.Println("ERROR: refreshOpenidToken()", resp.StatusCode, string(body))
-		err = errors.New("access denied")
+		err = errors.New(string(body))
 		resp.Body.Close()
 		return
 	}
