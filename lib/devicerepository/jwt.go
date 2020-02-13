@@ -150,6 +150,7 @@ func getOpenidToken(token *OpenidToken, config util.Config) (err error) {
 		"client_id":     {config.AuthClientId},
 		"client_secret": {config.AuthClientSecret},
 		"grant_type":    {"client_credentials"},
+		"scope":         {"offline_access"},
 	})
 
 	if err != nil {
