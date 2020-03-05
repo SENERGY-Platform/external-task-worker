@@ -63,6 +63,16 @@ func (this *KafkaMock) Produce(topic string, message string) {
 	}
 }
 
+func (this *KafkaMock) ProduceWithKey(topic string, key string, message string) {
+	this.mux.Lock()
+	defer this.mux.Unlock()
+	log.Println("Produce", topic, message)
+	this.Produced[topic] = append(this.Produced[topic], message)
+	for _, l := range this.listeners[topic] {
+		log.Println(l(message))
+	}
+}
+
 func (this *KafkaMock) Close() {}
 
 func (this *KafkaMock) Stop() {}

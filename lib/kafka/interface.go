@@ -29,5 +29,6 @@ type ConsumerInterface interface {
 
 type ProducerInterface interface {
 	Produce(topic string, message string)
+	ProduceWithKey(topic string, key string, message string)
 	Close()
 }

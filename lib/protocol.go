@@ -27,7 +27,7 @@ import (
 	"strconv"
 )
 
-func (this *worker) CreateProtocolMessage(command messages.Command, task messages.CamundaExternalTask) (topic string, message string, err error) {
+func (this *worker) CreateProtocolMessage(command messages.Command, task messages.CamundaExternalTask) (topic string, key string, message string, err error) {
 	value, err := this.createMessageForProtocolHandler(command, task)
 	if err != nil {
 		if this.config.Debug {
@@ -39,7 +39,7 @@ func (this *worker) CreateProtocolMessage(command messages.Command, task message
 	}
 	topic = value.Metadata.Protocol.Handler
 	msg, err := json.Marshal(value)
-	return topic, string(msg), err
+	return topic, value.Metadata.Device.Id, string(msg), err
 }
 
 func (this *worker) createMessageForProtocolHandler(command messages.Command, task messages.CamundaExternalTask) (result messages.ProtocolMsg, err error) {

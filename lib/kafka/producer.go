@@ -66,6 +66,11 @@ func (this *Producer) Produce(topic string, message string) {
 	this.producer.Input() <- &sarama.ProducerMessage{Topic: topic, Key: nil, Value: sarama.StringEncoder(message), Timestamp: util.TimeNow()}
 }
 
+func (this *Producer) ProduceWithKey(topic string, key string, message string) {
+	log.Println("produce kafka msg: ", topic, message)
+	this.producer.Input() <- &sarama.ProducerMessage{Topic: topic, Key: sarama.StringEncoder(key), Value: sarama.StringEncoder(message), Timestamp: util.TimeNow()}
+}
+
 func (this *Producer) Close() {
 	this.producer.Close()
 }

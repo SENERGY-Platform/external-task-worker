@@ -122,7 +122,7 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
 		return
 	}
 
-	protocolTopic, message, err := this.CreateProtocolMessage(request, task)
+	protocolTopic, key, message, err := this.CreateProtocolMessage(request, task)
 	if err != nil {
 		log.Println("error on ExecuteTask CreateProtocolMessage", err)
 		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, err.Error(), task.TenantId)
@@ -130,7 +130,7 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
 	}
 
 	this.camunda.SetRetry(task.Id, task.Retries+1)
-	this.producer.Produce(protocolTopic, message)
+	this.producer.ProduceWithKey(protocolTopic, key, message)
 
 	if this.config.CompletionStrategy == util.OPTIMISTIC {
 		time.Sleep(time.Duration(this.config.OptimisticTaskCompletionTimeout) * time.Millisecond) //prevent completes that are to fast
