@@ -64,7 +64,7 @@ func (this *MarshallerMock) MarshalFromServiceAndProtocol(characteristicId strin
 	return this.marshaller.MarshalInputs(mockProtocol, mockService, characteristicData, characteristicId, mockConfigurables...)
 }
 
-func (this *MarshallerMock) UnmarshalFromServiceAndProtocol(characteristicId string, service model.Service, protocol model.Protocol, message map[string]string) (characteristicData interface{}, err error) {
+func (this *MarshallerMock) UnmarshalFromServiceAndProtocol(characteristicId string, service model.Service, protocol model.Protocol, message map[string]string, hints []string) (characteristicData interface{}, err error) {
 	mockService := marshaller_service_model.Service{}
 	mockProtocol := marshaller_service_model.Protocol{}
 	err = jsonCast(service, &mockService)
@@ -75,5 +75,5 @@ func (this *MarshallerMock) UnmarshalFromServiceAndProtocol(characteristicId str
 	if err != nil {
 		return characteristicData, err
 	}
-	return this.marshaller.UnmarshalOutputs(mockProtocol, mockService, message, characteristicId)
+	return this.marshaller.UnmarshalOutputs(mockProtocol, mockService, message, characteristicId, hints...)
 }

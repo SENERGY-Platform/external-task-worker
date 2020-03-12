@@ -27,10 +27,11 @@ type MarshallingRequest struct {
 }
 
 type UnmarshallingRequest struct {
-	Service          model.Service     `json:"service,omitempty"`           //semi-optional, may be determined by request path
-	Protocol         *model.Protocol   `json:"protocol,omitempty"`          //semi-optional, may be determined by service
-	CharacteristicId string            `json:"characteristic_id,omitempty"` //semi-optional, may be determined by request path
-	Message          map[string]string `json:"message"`
+	Service              model.Service     `json:"service,omitempty"`           //semi-optional, may be determined by request path
+	Protocol             *model.Protocol   `json:"protocol,omitempty"`          //semi-optional, may be determined by service
+	CharacteristicId     string            `json:"characteristic_id,omitempty"` //semi-optional, may be determined by request path
+	Message              map[string]string `json:"message"`
+	ContentVariableHints []string          `json:"content_variable_hints"` //optional
 }
 
 type FindConfigurablesRequest struct {

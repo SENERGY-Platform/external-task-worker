@@ -28,7 +28,7 @@ func New(url string) *Marshaller {
 
 type Interface interface {
 	MarshalFromServiceAndProtocol(characteristicId string, service model.Service, protocol model.Protocol, characteristicData interface{}, configurables []Configurable) (result map[string]string, err error)
-	UnmarshalFromServiceAndProtocol(characteristicId string, service model.Service, protocol model.Protocol, message map[string]string) (characteristicData interface{}, err error)
+	UnmarshalFromServiceAndProtocol(characteristicId string, service model.Service, protocol model.Protocol, message map[string]string, hints []string) (characteristicData interface{}, err error)
 }
 
 type FactoryInterface interface {

@@ -27,26 +27,29 @@ import (
 	"runtime/debug"
 )
 
-func (this *Marshaller) Unmarshal(characteristicId string, serviceId string, message map[string]string) (characteristicData interface{}, err error) {
+func (this *Marshaller) Unmarshal(characteristicId string, serviceId string, message map[string]string, hints []string) (characteristicData interface{}, err error) {
 	return SendUnmarshalRequest(this.url+"/unmarshal/"+url.PathEscape(serviceId)+"/"+url.PathEscape(characteristicId), UnmarshallingRequest{
-		Message: message,
+		Message:              message,
+		ContentVariableHints: hints,
 	})
 }
 
-func (this *Marshaller) UnmarshalFromService(characteristicId string, service model.Service, message map[string]string) (characteristicData interface{}, err error) {
+func (this *Marshaller) UnmarshalFromService(characteristicId string, service model.Service, message map[string]string, hints []string) (characteristicData interface{}, err error) {
 	return SendUnmarshalRequest(this.url+"/unmarshal", UnmarshallingRequest{
-		CharacteristicId: characteristicId,
-		Service:          service,
-		Message:          message,
+		CharacteristicId:     characteristicId,
+		Service:              service,
+		Message:              message,
+		ContentVariableHints: hints,
 	})
 }
 
-func (this *Marshaller) UnmarshalFromServiceAndProtocol(characteristicId string, service model.Service, protocol model.Protocol, message map[string]string) (characteristicData interface{}, err error) {
+func (this *Marshaller) UnmarshalFromServiceAndProtocol(characteristicId string, service model.Service, protocol model.Protocol, message map[string]string, hints []string) (characteristicData interface{}, err error) {
 	return SendUnmarshalRequest(this.url+"/unmarshal", UnmarshallingRequest{
-		CharacteristicId: characteristicId,
-		Service:          service,
-		Protocol:         &protocol,
-		Message:          message,
+		CharacteristicId:     characteristicId,
+		Service:              service,
+		Protocol:             &protocol,
+		Message:              message,
+		ContentVariableHints: hints,
 	})
 }
 

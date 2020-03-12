@@ -164,7 +164,7 @@ func (this *worker) CompleteTask(msg string) (err error) {
 
 	var output interface{}
 	if message.Metadata.OutputCharacteristic != model.NullCharacteristic.Id {
-		output, err = this.marshaller.UnmarshalFromServiceAndProtocol(message.Metadata.OutputCharacteristic, message.Metadata.Service, message.Metadata.Protocol, message.Response.Output)
+		output, err = this.marshaller.UnmarshalFromServiceAndProtocol(message.Metadata.OutputCharacteristic, message.Metadata.Service, message.Metadata.Protocol, message.Response.Output, message.Metadata.ContentVariableHints)
 		if err != nil {
 			return err
 		}

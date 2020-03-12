@@ -31,13 +31,14 @@ type Command struct {
 	Aspect      *model.Aspect      `json:"aspect,omitempty"`
 
 	//deployment time
-	DeviceId      string                    `json:"device_id,omitempty"`
-	Device        *model.Device             `json:"device,omitempty"`
-	ServiceId     string                    `json:"service_id,omitempty"`
-	Service       *model.Service            `json:"service,omitempty"`
-	Protocol      *model.Protocol           `json:"protocol,omitempty"`
-	ProtocolId    string                    `json:"protocol_id,omitempty"`
-	Configurables []marshaller.Configurable `json:"configurables,omitempty"`
+	DeviceId             string                    `json:"device_id,omitempty"`
+	Device               *model.Device             `json:"device,omitempty"`
+	ServiceId            string                    `json:"service_id,omitempty"`
+	Service              *model.Service            `json:"service,omitempty"`
+	Protocol             *model.Protocol           `json:"protocol,omitempty"`
+	ProtocolId           string                    `json:"protocol_id,omitempty"`
+	Configurables        []marshaller.Configurable `json:"configurables,omitempty"`
+	ContentVariableHints []string                  `json:"content_variable_hints,omitempty"`
 
 	//runtime
 	Input  interface{} `json:"input,omitempty"`

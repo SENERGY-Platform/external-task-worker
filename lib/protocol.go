@@ -111,6 +111,7 @@ func (this *worker) createMessageForProtocolHandler(command messages.Command, ta
 			Protocol:             *protocol,
 			InputCharacteristic:  inputCharacteristicId,
 			OutputCharacteristic: outputCharacteristicId,
+			ContentVariableHints: command.ContentVariableHints,
 		},
 	}
 
