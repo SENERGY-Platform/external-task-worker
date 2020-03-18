@@ -158,7 +158,7 @@ func (this *Camunda) Error(externalTaskId string, processInstanceId string, proc
 		debug.PrintStack()
 		return
 	}
-	this.producer.Produce(this.config.KafkaIncidentTopic, string(b))
+	this.producer.ProduceWithKey(this.config.KafkaIncidentTopic, processDefinitionId, string(b))
 }
 
 func (this *Camunda) GetWorkerId() string {
