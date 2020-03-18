@@ -139,16 +139,19 @@ func (this *Camunda) SetRetry(taskid string, retries int64) {
 }
 
 func (this *Camunda) Error(externalTaskId string, processInstanceId string, processDefinitionId string, msg string, tenantId string) {
-	b, err := json.Marshal(messages.KafkaIncidentMessage{
-		Id:                  util.GetId(),
-		MsgVersion:          2,
-		ExternalTaskId:      externalTaskId,
-		ProcessInstanceId:   processInstanceId,
-		ProcessDefinitionId: processDefinitionId,
-		WorkerId:            this.GetWorkerId(),
-		ErrorMessage:        msg,
-		Time:                util.TimeNow(),
-		TenantId:            tenantId,
+	b, err := json.Marshal(messages.KafkaIncidentsCommand{
+		Command:    "POST",
+		MsgVersion: 3,
+		Incident: &messages.Incident{
+			Id:                  util.GetId(),
+			ExternalTaskId:      externalTaskId,
+			ProcessInstanceId:   processInstanceId,
+			ProcessDefinitionId: processDefinitionId,
+			WorkerId:            this.GetWorkerId(),
+			ErrorMessage:        msg,
+			Time:                util.TimeNow(),
+			TenantId:            tenantId,
+		},
 	})
 	if err != nil {
 		log.Println("ERROR:", err)
