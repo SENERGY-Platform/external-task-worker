@@ -34,7 +34,7 @@ func (this *worker) CreateProtocolMessage(command messages.Command, task message
 			log.Println("DEBUG:", task.TenantId)
 		}
 		log.Println("ERROR: on CreateProtocolMessage createMessageForProtocolHandler(): ", err)
-		err = errors.New("internal format error (inconsistent data?) (time: " + util.TimeNow().String() + ")")
+		err = errors.New("internal format error (" + err.Error() + ") (time: " + util.TimeNow().String() + ")")
 		return
 	}
 	topic = value.Metadata.Protocol.Handler
