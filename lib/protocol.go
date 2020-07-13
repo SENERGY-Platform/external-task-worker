@@ -70,6 +70,9 @@ func (this *worker) createMessageForProtocolHandler(command messages.Command, ta
 		service = &temp
 	}
 	if protocol == nil {
+		if command.ProtocolId == "" {
+			command.ProtocolId = service.ProtocolId
+		}
 		temp, err := this.repository.GetProtocol(token, command.ProtocolId)
 		if err != nil {
 			log.Println("ERROR: unable to load protocol", command.ProtocolId, task.TenantId, token)
