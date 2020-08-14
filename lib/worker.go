@@ -156,7 +156,16 @@ func (this *worker) CompleteTask(msg string) (err error) {
 	if err != nil {
 		return err
 	}
-
+	defer func() {
+		if this.config.Debug {
+			log.Println("TRACE: ", message.Trace)
+		}
+	}()
+	message.Trace = append(message.Trace, messages.Trace{
+		Timestamp: time.Now().UnixNano(),
+		TimeUnit:  "unix_nano",
+		Location:  "github.com/SENERGY-Platform/external-task-worker CompleteTask() message unmarshal",
+	})
 	if this.missesCamundaDuration(message) {
 		log.Println("WARNING: drop late response:", msg)
 		return
@@ -169,10 +178,20 @@ func (this *worker) CompleteTask(msg string) (err error) {
 			return err
 		}
 	}
+	message.Trace = append(message.Trace, messages.Trace{
+		Timestamp: time.Now().UnixNano(),
+		TimeUnit:  "unix_nano",
+		Location:  "github.com/SENERGY-Platform/external-task-worker CompleteTask() after this.marshaller.UnmarshalFromServiceAndProtocol()",
+	})
 	err = this.camunda.CompleteTask(message.TaskInfo, this.config.CamundaTaskResultName, output)
 	if this.config.Debug {
 		log.Println("Complete", message.TaskInfo.TaskId, util.TimeNow().Second(), output, msg, err)
 	}
+	message.Trace = append(message.Trace, messages.Trace{
+		Timestamp: time.Now().UnixNano(),
+		TimeUnit:  "unix_nano",
+		Location:  "github.com/SENERGY-Platform/external-task-worker CompleteTask() after this.camunda.CompleteTask()",
+	})
 	return
 }
 

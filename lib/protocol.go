@@ -25,6 +25,7 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"log"
 	"strconv"
+	"time"
 )
 
 func (this *worker) CreateProtocolMessage(command messages.Command, task messages.CamundaExternalTask) (topic string, key string, message string, err error) {
@@ -43,6 +44,11 @@ func (this *worker) CreateProtocolMessage(command messages.Command, task message
 }
 
 func (this *worker) createMessageForProtocolHandler(command messages.Command, task messages.CamundaExternalTask) (result messages.ProtocolMsg, err error) {
+	trace := []messages.Trace{{
+		Timestamp: time.Now().UnixNano(),
+		TimeUnit:  "unix_nano",
+		Location:  "github.com/SENERGY-Platform/external-task-worker createMessageForProtocolHandler() start",
+	}}
 	device := command.Device
 	service := command.Service
 	protocol := command.Protocol
@@ -95,6 +101,12 @@ func (this *worker) createMessageForProtocolHandler(command messages.Command, ta
 		return result, err
 	}
 
+	trace = append(trace, messages.Trace{
+		Timestamp: time.Now().UnixNano(),
+		TimeUnit:  "unix_nano",
+		Location:  "github.com/SENERGY-Platform/external-task-worker createMessageForProtocolHandler() end",
+	})
+
 	result = messages.ProtocolMsg{
 		TaskInfo: messages.TaskInfo{
 			WorkerId:            this.camunda.GetWorkerId(),
@@ -116,6 +128,7 @@ func (this *worker) createMessageForProtocolHandler(command messages.Command, ta
 			OutputCharacteristic: outputCharacteristicId,
 			ContentVariableHints: command.ContentVariableHints,
 		},
+		Trace: trace,
 	}
 
 	return result, err

@@ -175,7 +175,11 @@ func ExampleWorkerCommand() {
 	protocolMessageStrings := mock.Kafka.GetProduced("protocol1")
 
 	for _, message := range protocolMessageStrings {
-		fmt.Println(message)
+		var temp messages.ProtocolMsg
+		json.Unmarshal([]byte(message), &temp)
+		temp.Trace = nil
+		messageWithoutTrace, _ := json.Marshal(temp)
+		fmt.Println(string(messageWithoutTrace))
 	}
 
 	//output:
@@ -273,7 +277,11 @@ func ExampleWorkerOnPowerCommand() {
 	protocolMessageStrings := mock.Kafka.GetProduced("protocol1")
 
 	for _, message := range protocolMessageStrings {
-		fmt.Println(message)
+		var temp messages.ProtocolMsg
+		json.Unmarshal([]byte(message), &temp)
+		temp.Trace = nil
+		messageWithoutTrace, _ := json.Marshal(temp)
+		fmt.Println(string(messageWithoutTrace))
 	}
 
 	//output:

@@ -153,7 +153,11 @@ func ExampleConfigurablesCommand1() {
 	protocolMessageStrings := mock.Kafka.GetProduced("protocol1")
 
 	for _, message := range protocolMessageStrings {
-		fmt.Println(message)
+		var temp messages.ProtocolMsg
+		json.Unmarshal([]byte(message), &temp)
+		temp.Trace = nil
+		messageWithoutTrace, _ := json.Marshal(temp)
+		fmt.Println(string(messageWithoutTrace))
 	}
 
 	//output:
@@ -283,7 +287,11 @@ func ExampleConfigurablesCommand2() {
 	protocolMessageStrings := mock.Kafka.GetProduced("protocol1")
 
 	for _, message := range protocolMessageStrings {
-		fmt.Println(message)
+		var temp messages.ProtocolMsg
+		json.Unmarshal([]byte(message), &temp)
+		temp.Trace = nil
+		messageWithoutTrace, _ := json.Marshal(temp)
+		fmt.Println(string(messageWithoutTrace))
 	}
 
 	//output:
@@ -424,7 +432,11 @@ func ExampleConfigurablesCommand3() {
 	protocolMessageStrings := mock.Kafka.GetProduced("protocol1")
 
 	for _, message := range protocolMessageStrings {
-		fmt.Println(message)
+		var temp messages.ProtocolMsg
+		json.Unmarshal([]byte(message), &temp)
+		temp.Trace = nil
+		messageWithoutTrace, _ := json.Marshal(temp)
+		fmt.Println(string(messageWithoutTrace))
 	}
 
 	//output:
@@ -556,7 +568,11 @@ func ExampleConfigurablesCommand4() {
 	protocolMessageStrings := mock.Kafka.GetProduced("protocol1")
 
 	for _, message := range protocolMessageStrings {
-		fmt.Println(message)
+		var temp messages.ProtocolMsg
+		json.Unmarshal([]byte(message), &temp)
+		temp.Trace = nil
+		messageWithoutTrace, _ := json.Marshal(temp)
+		fmt.Println(string(messageWithoutTrace))
 	}
 
 	//output:
@@ -705,7 +721,11 @@ func ExampleConfigurablesCommand5() {
 	protocolMessageStrings := mock.Kafka.GetProduced("protocol1")
 
 	for _, message := range protocolMessageStrings {
-		fmt.Println(message)
+		var temp messages.ProtocolMsg
+		json.Unmarshal([]byte(message), &temp)
+		temp.Trace = nil
+		messageWithoutTrace, _ := json.Marshal(temp)
+		fmt.Println(string(messageWithoutTrace))
 	}
 
 	//output:
