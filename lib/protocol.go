@@ -25,6 +25,7 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -90,7 +91,7 @@ func (this *worker) createMessageForProtocolHandler(command messages.Command, ta
 	var inputCharacteristicId string
 	var outputCharacteristicId string
 
-	if command.Function.RdfType == model.SES_ONTOLOGY_CONTROLLING_FUNCTION {
+	if isControllingFunction(command.Function) {
 		inputCharacteristicId = command.CharacteristicId
 	} else {
 		outputCharacteristicId = command.CharacteristicId
@@ -132,4 +133,14 @@ func (this *worker) createMessageForProtocolHandler(command messages.Command, ta
 	}
 
 	return result, err
+}
+
+func isControllingFunction(function model.Function) bool {
+	if function.RdfType == model.SES_ONTOLOGY_CONTROLLING_FUNCTION {
+		return true
+	}
+	if strings.HasPrefix(function.Id, "urn:infai:ses:controlling-function:") {
+		return true
+	}
+	return false
 }
