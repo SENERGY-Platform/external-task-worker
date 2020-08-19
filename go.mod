@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/SENERGY-Platform/converter v0.0.0-20200114152115-63d2a698b3c4
-	github.com/SENERGY-Platform/marshaller v0.0.0-20200312094952-26466102c49c
+	github.com/SENERGY-Platform/marshaller v0.0.0-20200819115755-79a11cda1994
 	github.com/Shopify/sarama v1.22.0
 	github.com/clbanning/mxj v1.8.4
 	github.com/coocood/freecache v1.1.0

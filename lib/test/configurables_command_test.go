@@ -127,7 +127,7 @@ func ExampleConfigurablesCommand1() {
 			{
 				CharacteristicId: duration.Seconds,
 				Values: []marshaller.ConfigurableCharacteristicValue{
-					{Value: 3},
+					{Value: "3"},
 				},
 			},
 		},
@@ -261,7 +261,7 @@ func ExampleConfigurablesCommand2() {
 			{
 				CharacteristicId: example.Hex,
 				Values: []marshaller.ConfigurableCharacteristicValue{
-					{Value: "#ff00aa"},
+					{Value: `"#ff00aa"`},
 				},
 			},
 		},
@@ -397,15 +397,15 @@ func ExampleConfigurablesCommand3() {
 				Values: []marshaller.ConfigurableCharacteristicValue{
 					{
 						Path:  "r",
-						Value: 255,
+						Value: "255",
 					},
 					{
 						Path:  "g",
-						Value: 0,
+						Value: "0",
 					},
 					{
 						Path:  "b",
-						Value: 170,
+						Value: "170",
 					},
 				},
 			},
@@ -541,7 +541,7 @@ func ExampleConfigurablesCommand4() {
 				CharacteristicId: temperature.Celcius,
 				Values: []marshaller.ConfigurableCharacteristicValue{
 					{
-						Value: 255,
+						Value: "255",
 					},
 				},
 			},
@@ -677,7 +677,7 @@ func ExampleConfigurablesCommand5() {
 				CharacteristicId: temperature.Celcius,
 				Values: []marshaller.ConfigurableCharacteristicValue{
 					{
-						Value: 255,
+						Value: "255",
 					},
 				},
 			},
@@ -686,15 +686,15 @@ func ExampleConfigurablesCommand5() {
 				Values: []marshaller.ConfigurableCharacteristicValue{
 					{
 						Path:  "r",
-						Value: 255,
+						Value: "255",
 					},
 					{
 						Path:  "g",
-						Value: 0,
+						Value: "0",
 					},
 					{
 						Path:  "b",
-						Value: 170,
+						Value: "170",
 					},
 				},
 			},
@@ -830,7 +830,7 @@ func ExampleConfigurablesCommandWithoutFunctionRdfType() {
 				CharacteristicId: temperature.Celcius,
 				Values: []marshaller.ConfigurableCharacteristicValue{
 					{
-						Value: 255,
+						Value: "255",
 					},
 				},
 			},
@@ -839,15 +839,15 @@ func ExampleConfigurablesCommandWithoutFunctionRdfType() {
 				Values: []marshaller.ConfigurableCharacteristicValue{
 					{
 						Path:  "r",
-						Value: 255,
+						Value: "255",
 					},
 					{
 						Path:  "g",
-						Value: 0,
+						Value: "0",
 					},
 					{
 						Path:  "b",
-						Value: 170,
+						Value: "170",
 					},
 				},
 			},

@@ -8,6 +8,8 @@ github.com/SENERGY-Platform/marshaller v0.0.0-20200116101840-c971c70fb3c3 h1:Zdp
 github.com/SENERGY-Platform/marshaller v0.0.0-20200116101840-c971c70fb3c3/go.mod h1:cc9gdkVBIbmFs9saRaB/EyiTRzeJArbu+eD024mgmaE=
 github.com/SENERGY-Platform/marshaller v0.0.0-20200312094952-26466102c49c h1:7l3vSB4rQ0yjqXIwYVzpoQwhVPppz9jE0VPlj2Jor7M=
 github.com/SENERGY-Platform/marshaller v0.0.0-20200312094952-26466102c49c/go.mod h1:cc9gdkVBIbmFs9saRaB/EyiTRzeJArbu+eD024mgmaE=
+github.com/SENERGY-Platform/marshaller v0.0.0-20200819115755-79a11cda1994 h1:O9KtjQEIVxjd6d5krePtVL8BcZPWLN5rVD4qAYXfiPQ=
+github.com/SENERGY-Platform/marshaller v0.0.0-20200819115755-79a11cda1994/go.mod h1:cc9gdkVBIbmFs9saRaB/EyiTRzeJArbu+eD024mgmaE=
 github.com/Shopify/sarama v1.22.0 h1:rtiODsvY4jW6nUV6n3K+0gx/8WlAwVt+Ixt6RIvpYyo=
 github.com/Shopify/sarama v1.22.0/go.mod h1:lm3THZ8reqBDBQKQyb5HB3sY1lKp3grEbQ81aWSgPp4=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
