@@ -19,6 +19,7 @@ package model
 type DeviceClass struct {
 	Id      string `json:"id"`
 	Name    string `json:"name"`
+	Image   string `json:"image"`
 	RdfType string `json:"rdf_type"`
 }
 

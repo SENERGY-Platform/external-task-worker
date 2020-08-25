@@ -1,48 +1,40 @@
-/*
- * Copyright 2019 InfAI (CC SES)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package model
 
 import "github.com/google/uuid"
 
-func (variable *Characteristic) GenerateId() {
-	variable.Id = URN_PREFIX + "characteristic:" + uuid.New().String()
-	for i, v := range variable.SubCharacteristics {
+func (characteristic *Characteristic) GenerateId() {
+	if characteristic.Id == "" {
+		characteristic.Id = URN_PREFIX + "characteristic:" + uuid.New().String()
+	}
+	for i, v := range characteristic.SubCharacteristics {
 		v.GenerateId()
-		variable.SubCharacteristics[i] = v
+		characteristic.SubCharacteristics[i] = v
 	}
 }
 
 func (class *DeviceClass) GenerateId() {
-	class.Id = URN_PREFIX + "device-class:" + uuid.New().String()
+	if class.Id == "" {
+		class.Id = URN_PREFIX + "device-class:" + uuid.New().String()
+	}
 }
 
 func (function *Function) GenerateId() {
-	switch function.RdfType {
-	case SES_ONTOLOGY_CONTROLLING_FUNCTION:
-		function.Id = URN_PREFIX + "controlling-function:" + uuid.New().String()
-	case SES_ONTOLOGY_MEASURING_FUNCTION:
-		function.Id = URN_PREFIX + "measuring-function:" + uuid.New().String()
-	default:
-		function.Id = ""
+	if function.Id == "" {
+		switch function.RdfType {
+		case SES_ONTOLOGY_CONTROLLING_FUNCTION:
+			function.Id = URN_PREFIX + "controlling-function:" + uuid.New().String()
+		case SES_ONTOLOGY_MEASURING_FUNCTION:
+			function.Id = URN_PREFIX + "measuring-function:" + uuid.New().String()
+		default:
+			function.Id = ""
+		}
 	}
 }
 
 func (aspect *Aspect) GenerateId() {
-	aspect.Id = URN_PREFIX + "aspect:" + uuid.New().String()
+	if aspect.Id == "" {
+		aspect.Id = URN_PREFIX + "aspect:" + uuid.New().String()
+	}
 }
 
 func (concept *Concept) GenerateId() {
@@ -56,31 +48,18 @@ func (device *Device) GenerateId() {
 }
 
 func (deviceType *DeviceType) GenerateId() {
-	deviceType.Id = URN_PREFIX + "device-type:" + uuid.New().String()
-	for i, service := range deviceType.Services {
-		if service.Id == "" {
-			service.GenerateId()
-			deviceType.Services[i] = service
-		}
+	if deviceType.Id == "" {
+		deviceType.Id = URN_PREFIX + "device-type:" + uuid.New().String()
 	}
-	if deviceType.DeviceClass.Id == "" {
-		deviceType.DeviceClass.GenerateId()
+	for i, service := range deviceType.Services {
+		service.GenerateId()
+		deviceType.Services[i] = service
 	}
 }
 
 func (service *Service) GenerateId() {
-	service.Id = URN_PREFIX + "service:" + uuid.New().String()
-	for i, function := range service.Functions {
-		if function.Id == "" {
-			function.GenerateId()
-			service.Functions[i] = function
-		}
-	}
-	for i, aspect := range service.Aspects {
-		if aspect.Id == "" {
-			aspect.GenerateId()
-			service.Aspects[i] = aspect
-		}
+	if service.Id == "" {
+		service.Id = URN_PREFIX + "service:" + uuid.New().String()
 	}
 	for i, content := range service.Inputs {
 		content.GenerateId()
@@ -97,7 +76,9 @@ func (hub *Hub) GenerateId() {
 }
 
 func (protocol *Protocol) GenerateId() {
-	protocol.Id = URN_PREFIX + "protocol:" + uuid.New().String()
+	if protocol.Id == "" {
+		protocol.Id = URN_PREFIX + "protocol:" + uuid.New().String()
+	}
 	for i, segment := range protocol.ProtocolSegments {
 		segment.GenerateId()
 		protocol.ProtocolSegments[i] = segment
@@ -105,16 +86,22 @@ func (protocol *Protocol) GenerateId() {
 }
 
 func (segment *ProtocolSegment) GenerateId() {
-	segment.Id = URN_PREFIX + "protocol-segment:" + uuid.New().String()
+	if segment.Id == "" {
+		segment.Id = URN_PREFIX + "protocol-segment:" + uuid.New().String()
+	}
 }
 
 func (content *Content) GenerateId() {
-	content.Id = URN_PREFIX + "content:" + uuid.New().String()
+	if content.Id == "" {
+		content.Id = URN_PREFIX + "content:" + uuid.New().String()
+	}
 	content.ContentVariable.GenerateId()
 }
 
 func (variable *ContentVariable) GenerateId() {
-	variable.Id = URN_PREFIX + "content-variable:" + uuid.New().String()
+	if variable.Id == "" {
+		variable.Id = URN_PREFIX + "content-variable:" + uuid.New().String()
+	}
 	for i, v := range variable.SubContentVariables {
 		v.GenerateId()
 		variable.SubContentVariables[i] = v
