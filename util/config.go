@@ -60,6 +60,7 @@ type Config struct {
 	KafkaIncidentTopic              string
 	Debug                           bool
 	MarshallerUrl                   string
+	HealthCheckPort                 string
 }
 
 //loads config from json in location and used environment variables (e.g ZookeeperUrl --> ZOOKEEPER_URL)

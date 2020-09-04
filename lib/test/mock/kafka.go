@@ -53,7 +53,7 @@ func (this *KafkaMock) NewProducer(config util.Config) (kafka.ProducerInterface,
 	return this, nil
 }
 
-func (this *KafkaMock) Produce(topic string, message string) {
+func (this *KafkaMock) Produce(topic string, message string) error {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	log.Println("Produce", topic, message)
@@ -61,9 +61,10 @@ func (this *KafkaMock) Produce(topic string, message string) {
 	for _, l := range this.listeners[topic] {
 		log.Println(l(message))
 	}
+	return nil
 }
 
-func (this *KafkaMock) ProduceWithKey(topic string, key string, message string) {
+func (this *KafkaMock) ProduceWithKey(topic string, key string, message string) error {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	log.Println("Produce", topic, message)
@@ -71,6 +72,7 @@ func (this *KafkaMock) ProduceWithKey(topic string, key string, message string) 
 	for _, l := range this.listeners[topic] {
 		log.Println(l(message))
 	}
+	return nil
 }
 
 func (this *KafkaMock) Close() {}

@@ -39,19 +39,25 @@ import (
 )
 
 type worker struct {
-	consumer   kafka.ConsumerInterface
-	producer   kafka.ProducerInterface
-	repository devicerepository.RepoInterface
-	camunda    camunda.CamundaInterface
-	config     util.Config
-	marshaller marshaller.Interface
+	consumer                  kafka.ConsumerInterface
+	producer                  kafka.ProducerInterface
+	repository                devicerepository.RepoInterface
+	camunda                   camunda.CamundaInterface
+	config                    util.Config
+	marshaller                marshaller.Interface
+	camundaCallMux            sync.Mutex
+	lastSuccessfulCamundaCall time.Time
+	producerCallMux           sync.Mutex
+	lastProducerCallSuccess   bool
 }
 
 func Worker(ctx context.Context, config util.Config, kafkaFactory kafka.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory camunda.FactoryInterface, marshallerFactory marshaller.FactoryInterface) {
 	log.Println("start camunda worker")
 	base.DEBUG = config.Debug
 	var err error
-	w := worker{config: config, marshaller: marshallerFactory.New(config.MarshallerUrl)}
+	w := worker{config: config, marshaller: marshallerFactory.New(config.MarshallerUrl), lastProducerCallSuccess: true, lastSuccessfulCamundaCall: time.Now()}
+
+	StartHealthCheckEndpoint(ctx, config, &w)
 
 	if config.CompletionStrategy != util.OPTIMISTIC {
 		w.consumer, err = kafkaFactory.NewConsumer(config, w.CompleteTask)
@@ -87,6 +93,7 @@ func (this *worker) ExecuteNextTask() (wait bool) {
 		log.Println("error on ExecuteNextTask getTask", err)
 		return true
 	}
+	this.logSuccessfulCamundaCall()
 	if len(tasks) == 0 {
 		return true
 	}
@@ -130,7 +137,13 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
 	}
 
 	this.camunda.SetRetry(task.Id, task.Retries+1)
-	this.producer.ProduceWithKey(protocolTopic, key, message)
+	err = this.producer.ProduceWithKey(protocolTopic, key, message)
+	if err != nil {
+		log.Println("ERROR: unable to produce kafka msg", err)
+		this.logProducerError()
+	} else {
+		this.logProducerSuccess()
+	}
 
 	if this.config.CompletionStrategy == util.OPTIMISTIC {
 		time.Sleep(time.Duration(this.config.OptimisticTaskCompletionTimeout) * time.Millisecond) //prevent completes that are to fast
@@ -205,6 +218,48 @@ func (this *worker) missesCamundaDuration(msg messages.ProtocolMsg) bool {
 	}
 	taskTime := time.Unix(unixTime, 0)
 	return util.TimeNow().Sub(taskTime) >= time.Duration(this.config.CamundaFetchLockDuration)*time.Millisecond
+}
+
+type WorkerState struct {
+	ProducerOk                bool
+	LastSuccessfulCamundaCall time.Duration
+}
+
+func (this *worker) GetState() WorkerState {
+	return WorkerState{
+		ProducerOk:                this.LastProducerCallSuccessful(),
+		LastSuccessfulCamundaCall: this.SinceLastSuccessfulCamundaCall(),
+	}
+}
+
+func (this *worker) SinceLastSuccessfulCamundaCall() time.Duration {
+	this.camundaCallMux.Lock()
+	defer this.camundaCallMux.Unlock()
+	return time.Since(this.lastSuccessfulCamundaCall)
+}
+
+func (this *worker) logSuccessfulCamundaCall() {
+	this.camundaCallMux.Lock()
+	defer this.camundaCallMux.Unlock()
+	this.lastSuccessfulCamundaCall = time.Now()
+}
+
+func (this *worker) LastProducerCallSuccessful() bool {
+	this.producerCallMux.Lock()
+	defer this.producerCallMux.Unlock()
+	return this.lastProducerCallSuccess
+}
+
+func (this *worker) logProducerError() {
+	this.producerCallMux.Lock()
+	defer this.producerCallMux.Unlock()
+	this.lastProducerCallSuccess = false
+}
+
+func (this *worker) logProducerSuccess() {
+	this.producerCallMux.Lock()
+	defer this.producerCallMux.Unlock()
+	this.lastProducerCallSuccess = true
 }
 
 func setVarOnPath(element interface{}, path []string, value interface{}) (result interface{}, err error) {

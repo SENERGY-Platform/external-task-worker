@@ -16,7 +16,9 @@
 
 package kafka
 
-import "github.com/SENERGY-Platform/external-task-worker/util"
+import (
+	"github.com/SENERGY-Platform/external-task-worker/util"
+)
 
 type FactoryInterface interface {
 	NewConsumer(config util.Config, listener func(msg string) error) (consumer ConsumerInterface, err error)
@@ -28,7 +30,7 @@ type ConsumerInterface interface {
 }
 
 type ProducerInterface interface {
-	Produce(topic string, message string)
-	ProduceWithKey(topic string, key string, message string)
+	Produce(topic string, message string) (err error)
+	ProduceWithKey(topic string, message string, key string) (err error)
 	Close()
 }

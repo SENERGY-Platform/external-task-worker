@@ -19,6 +19,7 @@ package kafka
 import (
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"log"
+	"time"
 )
 
 type FactoryType struct{}
@@ -26,7 +27,7 @@ type FactoryType struct{}
 var Factory = FactoryType{}
 
 func (FactoryType) NewConsumer(config util.Config, listener func(msg string) error) (consumer ConsumerInterface, err error) {
-	consumer, err = NewConsumer(config, config.ResponseTopic, func(topic string, msg []byte) error {
+	consumer, err = NewConsumer(config.ZookeeperUrl, config.KafkaConsumerGroup, config.ResponseTopic, func(topic string, msg []byte, time time.Time) error {
 		return listener(string(msg))
 	}, func(err error, consumer *Consumer) {
 		log.Println("FATAL ERROR: kafka", err)
@@ -36,5 +37,5 @@ func (FactoryType) NewConsumer(config util.Config, listener func(msg string) err
 }
 
 func (FactoryType) NewProducer(config util.Config) (ProducerInterface, error) {
-	return InitProducer(config)
+	return PrepareProducer(config.ZookeeperUrl, true, false)
 }

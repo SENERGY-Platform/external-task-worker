@@ -22,5 +22,6 @@
   "JwtIssuer": "camundaworker",
   "PermissionsUrl": "http://permissionsearch:8080",
   "CamundaTaskResultName": "result",
-  "MarshallerUrl": "http://marshaller:8080"
+  "MarshallerUrl": "http://marshaller:8080",
+  "HealthCheckPort": "8080"
 }
