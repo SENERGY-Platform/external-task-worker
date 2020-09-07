@@ -1,4 +1,20 @@
-package kafka
+/*
+ * Copyright 2020 InfAI (CC SES)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package docker
 
 import (
 	"github.com/ory/dockertest/v3"
@@ -9,92 +25,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
-	"testing"
-	"time"
 )
-
-func TestProducer_Produce(t *testing.T) {
-	pool, err := dockertest.NewPool("")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	closeZk, _, zkIp, err := Zookeeper(pool)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	defer closeZk()
-	zookeeperUrl := zkIp + ":2181"
-
-	//kafka
-	closeKafka, err := Kafka(pool, zookeeperUrl)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	defer closeKafka()
-
-	time.Sleep(2 * time.Second)
-
-	err = InitTopic(zookeeperUrl, "test")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	err = InitTopic(zookeeperUrl, "test2")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	result := [][]byte{}
-
-	consumer, err := NewConsumer(zookeeperUrl, "test", "test", func(topic string, msg []byte, t time.Time) error {
-		result = append(result, msg)
-		return nil
-	}, func(err error, consumer *Consumer) {
-		t.Error(err)
-	})
-	defer consumer.Stop()
-
-	producer, err := PrepareProducer(zookeeperUrl, true, true)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	log.Println("produce 1")
-	err = producer.Produce("test", "msg1")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	log.Println("produce 2")
-	err = producer.Produce("test", "msg2")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	log.Println("produce 3")
-	err = producer.Produce("test2", "msg3")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	log.Println("produced")
-
-	time.Sleep(5 * time.Second)
-
-	if len(result) != 2 {
-		t.Error(len(result))
-	}
-
-	if len(result) > 0 && string(result[0]) != "msg1" {
-		t.Error(string(result[0]))
-	}
-}
 
 func Kafka(pool *dockertest.Pool, zookeeperUrl string) (closer func(), err error) {
 	kafkaport, err := getFreePort()

@@ -32,7 +32,7 @@ type ConsumerInterface interface {
 
 type ProducerInterface interface {
 	Produce(topic string, message string) (err error)
-	ProduceWithKey(topic string, message string, key string) (err error)
+	ProduceWithKey(topic string, key string, message string) (err error)
 	Close()
 	Log(logger *log.Logger)
 }
