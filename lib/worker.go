@@ -70,6 +70,9 @@ func Worker(ctx context.Context, config util.Config, kafkaFactory kafka.FactoryI
 	if err != nil {
 		log.Fatal("ERROR: kafkaFactory.NewProducer", err)
 	}
+	if config.Debug {
+		w.producer.Log(log.New(log.Writer(), "[CONNECTOR-KAFKA] ", 0))
+	}
 	defer w.producer.Close()
 	w.repository = repoFactory.Get(config)
 	w.camunda = camundaFactory.Get(config, w.producer)

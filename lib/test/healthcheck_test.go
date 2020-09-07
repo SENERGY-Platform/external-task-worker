@@ -218,6 +218,10 @@ func (this *StoppableTestKafka) NewProducer(config util.Config) (kafka.ProducerI
 	return this, nil
 }
 
+func (this *StoppableTestKafka) Log(logger *log.Logger) {
+
+}
+
 type StoppableTestCamunda struct {
 	On    bool
 	tasks []messages.CamundaExternalTask

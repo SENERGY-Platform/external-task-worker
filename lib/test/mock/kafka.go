@@ -31,6 +31,10 @@ type KafkaMock struct {
 	listeners map[string][]func(msg string) error
 }
 
+func (this *KafkaMock) Log(logger *log.Logger) {
+
+}
+
 func (this *KafkaMock) NewConsumer(config util.Config, listener func(msg string) error) (consumer kafka.ConsumerInterface, err error) {
 	this.Subscribe(config.ResponseTopic, listener)
 	return this, nil

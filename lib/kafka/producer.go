@@ -121,7 +121,7 @@ func (this *AsyncProducer) Produce(topic string, message string) (err error) {
 	return
 }
 
-func (this *SyncProducer) ProduceWithKey(topic string, message string, key string) (err error) {
+func (this *SyncProducer) ProduceWithKey(topic string, key string, message string) (err error) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	if this.logger != nil {
@@ -135,7 +135,7 @@ func (this *SyncProducer) ProduceWithKey(topic string, message string, key strin
 	return err
 }
 
-func (this *AsyncProducer) ProduceWithKey(topic string, message string, key string) (err error) {
+func (this *AsyncProducer) ProduceWithKey(topic string, key string, message string) (err error) {
 	if this.logger != nil {
 		this.logger.Println("DEBUG: produce ", topic, message)
 	}

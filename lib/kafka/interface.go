@@ -18,6 +18,7 @@ package kafka
 
 import (
 	"github.com/SENERGY-Platform/external-task-worker/util"
+	"log"
 )
 
 type FactoryInterface interface {
@@ -33,4 +34,5 @@ type ProducerInterface interface {
 	Produce(topic string, message string) (err error)
 	ProduceWithKey(topic string, message string, key string) (err error)
 	Close()
+	Log(logger *log.Logger)
 }
