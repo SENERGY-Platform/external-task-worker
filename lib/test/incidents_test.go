@@ -31,10 +31,14 @@ func ExampleIncidents() {
 		return time.Time{}
 	}
 	idCount := 0
+	temp := util.GetId
 	util.GetId = func() string {
 		idCount = idCount + 1
 		return strconv.Itoa(idCount)
 	}
+	defer func() {
+		util.GetId = temp
+	}()
 
 	config, err := util.LoadConfig("../../config.json")
 	if err != nil {

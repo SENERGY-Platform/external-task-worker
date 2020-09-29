@@ -19,6 +19,8 @@ package camunda
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/cache"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/shards"
 	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
@@ -38,11 +40,11 @@ type Camunda struct {
 	shards   *shards.Shards
 }
 
-func NewCamundaWithShards(config util.Config, producer kafka.ProducerInterface, shards *shards.Shards) (result CamundaInterface) {
+func NewCamundaWithShards(config util.Config, producer kafka.ProducerInterface, shards *shards.Shards) (result *Camunda) {
 	return &Camunda{config: config, workerId: util.GetId(), producer: producer, shards: shards}
 }
 
-func NewCamunda(config util.Config, producer kafka.ProducerInterface) (result CamundaInterface, err error) {
+func NewCamunda(config util.Config, producer kafka.ProducerInterface) (result *Camunda, err error) {
 	s, err := shards.New(config.ShardsDb, cache.New(&cache.CacheConfig{
 		L1Expiration: 60,
 	}))
@@ -79,11 +81,17 @@ func (this *Camunda) getShardTasks(shard string) (tasks []messages.CamundaExtern
 	if err != nil {
 		return
 	}
-	resp, err := client.Post(shard+"/external-task/fetchAndLock", "application/json", b)
+	endpoint := shard + "/engine-rest/external-task/fetchAndLock"
+	resp, err := client.Post(endpoint, "application/json", b)
 	if err != nil {
 		return tasks, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		temp, err := ioutil.ReadAll(resp.Body)
+		err = errors.New(fmt.Sprintln(endpoint, resp.Status, resp.StatusCode, string(temp), err))
+		return tasks, err
+	}
 	err = json.NewDecoder(resp.Body).Decode(&tasks)
 	return
 }
@@ -117,7 +125,7 @@ func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string,
 	if err != nil {
 		return
 	}
-	resp, err := client.Post(shard+"/external-task/"+taskInfo.TaskId+"/complete", "application/json", b)
+	resp, err := client.Post(shard+"/engine-rest/external-task/"+taskInfo.TaskId+"/complete", "application/json", b)
 	if err != nil {
 		return err
 	}
@@ -151,7 +159,7 @@ func (this *Camunda) SetRetry(taskid string, tenantId string, retries int64) {
 	if err != nil {
 		return
 	}
-	request, err := http.NewRequest("PUT", shard+"/external-task/"+taskid+"/retries", b)
+	request, err := http.NewRequest("PUT", shard+"/engine-rest/external-task/"+taskid+"/retries", b)
 	if err != nil {
 		log.Println("ERROR: SetRetry():", err)
 		debug.PrintStack()

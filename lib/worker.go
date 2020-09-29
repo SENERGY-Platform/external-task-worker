@@ -22,7 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/SENERGY-Platform/converter/lib/converter/base"
-	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
+	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/interfaces"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
@@ -42,7 +42,7 @@ type worker struct {
 	consumer                  kafka.ConsumerInterface
 	producer                  kafka.ProducerInterface
 	repository                devicerepository.RepoInterface
-	camunda                   camunda.CamundaInterface
+	camunda                   interfaces.CamundaInterface
 	config                    util.Config
 	marshaller                marshaller.Interface
 	camundaCallMux            sync.Mutex
@@ -51,7 +51,7 @@ type worker struct {
 	lastProducerCallSuccess   bool
 }
 
-func Worker(ctx context.Context, config util.Config, kafkaFactory kafka.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory camunda.FactoryInterface, marshallerFactory marshaller.FactoryInterface) {
+func Worker(ctx context.Context, config util.Config, kafkaFactory kafka.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory interfaces.FactoryInterface, marshallerFactory marshaller.FactoryInterface) {
 	log.Println("start camunda worker")
 	base.DEBUG = config.Debug
 	var err error

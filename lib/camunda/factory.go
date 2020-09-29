@@ -17,6 +17,7 @@
 package camunda
 
 import (
+	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/interfaces"
 	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 )
@@ -25,6 +26,6 @@ type FactoryType struct{}
 
 var Factory FactoryType
 
-func (FactoryType) Get(config util.Config, producer kafka.ProducerInterface) (CamundaInterface, error) {
+func (FactoryType) Get(config util.Config, producer kafka.ProducerInterface) (interfaces.CamundaInterface, error) {
 	return NewCamunda(config, producer)
 }

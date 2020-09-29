@@ -18,7 +18,7 @@ package mock
 
 import (
 	"errors"
-	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
+	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/interfaces"
 	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
@@ -39,7 +39,7 @@ type CamundaMock struct {
 	lockTimes      map[string]time.Time
 }
 
-func (this *CamundaMock) Get(config util.Config, producer kafka.ProducerInterface) (camunda.CamundaInterface, error) {
+func (this *CamundaMock) Get(config util.Config, producer kafka.ProducerInterface) (interfaces.CamundaInterface, error) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	this.waitingTasks = []messages.CamundaExternalTask{}
