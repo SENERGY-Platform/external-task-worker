@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib"
-	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
+	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/interfaces"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
@@ -227,7 +227,7 @@ type StoppableTestCamunda struct {
 	tasks []messages.CamundaExternalTask
 }
 
-func (this *StoppableTestCamunda) Get(configType util.Config, producer kafka.ProducerInterface) (camunda.CamundaInterface, error) {
+func (this *StoppableTestCamunda) Get(configType util.Config, producer kafka.ProducerInterface) (interfaces.CamundaInterface, error) {
 	return this, nil
 }
 
