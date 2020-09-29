@@ -75,13 +75,16 @@ func Worker(ctx context.Context, config util.Config, kafkaFactory kafka.FactoryI
 	}
 	defer w.producer.Close()
 	w.repository = repoFactory.Get(config)
-	w.camunda = camundaFactory.Get(config, w.producer)
+	w.camunda, err = camundaFactory.Get(config, w.producer)
+	if err != nil {
+		log.Fatal("ERROR: kafkaFactory.NewProducer", err)
+	}
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			wait := w.ExecuteNextTask()
+			wait := w.ExecuteNextTasks()
 			if wait {
 				duration := time.Duration(config.CamundaWorkerTimeout) * time.Millisecond
 				time.Sleep(duration)
@@ -90,10 +93,10 @@ func Worker(ctx context.Context, config util.Config, kafkaFactory kafka.FactoryI
 	}
 }
 
-func (this *worker) ExecuteNextTask() (wait bool) {
-	tasks, err := this.camunda.GetTask()
+func (this *worker) ExecuteNextTasks() (wait bool) {
+	tasks, err := this.camunda.GetTasks()
 	if err != nil {
-		log.Println("error on ExecuteNextTask getTask", err)
+		log.Println("error on ExecuteNextTasks getTask", err)
 		return true
 	}
 	this.logSuccessfulCamundaCall()
@@ -139,7 +142,7 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
 		return
 	}
 
-	this.camunda.SetRetry(task.Id, task.Retries+1)
+	this.camunda.SetRetry(task.Id, task.TenantId, task.Retries+1)
 	err = this.producer.ProduceWithKey(protocolTopic, key, message)
 	if err != nil {
 		log.Println("ERROR: unable to produce kafka msg", err)

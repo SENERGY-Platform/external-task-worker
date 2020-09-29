@@ -33,6 +33,7 @@ const CAMUNDA_VARIABLES_PAYLOAD = "payload"
 const CAMUNDA_VARIABLES_OVERWRITE = "overwrite"
 
 type Config struct {
+	ShardsDb                        string
 	DeviceRepoUrl                   string
 	CompletionStrategy              string
 	OptimisticTaskCompletionTimeout int64
@@ -40,7 +41,6 @@ type Config struct {
 	CamundaWorkerTasks              int64
 	CamundaAsyncResponseTimeout     int64
 	CamundaFetchLockDuration        int64
-	CamundaUrl                      string
 	CamundaTopic                    string
 	CamundaTaskResultName           string
 	ZookeeperUrl                    string //host1:2181,host2:2181/chroot

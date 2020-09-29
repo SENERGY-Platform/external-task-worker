@@ -97,7 +97,7 @@ func TestProducer_Produce(t *testing.T) {
 	}
 	log.Println("produced")
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(20 * time.Second)
 
 	if len(result) != 2 {
 		t.Error(len(result))
@@ -180,7 +180,7 @@ func TestProducer_ProduceWithKey(t *testing.T) {
 	}
 	log.Println("produced")
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(20 * time.Second)
 
 	if len(result) != 2 {
 		t.Error(len(result))

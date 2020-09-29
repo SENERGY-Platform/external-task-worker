@@ -23,13 +23,13 @@ import (
 )
 
 type FactoryInterface interface {
-	Get(configType util.Config, producer kafka.ProducerInterface) CamundaInterface
+	Get(configType util.Config, producer kafka.ProducerInterface) (CamundaInterface, error)
 }
 
 type CamundaInterface interface {
-	GetTask() (tasks []messages.CamundaExternalTask, err error)
+	GetTasks() (tasks []messages.CamundaExternalTask, err error)
 	CompleteTask(taskInfo messages.TaskInfo, outputName string, output interface{}) (err error)
-	SetRetry(taskid string, number int64)
+	SetRetry(taskid string, tenantId string, number int64)
 	Error(externalTaskId string, processInstanceId string, processDefinitionId string, msg string, tenantId string)
 	GetWorkerId() string
 }

@@ -227,11 +227,11 @@ type StoppableTestCamunda struct {
 	tasks []messages.CamundaExternalTask
 }
 
-func (this *StoppableTestCamunda) Get(configType util.Config, producer kafka.ProducerInterface) camunda.CamundaInterface {
-	return this
+func (this *StoppableTestCamunda) Get(configType util.Config, producer kafka.ProducerInterface) (camunda.CamundaInterface, error) {
+	return this, nil
 }
 
-func (this *StoppableTestCamunda) GetTask() (tasks []messages.CamundaExternalTask, err error) {
+func (this *StoppableTestCamunda) GetTasks() (tasks []messages.CamundaExternalTask, err error) {
 	if this.On {
 		return this.tasks, nil
 	} else {
@@ -243,7 +243,7 @@ func (this *StoppableTestCamunda) CompleteTask(taskInfo messages.TaskInfo, outpu
 	return nil
 }
 
-func (this *StoppableTestCamunda) SetRetry(taskid string, number int64) {}
+func (this *StoppableTestCamunda) SetRetry(taskid string, tenantId string, number int64) {}
 
 func (this *StoppableTestCamunda) Error(externalTaskId string, processInstanceId string, processDefinitionId string, msg string, tenantId string) {
 }

@@ -46,7 +46,8 @@ func ExampleIncidents() {
 		fmt.Println(err)
 		return
 	}
-	camunda := camunda.Factory.Get(config, kafka)
+
+	camunda := camunda.NewCamundaWithShards(config, kafka, nil)
 	camunda.Error("task_id_1", "piid_1", "pdid_1", "error message", "user1")
 	camunda.Error("task_id_2", "piid_2", "pdid_2", "error message", "user1")
 

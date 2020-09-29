@@ -25,6 +25,6 @@ type FactoryType struct{}
 
 var Factory FactoryType
 
-func (FactoryType) Get(config util.Config, producer kafka.ProducerInterface) CamundaInterface {
+func (FactoryType) Get(config util.Config, producer kafka.ProducerInterface) (CamundaInterface, error) {
 	return NewCamunda(config, producer)
 }

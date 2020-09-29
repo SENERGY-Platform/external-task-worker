@@ -19,6 +19,8 @@ package camunda
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/cache"
+	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/shards"
 	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
@@ -33,13 +35,39 @@ type Camunda struct {
 	config   util.Config
 	workerId string
 	producer kafka.ProducerInterface
+	shards   *shards.Shards
 }
 
-func NewCamunda(config util.Config, producer kafka.ProducerInterface) CamundaInterface {
-	return &Camunda{config: config, workerId: util.GetId(), producer: producer}
+func NewCamundaWithShards(config util.Config, producer kafka.ProducerInterface, shards *shards.Shards) (result CamundaInterface) {
+	return &Camunda{config: config, workerId: util.GetId(), producer: producer, shards: shards}
 }
 
-func (this *Camunda) GetTask() (tasks []messages.CamundaExternalTask, err error) {
+func NewCamunda(config util.Config, producer kafka.ProducerInterface) (result CamundaInterface, err error) {
+	s, err := shards.New(config.ShardsDb, cache.New(&cache.CacheConfig{
+		L1Expiration: 60,
+	}))
+	if err != nil {
+		return result, err
+	}
+	return NewCamundaWithShards(config, producer, s), nil
+}
+
+func (this *Camunda) GetTasks() (tasks []messages.CamundaExternalTask, err error) {
+	shards, err := this.shards.GetShards()
+	if err != nil {
+		return tasks, err
+	}
+	for _, shard := range shards {
+		temp, err := this.getShardTasks(shard)
+		if err != nil {
+			return tasks, err
+		}
+		tasks = append(tasks, temp...)
+	}
+	return tasks, nil
+}
+
+func (this *Camunda) getShardTasks(shard string) (tasks []messages.CamundaExternalTask, err error) {
 	fetchRequest := messages.CamundaFetchRequest{
 		WorkerId: this.workerId,
 		MaxTasks: this.config.CamundaWorkerTasks,
@@ -51,7 +79,7 @@ func (this *Camunda) GetTask() (tasks []messages.CamundaExternalTask, err error)
 	if err != nil {
 		return
 	}
-	resp, err := client.Post(this.config.CamundaUrl+"/external-task/fetchAndLock", "application/json", b)
+	resp, err := client.Post(shard+"/external-task/fetchAndLock", "application/json", b)
 	if err != nil {
 		return tasks, err
 	}
@@ -61,6 +89,11 @@ func (this *Camunda) GetTask() (tasks []messages.CamundaExternalTask, err error)
 }
 
 func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string, output interface{}) (err error) {
+	shard, err := this.shards.GetShardForUser(taskInfo.TenantId)
+	if err != nil {
+		return err
+	}
+
 	var completeRequest messages.CamundaCompleteRequest
 
 	if taskInfo.WorkerId == "" {
@@ -84,7 +117,7 @@ func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string,
 	if err != nil {
 		return
 	}
-	resp, err := client.Post(this.config.CamundaUrl+"/external-task/"+taskInfo.TaskId+"/complete", "application/json", b)
+	resp, err := client.Post(shard+"/external-task/"+taskInfo.TaskId+"/complete", "application/json", b)
 	if err != nil {
 		return err
 	}
@@ -103,16 +136,22 @@ func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string,
 	return
 }
 
-func (this *Camunda) SetRetry(taskid string, retries int64) {
+func (this *Camunda) SetRetry(taskid string, tenantId string, retries int64) {
+	shard, err := this.shards.GetShardForUser(tenantId)
+	if err != nil {
+		log.Println("ERROR: unable to get shard for SetRetry()", err)
+		debug.PrintStack()
+		return
+	}
 	retry := messages.CamundaRetrySetRequest{Retries: retries}
 
 	client := http.Client{Timeout: 5 * time.Second}
 	b := new(bytes.Buffer)
-	err := json.NewEncoder(b).Encode(retry)
+	err = json.NewEncoder(b).Encode(retry)
 	if err != nil {
 		return
 	}
-	request, err := http.NewRequest("PUT", this.config.CamundaUrl+"/external-task/"+taskid+"/retries", b)
+	request, err := http.NewRequest("PUT", shard+"/external-task/"+taskid+"/retries", b)
 	if err != nil {
 		log.Println("ERROR: SetRetry():", err)
 		debug.PrintStack()

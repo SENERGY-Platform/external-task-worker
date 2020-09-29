@@ -39,7 +39,7 @@ type CamundaMock struct {
 	lockTimes      map[string]time.Time
 }
 
-func (this *CamundaMock) Get(config util.Config, producer kafka.ProducerInterface) camunda.CamundaInterface {
+func (this *CamundaMock) Get(config util.Config, producer kafka.ProducerInterface) (camunda.CamundaInterface, error) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	this.waitingTasks = []messages.CamundaExternalTask{}
@@ -48,7 +48,7 @@ func (this *CamundaMock) Get(config util.Config, producer kafka.ProducerInterfac
 	this.failedTasks = map[string]messages.CamundaExternalTask{}
 	this.lockTimes = map[string]time.Time{}
 	this.config = config
-	return this
+	return this, nil
 }
 
 func (this *CamundaMock) AddTask(task messages.CamundaExternalTask) {
@@ -57,7 +57,7 @@ func (this *CamundaMock) AddTask(task messages.CamundaExternalTask) {
 	this.waitingTasks = append(this.waitingTasks, task)
 }
 
-func (this *CamundaMock) GetTask() (tasks []messages.CamundaExternalTask, err error) {
+func (this *CamundaMock) GetTasks() (tasks []messages.CamundaExternalTask, err error) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 
@@ -95,7 +95,7 @@ func (this *CamundaMock) CompleteTask(taskInfo messages.TaskInfo, outputName str
 	return
 }
 
-func (this *CamundaMock) SetRetry(taskid string, number int64) {
+func (this *CamundaMock) SetRetry(taskid string, tenantId string, number int64) {
 	log.Println("DEBUG: SetRetry", taskid, number)
 	this.mux.Lock()
 	defer this.mux.Unlock()
