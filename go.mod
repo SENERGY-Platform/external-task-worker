@@ -1,6 +1,6 @@
 module github.com/SENERGY-Platform/external-task-worker
 
-go 1.13
+go 1.15
 
 require (
 	github.com/SENERGY-Platform/camunda-engine-wrapper v0.0.0-20200710121557-763e3a44aace // indirect
