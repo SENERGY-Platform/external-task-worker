@@ -26,6 +26,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"time"
 
 	"syscall"
 
@@ -34,7 +35,6 @@ import (
 )
 
 func main() {
-
 	configLocation := flag.String("config", "config.json", "configuration file")
 	flag.Parse()
 
@@ -42,6 +42,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.Println("wait for cluster routing")
+	time.Sleep(10 * time.Second)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
