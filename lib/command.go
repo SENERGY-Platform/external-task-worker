@@ -27,7 +27,7 @@ import (
 	"strings"
 )
 
-func CreateCommandRequest(task messages.CamundaExternalTask) (command messages.Command, err error) {
+func GetCommandRequest(task messages.CamundaExternalTask) (command messages.Command, err error) {
 	payload, ok := task.Variables[util.CAMUNDA_VARIABLES_PAYLOAD].Value.(string)
 	if !ok {
 		return command, errors.New(fmt.Sprint("ERROR: payload is not a string, ", task.Variables))

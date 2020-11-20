@@ -61,6 +61,8 @@ type Config struct {
 	Debug                           bool
 	MarshallerUrl                   string
 	HealthCheckPort                 string
+	SubResultExpirationInSeconds    int32
+	SubResultDatabaseUrls           []string
 }
 
 //loads config from json in location and used environment variables (e.g ZookeeperUrl --> ZOOKEEPER_URL)
@@ -106,6 +108,10 @@ func handleEnvironmentVars(config *Config) {
 			fmt.Println("use environment variable: ", envName, " = ", envValue)
 			if configValue.FieldByName(fieldName).Kind() == reflect.Int64 {
 				i, _ := strconv.ParseInt(envValue, 10, 64)
+				configValue.FieldByName(fieldName).SetInt(i)
+			}
+			if configValue.FieldByName(fieldName).Kind() == reflect.Int32 {
+				i, _ := strconv.ParseInt(envValue, 10, 32)
 				configValue.FieldByName(fieldName).SetInt(i)
 			}
 			if configValue.FieldByName(fieldName).Kind() == reflect.String {

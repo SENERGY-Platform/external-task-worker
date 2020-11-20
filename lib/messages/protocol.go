@@ -58,3 +58,9 @@ type Trace struct {
 	Timestamp int64  `json:"timestamp"`
 	Location  string `json:"location"`
 }
+
+type KafkaMessage struct {
+	Topic   string
+	Key     string
+	Payload string
+}

@@ -136,8 +136,8 @@ func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string,
 	}
 
 	if resp.StatusCode >= 300 {
-		this.Error(taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, string(pl), taskInfo.TenantId)
-		log.Println("Error on completeCamundaTask.")
+		//this.Error(taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, string(pl), taskInfo.TenantId)
+		log.Println("WARNING: unable to complete task", taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, string(pl), taskInfo.TenantId)
 	} else {
 		log.Println("complete camunda task: ", completeRequest, string(pl))
 	}

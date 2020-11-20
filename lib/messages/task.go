@@ -22,6 +22,8 @@ import (
 )
 
 type Command struct {
+	Version int `json:"version"`
+
 	//modeling time
 	Function         model.Function `json:"function"`
 	CharacteristicId string         `json:"characteristic_id"`
@@ -31,6 +33,7 @@ type Command struct {
 	Aspect      *model.Aspect      `json:"aspect,omitempty"`
 
 	//deployment time
+	GroupId              string                    `json:"group_id"`
 	DeviceId             string                    `json:"device_id,omitempty"`
 	Device               *model.Device             `json:"device,omitempty"`
 	ServiceId            string                    `json:"service_id,omitempty"`

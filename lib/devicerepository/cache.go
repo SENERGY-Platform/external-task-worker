@@ -17,6 +17,7 @@
 package devicerepository
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/coocood/freecache"
 	"log"
@@ -55,4 +56,22 @@ func (this *Cache) Set(key string, value []byte) {
 		log.Println("ERROR: in Cache::l1.Set()", err)
 	}
 	return
+}
+
+func (this *Cache) Use(key string, getter func() (interface{}, error), result interface{}) (err error) {
+	item, err := this.Get(key)
+	if err == nil {
+		err = json.Unmarshal(item.Value, result)
+		return
+	}
+	temp, err := getter()
+	if err != nil {
+		return err
+	}
+	value, err := json.Marshal(temp)
+	if err != nil {
+		return err
+	}
+	this.Set(key, value)
+	return json.Unmarshal(value, &result)
 }

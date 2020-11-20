@@ -30,4 +30,7 @@ type RepoInterface interface {
 	GetService(token Impersonate, device model.Device, serviceId string) (model.Service, error)
 	GetProtocol(token Impersonate, id string) (model.Protocol, error)
 	GetToken(user string) (Impersonate, error)
+
+	GetDeviceType(token Impersonate, id string) (model.DeviceType, error)
+	GetDeviceGroup(token Impersonate, id string) (model.DeviceGroup, error)
 }

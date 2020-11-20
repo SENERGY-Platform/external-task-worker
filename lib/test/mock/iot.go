@@ -31,6 +31,14 @@ type RepoMock struct {
 	protocols map[string]model.Protocol
 }
 
+func (this *RepoMock) GetDeviceType(token devicerepository.Impersonate, id string) (model.DeviceType, error) {
+	return model.DeviceType{}, errors.New("not implemented")
+}
+
+func (this *RepoMock) GetDeviceGroup(token devicerepository.Impersonate, id string) (model.DeviceGroup, error) {
+	return model.DeviceGroup{}, errors.New("not implemented")
+}
+
 func (this *RepoMock) Get(configType util.Config) devicerepository.RepoInterface {
 	this.devices = map[string]model.Device{}
 	this.services = map[string]model.Service{}

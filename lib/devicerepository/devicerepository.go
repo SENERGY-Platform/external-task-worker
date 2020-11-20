@@ -41,24 +41,26 @@ func (this *Iot) GetToken(user string) (Impersonate, error) {
 }
 
 func (this *Iot) GetDevice(token Impersonate, id string) (result model.Device, err error) {
-	result, err = this.getDeviceFromCache(id)
-	if err != nil {
-		err = token.GetJSON(this.repoUrl+"/devices/"+url.QueryEscape(id), &result)
-		if err == nil {
-			this.saveDeviceToCache(result)
-		}
-	}
+	err = this.cache.Use("device."+id, func() (interface{}, error) {
+		return this.getDevice(token, id)
+	}, &result)
+	return
+}
+
+func (this *Iot) getDevice(token Impersonate, id string) (result model.Device, err error) {
+	err = token.GetJSON(this.repoUrl+"/devices/"+url.QueryEscape(id), &result)
 	return
 }
 
 func (this *Iot) GetProtocol(token Impersonate, id string) (result model.Protocol, err error) {
-	result, err = this.getProtocolFromCache(id)
-	if err != nil {
-		err = token.GetJSON(this.repoUrl+"/protocols/"+url.QueryEscape(id), &result)
-		if err == nil {
-			this.saveProtocolToCache(result)
-		}
-	}
+	err = this.cache.Use("protocol."+id, func() (interface{}, error) {
+		return this.getProtocol(token, id)
+	}, &result)
+	return
+}
+
+func (this *Iot) getProtocol(token Impersonate, id string) (result model.Protocol, err error) {
+	err = token.GetJSON(this.repoUrl+"/protocols/"+url.QueryEscape(id), &result)
 	return
 }
 
@@ -82,20 +84,6 @@ func (this *Iot) GetService(token Impersonate, device model.Device, id string) (
 	return
 }
 
-func (this *Iot) getDeviceFromCache(id string) (device model.Device, err error) {
-	item, err := this.cache.Get("device." + id)
-	if err != nil {
-		return device, err
-	}
-	err = json.Unmarshal(item.Value, &device)
-	return
-}
-
-func (this *Iot) saveDeviceToCache(device model.Device) {
-	buffer, _ := json.Marshal(device)
-	this.cache.Set("device."+device.Id, buffer)
-}
-
 func (this *Iot) getServiceFromCache(id string) (service model.Service, err error) {
 	item, err := this.cache.Get("service." + id)
 	if err != nil {
@@ -110,41 +98,26 @@ func (this *Iot) saveServiceToCache(service model.Service) {
 	this.cache.Set("service."+service.Id, buffer)
 }
 
-func (this *Iot) saveProtocolToCache(protocol model.Protocol) {
-	buffer, _ := json.Marshal(protocol)
-	this.cache.Set("protocol."+protocol.Id, buffer)
-}
-
-func (this *Iot) getProtocolFromCache(id string) (protocol model.Protocol, err error) {
-	item, err := this.cache.Get("protocol." + id)
-	if err != nil {
-		return protocol, err
-	}
-	err = json.Unmarshal(item.Value, &protocol)
-	return
-}
-
 func (this *Iot) GetDeviceType(token Impersonate, id string) (result model.DeviceType, err error) {
-	result, err = this.getDeviceTypeFromCache(id)
-	if err != nil {
-		err = token.GetJSON(this.repoUrl+"/device-types/"+url.QueryEscape(id), &result)
-	}
-	if err == nil {
-		this.saveDeviceTypeToCache(result)
-	}
+	err = this.cache.Use("deviceType."+id, func() (interface{}, error) {
+		return this.getDeviceType(token, id)
+	}, &result)
 	return
 }
 
-func (this *Iot) saveDeviceTypeToCache(deviceType model.DeviceType) {
-	buffer, _ := json.Marshal(deviceType)
-	this.cache.Set("deviceType."+deviceType.Id, buffer)
+func (this *Iot) getDeviceType(token Impersonate, id string) (result model.DeviceType, err error) {
+	err = token.GetJSON(this.repoUrl+"/device-types/"+url.QueryEscape(id), &result)
+	return
 }
 
-func (this *Iot) getDeviceTypeFromCache(id string) (deviceType model.DeviceType, err error) {
-	item, err := this.cache.Get("deviceType." + id)
-	if err != nil {
-		return deviceType, err
-	}
-	err = json.Unmarshal(item.Value, &deviceType)
+func (this *Iot) GetDeviceGroup(token Impersonate, id string) (result model.DeviceGroup, err error) {
+	err = this.cache.Use("deviceGroup."+id, func() (interface{}, error) {
+		return this.getDeviceGroup(token, id)
+	}, &result)
+	return
+}
+
+func (this *Iot) getDeviceGroup(token Impersonate, id string) (result model.DeviceGroup, err error) {
+	err = token.GetJSON(this.repoUrl+"/device-groups/"+url.QueryEscape(id), &result)
 	return
 }

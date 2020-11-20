@@ -65,3 +65,18 @@ type ProtocolSegment struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 }
+
+type DeviceGroup struct {
+	Id                 string           `json:"id"`
+	Name               string           `json:"name"`
+	Image              string           `json:"image"`
+	BlockedInteraction Interaction      `json:"blocked_interaction"` //service must not use this interaction
+	Criteria           []FilterCriteria `json:"criteria"`
+	DeviceIds          []string         `json:"device_ids"`
+}
+
+type FilterCriteria struct {
+	FunctionId    string `json:"function_id"`
+	AspectId      string `json:"aspect_id"`
+	DeviceClassId string `json:"device_class_id"`
+}

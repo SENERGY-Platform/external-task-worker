@@ -35,3 +35,6 @@ const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label"
 const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
 const URN_PREFIX = "urn:infai:ses:"
+
+const MEASURING_FUNCTION_PREFIX = "urn:infai:ses:measuring-function:"
+const CONTROLLING_FUNCTION_PREFIX = "urn:infai:ses:controlling-function:"
