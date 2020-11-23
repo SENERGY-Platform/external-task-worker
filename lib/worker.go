@@ -30,6 +30,7 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
 	"log"
 	"reflect"
+	"runtime/debug"
 	"strconv"
 	"sync"
 	"time"
@@ -133,6 +134,11 @@ func (this *worker) ExecuteNextTasks() (wait bool) {
 }
 
 func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("ERROR: ", r, "\n", debug.Stack())
+		}
+	}()
 	if this.config.Debug {
 		log.Println("Start", task.Id, util.TimeNow().Second())
 		log.Println("Get new Task: ", task)

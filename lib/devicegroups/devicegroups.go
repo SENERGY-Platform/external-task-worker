@@ -27,7 +27,7 @@ import (
 	"strings"
 )
 
-const META_KEY_PREFIX = "meta."
+const METADATA_KEY_PREFIX = "meta."
 const RESULT_KEY_PREFIX = "result."
 
 type Callback = func(command messages.Command, task messages.CamundaExternalTask) (topic string, key string, message string, err error)
@@ -74,7 +74,7 @@ func (this *DeviceGroups) ProcessCommand(request messages.Command, task messages
 	_, finishedResults, missingSubTasks, err = this.getTaskResults(task.Id)
 	if err == ErrNotFount {
 		err = nil
-		missingSubTasks, err := this.GetSubTasks(request, task)
+		missingSubTasks, err = this.GetSubTasks(request, task)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -119,12 +119,12 @@ func (this *DeviceGroups) IsFinished(taskId string) (parent messages.GroupTaskMe
 }
 
 func (this *DeviceGroups) getGroupMetadata(taskId string) (metadata messages.GroupTaskMetadata, err error) {
-	err = this.dbGet(META_KEY_PREFIX+taskId, &metadata)
+	err = this.dbGet(METADATA_KEY_PREFIX+taskId, &metadata)
 	return
 }
 
 func (this *DeviceGroups) setGroupMetadata(taskId string, metadata messages.GroupTaskMetadata) (err error) {
-	err = this.dbSet(META_KEY_PREFIX+taskId, metadata)
+	err = this.dbSet(METADATA_KEY_PREFIX+taskId, metadata)
 	return
 }
 
@@ -140,12 +140,12 @@ func (this *DeviceGroups) setSubResult(subTaskId string, subResult interface{}) 
 
 var ErrNotFount = memcache.ErrCacheMiss
 
-func (this *DeviceGroups) getTaskResults(taskId string) (meta messages.GroupTaskMetadata, results []interface{}, missingSubTasks []messages.GroupTaskMetadataElement, err error) {
-	meta, err = this.getGroupMetadata(taskId)
+func (this *DeviceGroups) getTaskResults(taskId string) (metadata messages.GroupTaskMetadata, results []interface{}, missingSubTasks []messages.GroupTaskMetadataElement, err error) {
+	metadata, err = this.getGroupMetadata(taskId)
 	if err != nil {
-		return meta, nil, nil, err
+		return metadata, nil, nil, err
 	}
-	for _, sub := range meta.Children {
+	for _, sub := range metadata.Children {
 		subResult, err := this.getSubResult(sub.Task.Id)
 		if err == ErrNotFount {
 			err = nil
