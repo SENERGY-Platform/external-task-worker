@@ -26,23 +26,35 @@ import (
 var Repo = &RepoMock{}
 
 type RepoMock struct {
-	devices   map[string]model.Device
-	services  map[string]model.Service
-	protocols map[string]model.Protocol
+	devices      map[string]model.Device
+	services     map[string]model.Service
+	protocols    map[string]model.Protocol
+	deviceTypes  map[string]model.DeviceType
+	deviceGroups map[string]model.DeviceGroup
 }
 
 func (this *RepoMock) GetDeviceType(token devicerepository.Impersonate, id string) (model.DeviceType, error) {
-	return model.DeviceType{}, errors.New("not implemented")
+	dt, ok := this.deviceTypes[id]
+	if !ok {
+		return dt, errors.New("device-type not found")
+	}
+	return dt, nil
 }
 
 func (this *RepoMock) GetDeviceGroup(token devicerepository.Impersonate, id string) (model.DeviceGroup, error) {
-	return model.DeviceGroup{}, errors.New("not implemented")
+	dg, ok := this.deviceGroups[id]
+	if !ok {
+		return dg, errors.New("device-group not found")
+	}
+	return dg, nil
 }
 
 func (this *RepoMock) Get(configType util.Config) devicerepository.RepoInterface {
 	this.devices = map[string]model.Device{}
 	this.services = map[string]model.Service{}
 	this.protocols = map[string]model.Protocol{}
+	this.deviceTypes = map[string]model.DeviceType{}
+	this.deviceGroups = map[string]model.DeviceGroup{}
 	return this
 }
 
@@ -96,4 +108,15 @@ func (this *RepoMock) RegisterService(service model.Service) {
 
 func (this *RepoMock) RegisterProtocol(protocol model.Protocol) {
 	this.protocols[protocol.Id] = protocol
+}
+
+func (this *RepoMock) RegisterDeviceType(deviceType model.DeviceType) {
+	this.deviceTypes[deviceType.Id] = deviceType
+	for _, s := range deviceType.Services {
+		this.services[s.Id] = s
+	}
+}
+
+func (this *RepoMock) RegisterDeviceGroup(deviceGroup model.DeviceGroup) {
+	this.deviceGroups[deviceGroup.Id] = deviceGroup
 }

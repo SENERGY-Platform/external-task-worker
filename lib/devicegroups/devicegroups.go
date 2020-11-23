@@ -114,7 +114,7 @@ func (this *DeviceGroups) IsFinished(taskId string) (parent messages.GroupTaskMe
 	if err != nil {
 		return parent, nil, false, err
 	}
-	finished = len(missing) > 0
+	finished = len(missing) == 0
 	return meta.Parent, results, finished, err
 }
 

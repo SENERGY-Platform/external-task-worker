@@ -175,7 +175,6 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
 		} else {
 			this.logProducerSuccess()
 		}
-		break
 	}
 
 	if this.config.CompletionStrategy == util.OPTIMISTIC || len(missingProtocolMessages) == 0 {
@@ -191,7 +190,11 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
 			log.Println("error on completeCamundaTask(): ", err)
 			return
 		} else {
-			log.Println("Completed task optimistic.")
+			if len(results) == 0 {
+				log.Println("Completed task optimistic.")
+			} else {
+				log.Println("Completed task with saved sub results.")
+			}
 		}
 	}
 }
@@ -272,7 +275,7 @@ func (this *worker) CompleteTask(msg string) (err error) {
 }
 
 func handleVersioning(version int, results []interface{}) interface{} {
-	if version == 0 && len(results) > 0 {
+	if version < 2 && len(results) > 0 {
 		return results[0]
 	} else {
 		return results
