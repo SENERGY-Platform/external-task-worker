@@ -391,7 +391,7 @@ func TestGroupResponses(t *testing.T) {
 		Function:         model.Function{Id: model.MEASURING_FUNCTION_PREFIX + "f1", RdfType: model.SES_ONTOLOGY_MEASURING_FUNCTION},
 		Aspect:           &model.Aspect{Id: "a1"},
 		CharacteristicId: example.Rgb,
-		GroupId:          "dg1",
+		DeviceGroupId:    "dg1",
 		DeviceId:         "device_1",
 		ServiceId:        "service_1",
 		ProtocolId:       "p1",
@@ -408,7 +408,7 @@ func TestGroupResponses(t *testing.T) {
 		Function:         model.Function{Id: model.MEASURING_FUNCTION_PREFIX + "f1", RdfType: model.SES_ONTOLOGY_MEASURING_FUNCTION},
 		Aspect:           &model.Aspect{Id: "a1"},
 		CharacteristicId: example.Hex,
-		GroupId:          "dg1",
+		DeviceGroupId:    "dg1",
 	}
 
 	cmdMsg2, err := json.Marshal(cmd2)
@@ -693,7 +693,7 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 		Function:         model.Function{Id: model.MEASURING_FUNCTION_PREFIX + "f1", RdfType: model.SES_ONTOLOGY_MEASURING_FUNCTION},
 		Aspect:           &model.Aspect{Id: "a1"},
 		CharacteristicId: example.Rgb,
-		GroupId:          "dg1",
+		DeviceGroupId:    "dg1",
 		DeviceId:         "device_1",
 		ServiceId:        "service_1",
 		ProtocolId:       "p1",
@@ -710,7 +710,7 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 		Function:         model.Function{Id: model.MEASURING_FUNCTION_PREFIX + "f1", RdfType: model.SES_ONTOLOGY_MEASURING_FUNCTION},
 		Aspect:           &model.Aspect{Id: "a1"},
 		CharacteristicId: example.Hex,
-		GroupId:          "dg1",
+		DeviceGroupId:    "dg1",
 	}
 
 	cmdMsg2, err := json.Marshal(cmd2)

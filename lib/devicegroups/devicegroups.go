@@ -158,7 +158,7 @@ func (this *DeviceGroups) getTaskResults(taskId string) (metadata messages.Group
 }
 
 func (this *DeviceGroups) GetSubTasks(request messages.Command, task messages.CamundaExternalTask) (result []messages.GroupTaskMetadataElement, err error) {
-	if request.GroupId == "" {
+	if request.DeviceGroupId == "" {
 		return []messages.GroupTaskMetadataElement{{
 			Command: request,
 			Task:    task,
@@ -168,7 +168,7 @@ func (this *DeviceGroups) GetSubTasks(request messages.Command, task messages.Ca
 	if err != nil {
 		return nil, err
 	}
-	group, err := this.repo.GetDeviceGroup(token, request.GroupId)
+	group, err := this.repo.GetDeviceGroup(token, request.DeviceGroupId)
 	if err != nil {
 		return nil, err
 	}
