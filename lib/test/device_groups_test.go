@@ -47,6 +47,7 @@ func TestWorkerResponseV2(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	mock.Camunda = &mock.CamundaMock{}
 	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mock.Camunda, mock.Marshaller)
 
 	time.Sleep(1 * time.Second)
@@ -175,7 +176,8 @@ func TestWorkerResponseV2(t *testing.T) {
 		log.Println("fetched:", fetched)
 		log.Println("failed:", failed)
 		log.Println("completed:", completed)
-		log.Fatal(len(fetched), len(failed), len(completed))
+		log.Println(len(fetched), len(failed), len(completed))
+		return
 	}
 
 	list := []string{}
@@ -213,6 +215,7 @@ func TestGroupResponses(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	mock.Camunda = &mock.CamundaMock{}
 	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mock.Camunda, mock.Marshaller)
 
 	time.Sleep(1 * time.Second)

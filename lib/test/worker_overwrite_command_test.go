@@ -44,6 +44,7 @@ func ExampleWorkerOverwriteCommand() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	mock.Camunda = &mock.CamundaMock{}
 	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mock.Camunda, mock.Marshaller)
 
 	time.Sleep(1 * time.Second)

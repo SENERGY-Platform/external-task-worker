@@ -45,6 +45,7 @@ func ExampleConfigurablesCommand1() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	mock.Camunda = &mock.CamundaMock{}
 	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mock.Camunda, mock.Marshaller)
 
 	time.Sleep(1 * time.Second)
@@ -179,6 +180,7 @@ func ExampleConfigurablesCommand2() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	mock.Camunda = &mock.CamundaMock{}
 	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mock.Camunda, mock.Marshaller)
 
 	time.Sleep(1 * time.Second)
@@ -313,6 +315,7 @@ func ExampleConfigurablesCommand3() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	mock.Camunda = &mock.CamundaMock{}
 	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mock.Camunda, mock.Marshaller)
 
 	time.Sleep(1 * time.Second)
@@ -458,6 +461,7 @@ func ExampleConfigurablesCommand4() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	mock.Camunda = &mock.CamundaMock{}
 	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mock.Camunda, mock.Marshaller)
 
 	time.Sleep(1 * time.Second)
@@ -594,6 +598,7 @@ func ExampleConfigurablesCommand5() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	mock.Camunda = &mock.CamundaMock{}
 	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mock.Camunda, mock.Marshaller)
 
 	time.Sleep(1 * time.Second)
@@ -747,6 +752,7 @@ func ExampleConfigurablesCommandWithoutFunctionRdfType() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	mock.Camunda = &mock.CamundaMock{}
 	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mock.Camunda, mock.Marshaller)
 
 	time.Sleep(1 * time.Second)
