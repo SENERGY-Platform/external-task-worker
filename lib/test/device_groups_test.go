@@ -238,11 +238,10 @@ func TestGroupResponses(t *testing.T) {
 	})
 
 	mock.Repo.RegisterDeviceGroup(model.DeviceGroup{
-		Id:                 "dg1",
-		Name:               "dg1",
-		BlockedInteraction: model.EVENT,
-		Criteria: []model.FilterCriteria{
-			{FunctionId: model.MEASURING_FUNCTION_PREFIX + "f1", AspectId: "a1"},
+		Id:   "dg1",
+		Name: "dg1",
+		Criteria: []model.DeviceGroupFilterCriteria{
+			{FunctionId: model.MEASURING_FUNCTION_PREFIX + "f1", AspectId: "a1", Interaction: model.REQUEST},
 		},
 		DeviceIds: []string{"device_1", "device_2"},
 	})
@@ -540,11 +539,10 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 	})
 
 	mock.Repo.RegisterDeviceGroup(model.DeviceGroup{
-		Id:                 "dg1",
-		Name:               "dg1",
-		BlockedInteraction: model.EVENT,
-		Criteria: []model.FilterCriteria{
-			{FunctionId: model.MEASURING_FUNCTION_PREFIX + "f1", AspectId: "a1"},
+		Id:   "dg1",
+		Name: "dg1",
+		Criteria: []model.DeviceGroupFilterCriteria{
+			{FunctionId: model.MEASURING_FUNCTION_PREFIX + "f1", AspectId: "a1", Interaction: model.REQUEST},
 		},
 		DeviceIds: []string{"device_1", "device_2"},
 	})
