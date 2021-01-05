@@ -23,6 +23,10 @@ import (
 	"sync"
 )
 
+func CleanKafkaMock() {
+	Kafka = &KafkaMock{}
+}
+
 var Kafka = &KafkaMock{}
 
 type KafkaMock struct {
@@ -58,25 +62,28 @@ func (this *KafkaMock) NewProducer(config util.Config) (kafka.ProducerInterface,
 }
 
 func (this *KafkaMock) Produce(topic string, message string) error {
-	this.mux.Lock()
-	defer this.mux.Unlock()
 	log.Println("Produce", topic, message)
-	this.Produced[topic] = append(this.Produced[topic], message)
-	for _, l := range this.listeners[topic] {
+	this.setProduced(topic, message)
+	for _, l := range this.getListeners(topic) {
 		log.Println(l(message))
 	}
 	return nil
 }
 
-func (this *KafkaMock) ProduceWithKey(topic string, key string, message string) error {
+func (this *KafkaMock) setProduced(topic string, message string) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
-	log.Println("Produce", topic, message)
 	this.Produced[topic] = append(this.Produced[topic], message)
-	for _, l := range this.listeners[topic] {
-		log.Println(l(message))
-	}
-	return nil
+}
+
+func (this *KafkaMock) getListeners(topic string) []func(msg string) error {
+	this.mux.Lock()
+	defer this.mux.Unlock()
+	return this.listeners[topic]
+}
+
+func (this *KafkaMock) ProduceWithKey(topic string, key string, message string) error {
+	return this.Produce(topic, message)
 }
 
 func (this *KafkaMock) Close() {}

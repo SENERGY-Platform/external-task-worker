@@ -391,9 +391,9 @@ func TestGroupResponses(t *testing.T) {
 		Aspect:           &model.Aspect{Id: "a1"},
 		CharacteristicId: example.Rgb,
 		DeviceGroupId:    "dg1",
-		DeviceId:         "device_1",
-		ServiceId:        "service_1",
-		ProtocolId:       "p1",
+		DeviceId:         "device_1",  //will be ignored because DeviceGroupId is set
+		ServiceId:        "service_1", //will be ignored because DeviceGroupId is set
+		ProtocolId:       "p1",        //will be ignored because DeviceGroupId is set
 	}
 
 	cmdMsg1, err := json.Marshal(cmd1)
@@ -692,9 +692,9 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 		Aspect:           &model.Aspect{Id: "a1"},
 		CharacteristicId: example.Rgb,
 		DeviceGroupId:    "dg1",
-		DeviceId:         "device_1",
-		ServiceId:        "service_1",
-		ProtocolId:       "p1",
+		DeviceId:         "device_1",  //will be ignored because DeviceGroupId is set
+		ServiceId:        "service_1", //will be ignored because DeviceGroupId is set
+		ProtocolId:       "p1",        //will be ignored because DeviceGroupId is set
 	}
 
 	cmdMsg1, err := json.Marshal(cmd1)
