@@ -153,15 +153,43 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
 		return
 	}
 
-	if request.Retries != -1 && request.Retries < task.Retries {
-		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, "communication timeout", task.TenantId)
-		return
-	}
-
 	missingProtocolMessages, results, err := this.deviceGroupsHandler.ProcessCommand(request, task)
 	if err != nil {
 		log.Println("error on deviceGroupsHandler.ProcessCommand", err)
 		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, err.Error(), task.TenantId)
+		return
+	}
+
+	noMoreRetries := request.Retries != -1 && request.Retries < task.Retries
+	atLeastOneResult := len(results) > 0
+	if this.config.CompletionStrategy == util.OPTIMISTIC || len(missingProtocolMessages) == 0 || (noMoreRetries && atLeastOneResult) {
+		time.Sleep(time.Duration(this.config.OptimisticTaskCompletionTimeout) * time.Millisecond) //prevent completes that are to fast
+		err = this.camunda.CompleteTask(messages.TaskInfo{
+			WorkerId:            this.camunda.GetWorkerId(),
+			TaskId:              task.Id,
+			ProcessInstanceId:   task.ProcessInstanceId,
+			ProcessDefinitionId: task.ProcessDefinitionId,
+			TenantId:            task.TenantId,
+		}, this.config.CamundaTaskResultName, handleVersioning(request.Version, results))
+		if err != nil {
+			log.Println("error on completeCamundaTask(): ", err)
+			return
+		}
+		if len(results) == 0 {
+			log.Println("Completed task optimistic.")
+		} else {
+			log.Println("Completed task with saved sub results.")
+		}
+		if this.config.CompletionStrategy != util.OPTIMISTIC {
+			//if optimistic: we have still to send the commands
+			//else: this is not the first try and now we are finished
+			return
+		}
+	}
+
+	if noMoreRetries {
+		// out of tries and no sub results -> send error
+		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, "communication timeout", task.TenantId)
 		return
 	}
 
@@ -174,27 +202,6 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
 			this.logProducerError()
 		} else {
 			this.logProducerSuccess()
-		}
-	}
-
-	if this.config.CompletionStrategy == util.OPTIMISTIC || len(missingProtocolMessages) == 0 {
-		time.Sleep(time.Duration(this.config.OptimisticTaskCompletionTimeout) * time.Millisecond) //prevent completes that are to fast
-		err = this.camunda.CompleteTask(messages.TaskInfo{
-			WorkerId:            this.camunda.GetWorkerId(),
-			TaskId:              task.Id,
-			ProcessInstanceId:   task.ProcessInstanceId,
-			ProcessDefinitionId: task.ProcessDefinitionId,
-			TenantId:            task.TenantId,
-		}, this.config.CamundaTaskResultName, handleVersioning(request.Version, results))
-		if err != nil {
-			log.Println("error on completeCamundaTask(): ", err)
-			return
-		} else {
-			if len(results) == 0 {
-				log.Println("Completed task optimistic.")
-			} else {
-				log.Println("Completed task with saved sub results.")
-			}
 		}
 	}
 }

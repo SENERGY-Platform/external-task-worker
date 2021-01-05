@@ -78,6 +78,16 @@ func (this *DeviceGroups) ProcessCommand(request messages.Command, task messages
 		if err != nil {
 			return nil, nil, err
 		}
+		err = this.setGroupMetadata(task.Id, messages.GroupTaskMetadata{
+			Parent: messages.GroupTaskMetadataElement{
+				Command: request,
+				Task:    task,
+			},
+			Children: missingSubTasks,
+		})
+		if err != nil {
+			return nil, nil, err
+		}
 		for _, subTask := range missingSubTasks {
 			err = this.setGroupMetadata(subTask.Task.Id, messages.GroupTaskMetadata{
 				Parent: messages.GroupTaskMetadataElement{
