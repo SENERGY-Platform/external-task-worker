@@ -61,6 +61,7 @@ func testForConstraintGroup(sequential bool, missingResponseForRequestIndex map[
 		}
 
 		config.CompletionStrategy = util.PESSIMISTIC
+		config.CamundaFetchLockDuration = 300
 		config.CamundaWorkerTimeout = 100
 		config.Debug = true
 
@@ -202,6 +203,7 @@ func testForConstraintGroup(sequential bool, missingResponseForRequestIndex map[
 			Aspect:           &model.Aspect{Id: "a1"},
 			CharacteristicId: example.Rgb,
 			DeviceGroupId:    "dg1",
+			Retries:          0,
 		}
 
 		cmdMsg, err := json.Marshal(cmd)

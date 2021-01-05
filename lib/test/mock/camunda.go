@@ -103,6 +103,8 @@ func (this *CamundaMock) SetRetry(taskid string, tenantId string, number int64) 
 	if ok {
 		temp.Retries = number
 		this.fetchedTasks[taskid] = temp
+	} else {
+		log.Println("DEBUG: UNABLE to SetRetry", taskid, number)
 	}
 }
 
