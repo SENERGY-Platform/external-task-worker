@@ -57,8 +57,7 @@ type worker struct {
 }
 
 type DeviceGroupsHandler interface {
-	ProcessCommand(request messages.Command, task messages.CamundaExternalTask) (missingRequests []messages.KafkaMessage, finishedResults []interface{}, err error)
-	IsFinished(taskId string) (parent messages.GroupTaskMetadataElement, results []interface{}, finished bool, err error)
+	ProcessCommand(request messages.Command, task messages.CamundaExternalTask) (completed bool, missingRequests []messages.KafkaMessage, finishedResults []interface{}, err error)
 	ProcessResponse(taskId string, subResult interface{}) (parent messages.GroupTaskMetadataElement, results []interface{}, finished bool, err error)
 }
 
@@ -77,7 +76,7 @@ func Worker(ctx context.Context, config util.Config, kafkaFactory kafka.FactoryI
 	StartHealthCheckEndpoint(ctx, config, &w)
 
 	if config.CompletionStrategy != util.OPTIMISTIC {
-		w.consumer, err = kafkaFactory.NewConsumer(config, w.CompleteTask)
+		w.consumer, err = kafkaFactory.NewConsumer(config, w.HandleTaskResponse)
 		if err != nil {
 			log.Fatal("ERROR: kafkaFactory.NewConsumer", err)
 		}
@@ -92,11 +91,11 @@ func Worker(ctx context.Context, config util.Config, kafkaFactory kafka.FactoryI
 	}
 	defer w.producer.Close()
 	w.repository = repoFactory.Get(config)
-	w.deviceGroupsHandler = devicegroups.New(w.repository, w.CreateProtocolMessage, config.SubResultExpirationInSeconds, config.SubResultDatabaseUrls)
 	w.camunda, err = camundaFactory.Get(config, w.producer)
 	if err != nil {
 		log.Fatal("ERROR: kafkaFactory.NewProducer", err)
 	}
+	w.deviceGroupsHandler = devicegroups.New(config.SequentialGroups, w.camunda, w.repository, w.CreateProtocolMessage, config.CamundaFetchLockDuration, config.SubResultExpirationInSeconds, config.SubResultDatabaseUrls)
 	for {
 		select {
 		case <-ctx.Done():
@@ -153,16 +152,13 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
 		return
 	}
 
-	missingProtocolMessages, results, err := this.deviceGroupsHandler.ProcessCommand(request, task)
+	completed, nextProtocolMessages, results, err := this.deviceGroupsHandler.ProcessCommand(request, task)
 	if err != nil {
-		log.Println("error on deviceGroupsHandler.ProcessCommand", err)
 		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, err.Error(), task.TenantId)
 		return
 	}
 
-	noMoreRetries := request.Retries != -1 && request.Retries < task.Retries
-	atLeastOneResult := len(results) > 0
-	if this.config.CompletionStrategy == util.OPTIMISTIC || len(missingProtocolMessages) == 0 || (noMoreRetries && atLeastOneResult) {
+	if this.config.CompletionStrategy == util.OPTIMISTIC || completed {
 		time.Sleep(time.Duration(this.config.OptimisticTaskCompletionTimeout) * time.Millisecond) //prevent completes that are to fast
 		err = this.camunda.CompleteTask(messages.TaskInfo{
 			WorkerId:            this.camunda.GetWorkerId(),
@@ -175,11 +171,6 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
 			log.Println("error on completeCamundaTask(): ", err)
 			return
 		}
-		if len(results) == 0 {
-			log.Println("Completed task optimistic.")
-		} else {
-			log.Println("Completed task with saved sub results.")
-		}
 		if this.config.CompletionStrategy != util.OPTIMISTIC {
 			//if optimistic: we have still to send the commands
 			//else: this is not the first try and now we are finished
@@ -187,15 +178,7 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
 		}
 	}
 
-	if noMoreRetries {
-		// out of tries and no sub results -> send error
-		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, "communication timeout", task.TenantId)
-		return
-	}
-
-	this.camunda.SetRetry(task.Id, task.TenantId, task.Retries+1)
-
-	for _, message := range missingProtocolMessages {
+	for _, message := range nextProtocolMessages {
 		err = this.producer.ProduceWithKey(message.Topic, message.Key, message.Payload)
 		if err != nil {
 			log.Println("ERROR: unable to produce kafka msg", err)
@@ -206,7 +189,7 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
 	}
 }
 
-func (this *worker) CompleteTask(msg string) (err error) {
+func (this *worker) HandleTaskResponse(msg string) (err error) {
 	var message messages.ProtocolMsg
 	err = json.Unmarshal([]byte(msg), &message)
 	if err != nil {
@@ -218,10 +201,14 @@ func (this *worker) CompleteTask(msg string) (err error) {
 		}
 	}()
 
+	if message.TaskInfo.CompletionStrategy == util.OPTIMISTIC {
+		return nil
+	}
+
 	message.Trace = append(message.Trace, messages.Trace{
 		Timestamp: time.Now().UnixNano(),
 		TimeUnit:  "unix_nano",
-		Location:  "github.com/SENERGY-Platform/external-task-worker CompleteTask() message unmarshal",
+		Location:  "github.com/SENERGY-Platform/external-task-worker HandleTaskResponse() message unmarshal",
 	})
 
 	if CheckCamundaDuration && this.missesCamundaDuration(message) {
@@ -239,7 +226,7 @@ func (this *worker) CompleteTask(msg string) (err error) {
 	message.Trace = append(message.Trace, messages.Trace{
 		Timestamp: time.Now().UnixNano(),
 		TimeUnit:  "unix_nano",
-		Location:  "github.com/SENERGY-Platform/external-task-worker CompleteTask() after this.marshaller.UnmarshalFromServiceAndProtocol()",
+		Location:  "github.com/SENERGY-Platform/external-task-worker HandleTaskResponse() after this.marshaller.UnmarshalFromServiceAndProtocol()",
 	})
 
 	parent, results, finished, err := this.deviceGroupsHandler.ProcessResponse(message.TaskInfo.TaskId, output)
@@ -275,8 +262,10 @@ func (this *worker) CompleteTask(msg string) (err error) {
 		message.Trace = append(message.Trace, messages.Trace{
 			Timestamp: time.Now().UnixNano(),
 			TimeUnit:  "unix_nano",
-			Location:  "github.com/SENERGY-Platform/external-task-worker CompleteTask() after this.camunda.CompleteTask()",
+			Location:  "github.com/SENERGY-Platform/external-task-worker HandleTaskResponse() after this.camunda.HandleTaskResponse()",
 		})
+	} else if this.config.SequentialGroups {
+		this.ExecuteTask(parent.Task)
 	}
 	return
 }

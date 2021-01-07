@@ -25,5 +25,6 @@
   "MarshallerUrl": "http://marshaller:8080",
   "HealthCheckPort": "8080",
   "SubResultExpirationInSeconds": 600,
-  "SubResultDatabaseUrls": []
+  "SubResultDatabaseUrls": [],
+  "SequentialGroups": false
 }

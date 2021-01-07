@@ -63,6 +63,7 @@ type Config struct {
 	HealthCheckPort                 string
 	SubResultExpirationInSeconds    int32
 	SubResultDatabaseUrls           []string
+	SequentialGroups                bool
 }
 
 //loads config from json in location and used environment variables (e.g ZookeeperUrl --> ZOOKEEPER_URL)

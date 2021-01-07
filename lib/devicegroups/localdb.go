@@ -52,3 +52,8 @@ func (this *LocalDb) Set(item *memcache.Item) error {
 	}
 	return this.db.Set([]byte(item.Key), item.Value, int(item.Expiration))
 }
+
+func (this *LocalDb) Delete(key string) error {
+	this.db.Del([]byte(key))
+	return nil
+}

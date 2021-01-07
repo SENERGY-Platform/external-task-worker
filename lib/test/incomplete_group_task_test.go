@@ -33,19 +33,19 @@ import (
 
 func TestConstraintGroup(t *testing.T) {
 	t.Run("parallel, no missing", testForConstraintGroup(false, map[int]bool{}))
-	t.Run("sequential, no missing", testForConstraintGroup(false, map[int]bool{}))
+	t.Run("sequential, no missing", testForConstraintGroup(true, map[int]bool{}))
 
 	t.Run("parallel, first missing", testForConstraintGroup(false, map[int]bool{0: true}))
-	t.Run("sequential, first missing", testForConstraintGroup(false, map[int]bool{0: true}))
+	t.Run("sequential, first missing", testForConstraintGroup(true, map[int]bool{0: true}))
 
 	t.Run("parallel, second missing", testForConstraintGroup(false, map[int]bool{1: true}))
-	t.Run("sequential, second missing", testForConstraintGroup(false, map[int]bool{1: true}))
+	t.Run("sequential, second missing", testForConstraintGroup(true, map[int]bool{1: true}))
 
 	t.Run("parallel, last missing", testForConstraintGroup(false, map[int]bool{2: true}))
-	t.Run("sequential, last missing", testForConstraintGroup(false, map[int]bool{2: true}))
+	t.Run("sequential, last missing", testForConstraintGroup(true, map[int]bool{2: true}))
 
 	t.Run("parallel, fist and last missing", testForConstraintGroup(false, map[int]bool{0: true, 2: true}))
-	t.Run("sequential, first last missing", testForConstraintGroup(false, map[int]bool{0: true, 2: true}))
+	t.Run("sequential, first last missing", testForConstraintGroup(true, map[int]bool{0: true, 2: true}))
 }
 
 func testForConstraintGroup(sequential bool, missingResponseForRequestIndex map[int]bool) func(t *testing.T) {
@@ -64,6 +64,7 @@ func testForConstraintGroup(sequential bool, missingResponseForRequestIndex map[
 		config.CamundaFetchLockDuration = 300
 		config.CamundaWorkerTimeout = 100
 		config.Debug = true
+		config.SequentialGroups = sequential
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -74,22 +75,26 @@ func testForConstraintGroup(sequential bool, missingResponseForRequestIndex map[
 
 		counter := 0
 		mock.Kafka.Subscribe("protocol1", func(message string) error {
-			if !missingResponseForRequestIndex[counter] {
-				msg := messages.ProtocolMsg{}
-				err = json.Unmarshal([]byte(message), &msg)
-				if err != nil {
-					log.Fatal(err)
-				}
-				msg.Response.Output = map[string]string{
-					"body": "{\"level\":\"#c8320" + strconv.Itoa(counter) + "\"}",
-				}
+			msg := messages.ProtocolMsg{}
+			err = json.Unmarshal([]byte(message), &msg)
+			if err != nil {
+				log.Fatal(err)
+			}
+			msg.Response.Output = map[string]string{
+				"body": "{\"level\":\"#c8320" + strconv.Itoa(counter) + "\"}",
+			}
+			ignore := !missingResponseForRequestIndex[counter]
+			counter = counter + 1
+			if ignore {
+				log.Println("RESPOND WITH", counter-1, msg.Response.Output)
 				resp, err := json.Marshal(msg)
 				if err != nil {
 					log.Fatal(err)
 				}
 				mock.Kafka.Produce(config.ResponseTopic, string(resp))
+			} else {
+				log.Println("IGNORE", counter-1, msg.Response.Output)
 			}
-			counter = counter + 1
 			return nil
 		})
 

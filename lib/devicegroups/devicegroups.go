@@ -17,7 +17,8 @@
 package devicegroups
 
 import (
-	"encoding/json"
+	"errors"
+	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/interfaces"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
@@ -25,32 +26,29 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 )
 
-const METADATA_KEY_PREFIX = "meta."
-const RESULT_KEY_PREFIX = "result."
-
 type Callback = func(command messages.Command, task messages.CamundaExternalTask) (topic string, key string, message string, err error)
-type DbInterface interface {
-	Get(key string) (*memcache.Item, error)
-	Set(item *memcache.Item) error
-}
 
-func New(devicerepo devicerepository.RepoInterface, protocolMessageCallback Callback, expirationInSeconds int32, memcachedUrls []string) *DeviceGroups {
+func New(sequential bool, camunda interfaces.CamundaInterface, devicerepo devicerepository.RepoInterface, protocolMessageCallback Callback, currentlyRunningTimeoutInMs int64, expirationInSeconds int32, memcachedUrls []string) *DeviceGroups {
 	if len(memcachedUrls) == 0 {
 		log.Println("WARNING: start with local sub result storage")
-		return NewWithKeyValueStore(devicerepo, protocolMessageCallback, expirationInSeconds, NewLocalDb())
+		return NewWithKeyValueStore(sequential, camunda, devicerepo, protocolMessageCallback, currentlyRunningTimeoutInMs, expirationInSeconds, NewLocalDb())
 	} else {
-		return NewWithKeyValueStore(devicerepo, protocolMessageCallback, expirationInSeconds, memcache.New(memcachedUrls...))
+		return NewWithKeyValueStore(sequential, camunda, devicerepo, protocolMessageCallback, currentlyRunningTimeoutInMs, expirationInSeconds, memcache.New(memcachedUrls...))
 	}
 }
 
-func NewWithKeyValueStore(devicerepo devicerepository.RepoInterface, protocolMessageCallback Callback, expirationInSeconds int32, db DbInterface) *DeviceGroups {
+func NewWithKeyValueStore(sequential bool, camunda interfaces.CamundaInterface, devicerepo devicerepository.RepoInterface, protocolMessageCallback Callback, currentlyRunningTimeoutInMs int64, expirationInSeconds int32, db DbInterface) *DeviceGroups {
 	return &DeviceGroups{
 		protocolMessageCallback: protocolMessageCallback,
 		repo:                    devicerepo,
 		db:                      db,
 		expirationInSeconds:     expirationInSeconds,
+		camunda:                 camunda,
+		sequential:              sequential,
+		currentlyRunningTimeout: time.Duration(currentlyRunningTimeoutInMs) * time.Millisecond,
 	}
 }
 
@@ -59,28 +57,96 @@ type DeviceGroups struct {
 	repo                    devicerepository.RepoInterface
 	db                      DbInterface
 	expirationInSeconds     int32
+	camunda                 interfaces.CamundaInterface
+	sequential              bool
+	currentlyRunningTimeout time.Duration
+}
+
+type RequestInfo struct {
+	KafkaMessage messages.KafkaMessage
+	Metadata     messages.GroupTaskMetadataElement
+	SubTaskState SubTaskState
+}
+
+type RequestInfoList []RequestInfo
+
+func (this RequestInfoList) ToMessages() (result []messages.KafkaMessage) {
+	result = []messages.KafkaMessage{}
+	for _, element := range this {
+		result = append(result, element.KafkaMessage)
+	}
+	return
 }
 
 func (this *DeviceGroups) ProcessResponse(subTaskId string, subResult interface{}) (parent messages.GroupTaskMetadataElement, results []interface{}, finished bool, err error) {
-	err = this.setSubResult(subTaskId, subResult)
+	err = this.setSubResult(subTaskId, SubResultWrapper{Value: subResult})
 	if err != nil {
 		return parent, nil, false, err
 	}
-	return this.IsFinished(subTaskId)
+	parent, results, finished, err = this.isFinished(subTaskId)
+	if err == nil && finished {
+		this.clearTaskData(parent.Task.Id)
+	}
+	return
 }
 
-func (this *DeviceGroups) ProcessCommand(request messages.Command, task messages.CamundaExternalTask) (missingRequests []messages.KafkaMessage, finishedResults []interface{}, err error) {
+func (this *DeviceGroups) ProcessCommand(command messages.Command, task messages.CamundaExternalTask) (completed bool, nextMessages []messages.KafkaMessage, finishedResults []interface{}, err error) {
+	nextRequests, finishedResults, err := this.getNextRequests(command, task)
+	if err != nil {
+		return completed, nextRequests.ToMessages(), finishedResults, err
+	}
+	if this.sequential {
+		nextRequests, err = this.annotateSubTaskStates(nextRequests)
+		if err != nil {
+			return completed, nextRequests.ToMessages(), finishedResults, err
+		}
+		nextRequests = this.filterRetries(nextRequests, command.Retries)
+		completed = len(nextRequests) == 0
+		if completed {
+			this.clearTaskData(task.Id)
+			if len(finishedResults) == 0 {
+				err = errors.New("unable to get any results for device-group")
+			}
+			return completed, nextRequests.ToMessages(), finishedResults, err
+		}
+		nextRequests = this.filterCurrentlyRunning(nextRequests)
+		if len(nextRequests) > 0 {
+			nextRequests = nextRequests[:1] // possible place to implement batches in sequence
+		}
+		err = this.updateSubTaskState(nextRequests)
+		return completed, nextRequests.ToMessages(), finishedResults, err
+	} else {
+		noMoreRetries := command.Retries != -1 && command.Retries < task.Retries
+		completed = len(nextRequests) == 0 || noMoreRetries
+		if completed {
+			this.clearTaskData(task.Id)
+		}
+		if noMoreRetries {
+			nextMessages = []messages.KafkaMessage{}
+			nextRequests = RequestInfoList{}
+			if len(finishedResults) == 0 {
+				err = errors.New("unable to get any results for device-group")
+			}
+		} else {
+			this.camunda.SetRetry(task.Id, task.TenantId, task.Retries+1)
+		}
+		return completed, nextRequests.ToMessages(), finishedResults, err
+	}
+	return
+}
+
+func (this *DeviceGroups) getNextRequests(command messages.Command, task messages.CamundaExternalTask) (missingRequests RequestInfoList, finishedResults []interface{}, err error) {
 	var missingSubTasks []messages.GroupTaskMetadataElement
 	_, finishedResults, missingSubTasks, err = this.getTaskResults(task.Id)
 	if err == ErrNotFount {
 		err = nil
-		missingSubTasks, err = this.GetSubTasks(request, task)
+		missingSubTasks, err = this.GetSubTasks(command, task)
 		if err != nil {
 			return nil, nil, err
 		}
 		err = this.setGroupMetadata(task.Id, messages.GroupTaskMetadata{
 			Parent: messages.GroupTaskMetadataElement{
-				Command: request,
+				Command: command,
 				Task:    task,
 			},
 			Children: missingSubTasks,
@@ -91,7 +157,7 @@ func (this *DeviceGroups) ProcessCommand(request messages.Command, task messages
 		for _, subTask := range missingSubTasks {
 			err = this.setGroupMetadata(subTask.Task.Id, messages.GroupTaskMetadata{
 				Parent: messages.GroupTaskMetadataElement{
-					Command: request,
+					Command: command,
 					Task:    task,
 				},
 				Children: missingSubTasks,
@@ -106,16 +172,19 @@ func (this *DeviceGroups) ProcessCommand(request messages.Command, task messages
 		if err != nil {
 			return nil, nil, err
 		}
-		missingRequests = append(missingRequests, messages.KafkaMessage{
-			Topic:   protocolTopic,
-			Key:     key,
-			Payload: message,
+		missingRequests = append(missingRequests, RequestInfo{
+			KafkaMessage: messages.KafkaMessage{
+				Topic:   protocolTopic,
+				Key:     key,
+				Payload: message,
+			},
+			Metadata: subTask,
 		})
 	}
 	return
 }
 
-func (this *DeviceGroups) IsFinished(taskId string) (parent messages.GroupTaskMetadataElement, results []interface{}, finished bool, err error) {
+func (this *DeviceGroups) isFinished(taskId string) (parent messages.GroupTaskMetadataElement, results []interface{}, finished bool, err error) {
 	meta, results, missing, err := this.getTaskResults(taskId)
 	if err == ErrNotFount {
 		err = nil
@@ -128,40 +197,23 @@ func (this *DeviceGroups) IsFinished(taskId string) (parent messages.GroupTaskMe
 	return meta.Parent, results, finished, err
 }
 
-func (this *DeviceGroups) getGroupMetadata(taskId string) (metadata messages.GroupTaskMetadata, err error) {
-	err = this.dbGet(METADATA_KEY_PREFIX+taskId, &metadata)
-	return
-}
-
-func (this *DeviceGroups) setGroupMetadata(taskId string, metadata messages.GroupTaskMetadata) (err error) {
-	err = this.dbSet(METADATA_KEY_PREFIX+taskId, metadata)
-	return
-}
-
-func (this *DeviceGroups) getSubResult(subTaskId string) (result interface{}, err error) {
-	err = this.dbGet(RESULT_KEY_PREFIX+subTaskId, &result)
-	return
-}
-
-func (this *DeviceGroups) setSubResult(subTaskId string, subResult interface{}) (err error) {
-	err = this.dbSet(RESULT_KEY_PREFIX+subTaskId, subResult)
-	return
-}
-
-var ErrNotFount = memcache.ErrCacheMiss
-
 func (this *DeviceGroups) getTaskResults(taskId string) (metadata messages.GroupTaskMetadata, results []interface{}, missingSubTasks []messages.GroupTaskMetadataElement, err error) {
 	metadata, err = this.getGroupMetadata(taskId)
 	if err != nil {
 		return metadata, nil, nil, err
 	}
 	for _, sub := range metadata.Children {
-		subResult, err := this.getSubResult(sub.Task.Id)
+		var subResult SubResultWrapper
+		subResult, err = this.getSubResult(sub.Task.Id)
+		if err == nil && !subResult.Failed {
+			results = append(results, subResult.Value)
+		}
 		if err == ErrNotFount {
 			err = nil
 			missingSubTasks = append(missingSubTasks, sub)
-		} else {
-			results = append(results, subResult)
+		}
+		if err != nil {
+			return
 		}
 	}
 	return
@@ -216,23 +268,6 @@ func (this *DeviceGroups) GetSubTasks(request messages.Command, task messages.Ca
 	return result, nil
 }
 
-func (this *DeviceGroups) dbGet(key string, value interface{}) error {
-	item, err := this.db.Get(key)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(item.Value, value)
-	return err
-}
-
-func (this *DeviceGroups) dbSet(key string, value interface{}) error {
-	jsonValue, err := json.Marshal(value)
-	if err != nil {
-		return err
-	}
-	return this.db.Set(&memcache.Item{Value: jsonValue, Expiration: this.expirationInSeconds, Key: key})
-}
-
 func (this *DeviceGroups) getFilteredServices(command messages.Command, services []model.Service) (result []model.Service) {
 	serviceIndex := map[string]model.Service{}
 	for _, service := range services {
@@ -257,6 +292,23 @@ func (this *DeviceGroups) getFilteredServices(command messages.Command, services
 		result = append(result, service)
 	}
 	return result
+}
+
+func (this *DeviceGroups) clearTaskData(parentTaskId string) {
+	meta, err := this.getGroupMetadata(parentTaskId)
+	if err == ErrNotFount {
+		err = nil
+		return
+	}
+	if err != nil {
+		log.Println("WARNING: unable to delete data for", parentTaskId, err)
+		return
+	}
+	elements := append(meta.Children, meta.Parent)
+	for _, element := range elements {
+		_ = this.db.Delete(METADATA_KEY_PREFIX + element.Task.Id)
+		_ = this.db.Delete(RESULT_KEY_PREFIX + element.Task.Id)
+	}
 }
 
 func isMeasuringFunctionId(id string) bool {
