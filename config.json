@@ -24,7 +24,7 @@
   "CamundaTaskResultName": "result",
   "MarshallerUrl": "http://marshaller:8080",
   "HealthCheckPort": "8080",
-  "SubResultExpirationInSeconds": 600,
+  "SubResultExpirationInSeconds": 6000,
   "SubResultDatabaseUrls": [],
   "SequentialGroups": false
 }
