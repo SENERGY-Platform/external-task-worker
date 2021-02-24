@@ -37,10 +37,15 @@ type Camunda struct {
 	config   util.Config
 	workerId string
 	producer kafka.ProducerInterface
-	shards   *shards.Shards
+	shards   Shards
 }
 
-func NewCamundaWithShards(config util.Config, producer kafka.ProducerInterface, shards *shards.Shards) (result *Camunda) {
+type Shards interface {
+	GetShards() (result []string, err error)
+	GetShardForUser(userId string) (shardUrl string, err error)
+}
+
+func NewCamundaWithShards(config util.Config, producer kafka.ProducerInterface, shards Shards) (result *Camunda) {
 	return &Camunda{config: config, workerId: util.GetId(), producer: producer, shards: shards}
 }
 
