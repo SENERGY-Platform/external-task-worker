@@ -17,7 +17,12 @@
 package devicerepository
 
 import (
+	"encoding/json"
+	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/util"
+	"io/ioutil"
+	"net/http"
+	"net/url"
 	"strings"
 
 	"crypto/x509"
@@ -65,7 +70,32 @@ type RealmAccess struct {
 	Roles []string `json:"roles"`
 }
 
-func (this Keycloak) GetUserToken(user string) (token Impersonate, err error) {
+func (this Keycloak) GetUserToken(userid string) (token Impersonate, err error) {
+	resp, err := http.PostForm(this.config.AuthEndpoint+"/auth/realms/master/protocol/openid-connect/token", url.Values{
+		"client_id":         {this.config.AuthClientId},
+		"client_secret":     {this.config.AuthClientSecret},
+		"grant_type":        {"urn:ietf:params:oauth:grant-type:token-exchange"},
+		"requested_subject": {userid},
+	})
+	if err != nil {
+		return
+	}
+	if resp.StatusCode != http.StatusOK {
+		body, _ := ioutil.ReadAll(resp.Body)
+		log.Println("ERROR: GetUserToken()", resp.StatusCode, string(body))
+		err = errors.New("access denied")
+		resp.Body.Close()
+		return
+	}
+	var openIdToken OpenidToken
+	err = json.NewDecoder(resp.Body).Decode(&openIdToken)
+	if err != nil {
+		return
+	}
+	return Impersonate("Bearer " + openIdToken.AccessToken), nil
+}
+
+func (this Keycloak) ForgeUserToken(user string) (token Impersonate, err error) {
 	roles, err := this.getUserRoles(user)
 	if err != nil {
 		log.Println("ERROR: GetUserToken::getUserRoles()", err)
