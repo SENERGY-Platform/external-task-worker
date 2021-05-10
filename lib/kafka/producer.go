@@ -27,13 +27,13 @@ import (
 var Fatal = false
 
 type SyncProducer struct {
-	broker         []string
-	logger         *log.Logger
-	producer       sarama.SyncProducer
-	zk             string
-	syncIdempotent bool
-	mux            sync.Mutex
-	usedTopics     map[string]bool
+	broker            []string
+	logger            *log.Logger
+	producer          sarama.SyncProducer
+	kafkaBootstrapUrl string
+	syncIdempotent    bool
+	mux               sync.Mutex
+	usedTopics        map[string]bool
 }
 
 func (this *SyncProducer) Close() {
@@ -41,20 +41,20 @@ func (this *SyncProducer) Close() {
 }
 
 type AsyncProducer struct {
-	broker     []string
-	logger     *log.Logger
-	producer   sarama.AsyncProducer
-	zk         string
-	usedTopics map[string]bool
+	broker            []string
+	logger            *log.Logger
+	producer          sarama.AsyncProducer
+	kafkaBootstrapUrl string
+	usedTopics        map[string]bool
 }
 
 func (this *AsyncProducer) Close() {
 	this.producer.Close()
 }
 
-func PrepareProducer(zk string, sync bool, syncIdempotent bool) (ProducerInterface, error) {
+func PrepareProducer(kafkaBootstrapUrl string, sync bool, syncIdempotent bool) (ProducerInterface, error) {
 	var err error
-	broker, err := GetBroker(zk)
+	broker, err := GetBroker(kafkaBootstrapUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func PrepareProducer(zk string, sync bool, syncIdempotent bool) (ProducerInterfa
 		return nil, errors.New("missing kafka broker")
 	}
 	if sync {
-		result := &SyncProducer{broker: broker, zk: zk, syncIdempotent: syncIdempotent, usedTopics: map[string]bool{}}
+		result := &SyncProducer{broker: broker, kafkaBootstrapUrl: kafkaBootstrapUrl, syncIdempotent: syncIdempotent, usedTopics: map[string]bool{}}
 		sarama_conf := sarama.NewConfig()
 		sarama_conf.Version = sarama.V2_2_0_0
 		sarama_conf.Producer.Return.Errors = true
@@ -75,7 +75,7 @@ func PrepareProducer(zk string, sync bool, syncIdempotent bool) (ProducerInterfa
 		result.producer, err = sarama.NewSyncProducer(result.broker, sarama_conf)
 		return result, err
 	} else {
-		result := &AsyncProducer{broker: broker, zk: zk, usedTopics: map[string]bool{}}
+		result := &AsyncProducer{broker: broker, kafkaBootstrapUrl: kafkaBootstrapUrl, usedTopics: map[string]bool{}}
 		sarama_conf := sarama.NewConfig()
 		sarama_conf.Version = sarama.V2_2_0_0
 		sarama_conf.Producer.Return.Errors = true
@@ -101,7 +101,7 @@ func (this *SyncProducer) Produce(topic string, message string) (err error) {
 	if this.logger != nil {
 		this.logger.Println("DEBUG: produce ", topic, message)
 	}
-	err = EnsureTopic(topic, this.zk, &this.usedTopics)
+	err = EnsureTopic(topic, this.kafkaBootstrapUrl, &this.usedTopics)
 	if err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func (this *AsyncProducer) Produce(topic string, message string) (err error) {
 	if this.logger != nil {
 		this.logger.Println("DEBUG: produce ", topic, message)
 	}
-	err = EnsureTopic(topic, this.zk, &this.usedTopics)
+	err = EnsureTopic(topic, this.kafkaBootstrapUrl, &this.usedTopics)
 	if err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (this *SyncProducer) ProduceWithKey(topic string, key string, message strin
 	if this.logger != nil {
 		this.logger.Println("DEBUG: produce ", topic, message)
 	}
-	err = EnsureTopic(topic, this.zk, &this.usedTopics)
+	err = EnsureTopic(topic, this.kafkaBootstrapUrl, &this.usedTopics)
 	if err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ func (this *AsyncProducer) ProduceWithKey(topic string, key string, message stri
 	if this.logger != nil {
 		this.logger.Println("DEBUG: produce ", topic, message)
 	}
-	err = EnsureTopic(topic, this.zk, &this.usedTopics)
+	err = EnsureTopic(topic, this.kafkaBootstrapUrl, &this.usedTopics)
 	if err != nil {
 		return err
 	}

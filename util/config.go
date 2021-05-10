@@ -43,7 +43,7 @@ type Config struct {
 	CamundaFetchLockDuration        int64
 	CamundaTopic                    string
 	CamundaTaskResultName           string
-	ZookeeperUrl                    string //host1:2181,host2:2181/chroot
+	KafkaUrl                        string
 	KafkaConsumerGroup              string
 	ResponseTopic                   string
 	KafkaTimeout                    int64
@@ -66,7 +66,6 @@ type Config struct {
 	SequentialGroups                bool
 }
 
-//loads config from json in location and used environment variables (e.g ZookeeperUrl --> ZOOKEEPER_URL)
 func LoadConfig(location string) (config Config, err error) {
 	file, error := os.Open(location)
 	if error != nil {

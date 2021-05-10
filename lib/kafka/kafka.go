@@ -27,7 +27,7 @@ type FactoryType struct{}
 var Factory = FactoryType{}
 
 func (FactoryType) NewConsumer(config util.Config, listener func(msg string) error) (consumer ConsumerInterface, err error) {
-	consumer, err = NewConsumer(config.ZookeeperUrl, config.KafkaConsumerGroup, config.ResponseTopic, func(topic string, msg []byte, time time.Time) error {
+	consumer, err = NewConsumer(config.KafkaUrl, config.KafkaConsumerGroup, config.ResponseTopic, func(topic string, msg []byte, time time.Time) error {
 		return listener(string(msg))
 	}, func(err error, consumer *Consumer) {
 		log.Println("FATAL ERROR: kafka", err)
@@ -37,5 +37,5 @@ func (FactoryType) NewConsumer(config util.Config, listener func(msg string) err
 }
 
 func (FactoryType) NewProducer(config util.Config) (ProducerInterface, error) {
-	return PrepareProducer(config.ZookeeperUrl, true, false)
+	return PrepareProducer(config.KafkaUrl, true, false)
 }

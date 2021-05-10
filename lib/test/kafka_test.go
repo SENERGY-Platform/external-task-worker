@@ -41,7 +41,7 @@ func TestProducer_Produce(t *testing.T) {
 	zookeeperUrl := zkIp + ":2181"
 
 	//kafka
-	closeKafka, err := docker.Kafka(pool, zookeeperUrl)
+	kafkaUrl, closeKafka, err := docker.Kafka(pool, zookeeperUrl)
 	if err != nil {
 		t.Error(err)
 		return
@@ -50,13 +50,13 @@ func TestProducer_Produce(t *testing.T) {
 
 	time.Sleep(2 * time.Second)
 
-	err = kafka.InitTopic(zookeeperUrl, "test")
+	err = kafka.InitTopic(kafkaUrl, "test")
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	err = kafka.InitTopic(zookeeperUrl, "test2")
+	err = kafka.InitTopic(kafkaUrl, "test2")
 	if err != nil {
 		t.Error(err)
 		return
@@ -64,7 +64,7 @@ func TestProducer_Produce(t *testing.T) {
 
 	result := [][]byte{}
 
-	consumer, err := kafka.NewConsumer(zookeeperUrl, "test", "test", func(topic string, msg []byte, t time.Time) error {
+	consumer, err := kafka.NewConsumer(kafkaUrl, "test", "test", func(topic string, msg []byte, t time.Time) error {
 		result = append(result, msg)
 		return nil
 	}, func(err error, consumer *kafka.Consumer) {
@@ -72,7 +72,7 @@ func TestProducer_Produce(t *testing.T) {
 	})
 	defer consumer.Stop()
 
-	producer, err := kafka.PrepareProducer(zookeeperUrl, true, true)
+	producer, err := kafka.PrepareProducer(kafkaUrl, true, true)
 	if err != nil {
 		t.Error(err)
 		return
@@ -124,7 +124,7 @@ func TestProducer_ProduceWithKey(t *testing.T) {
 	zookeeperUrl := zkIp + ":2181"
 
 	//kafka
-	closeKafka, err := docker.Kafka(pool, zookeeperUrl)
+	kafkaUrl, closeKafka, err := docker.Kafka(pool, zookeeperUrl)
 	if err != nil {
 		t.Error(err)
 		return
@@ -133,13 +133,13 @@ func TestProducer_ProduceWithKey(t *testing.T) {
 
 	time.Sleep(2 * time.Second)
 
-	err = kafka.InitTopic(zookeeperUrl, "test")
+	err = kafka.InitTopic(kafkaUrl, "test")
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	err = kafka.InitTopic(zookeeperUrl, "test2")
+	err = kafka.InitTopic(kafkaUrl, "test2")
 	if err != nil {
 		t.Error(err)
 		return
@@ -147,7 +147,7 @@ func TestProducer_ProduceWithKey(t *testing.T) {
 
 	result := [][]byte{}
 
-	consumer, err := kafka.NewConsumer(zookeeperUrl, "test", "test", func(topic string, msg []byte, t time.Time) error {
+	consumer, err := kafka.NewConsumer(kafkaUrl, "test", "test", func(topic string, msg []byte, t time.Time) error {
 		result = append(result, msg)
 		return nil
 	}, func(err error, consumer *kafka.Consumer) {
@@ -155,7 +155,7 @@ func TestProducer_ProduceWithKey(t *testing.T) {
 	})
 	defer consumer.Stop()
 
-	producer, err := kafka.PrepareProducer(zookeeperUrl, true, true)
+	producer, err := kafka.PrepareProducer(kafkaUrl, true, true)
 	if err != nil {
 		t.Error(err)
 		return
