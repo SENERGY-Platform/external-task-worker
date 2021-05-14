@@ -26,18 +26,20 @@ import (
 )
 
 func StartHealthCheckEndpoint(ctx context.Context, config util.Config, worker *worker) {
-	log.Println("start health-check api on " + config.HealthCheckPort)
-	server := &http.Server{Addr: ":" + config.HealthCheckPort, Handler: getHealthCheckEndpoint(config, worker), WriteTimeout: 10 * time.Second, ReadTimeout: 2 * time.Second, ReadHeaderTimeout: 2 * time.Second}
-	go func() {
-		if err := server.ListenAndServe(); err != http.ErrServerClosed {
-			log.Println("ERROR: server error", err)
-			log.Fatal(err)
-		}
-	}()
-	go func() {
-		<-ctx.Done()
-		log.Println("DEBUG: health-check shutdown", server.Shutdown(context.Background()))
-	}()
+	if config.HealthCheckPort != "" {
+		log.Println("start health-check api on " + config.HealthCheckPort)
+		server := &http.Server{Addr: ":" + config.HealthCheckPort, Handler: getHealthCheckEndpoint(config, worker), WriteTimeout: 10 * time.Second, ReadTimeout: 2 * time.Second, ReadHeaderTimeout: 2 * time.Second}
+		go func() {
+			if err := server.ListenAndServe(); err != http.ErrServerClosed {
+				log.Println("ERROR: server error", err)
+				log.Fatal(err)
+			}
+		}()
+		go func() {
+			<-ctx.Done()
+			log.Println("DEBUG: health-check shutdown", server.Shutdown(context.Background()))
+		}()
+	}
 	return
 }
 

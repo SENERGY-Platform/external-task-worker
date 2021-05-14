@@ -44,8 +44,9 @@ func ExampleWorkerCommand() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	mock.Camunda = &mock.CamundaMock{}
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mock.Camunda, mock.Marshaller)
+	mockCamunda := &mock.CamundaMock{}
+	mockCamunda.Init()
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
 
 	time.Sleep(1 * time.Second)
 
@@ -123,7 +124,7 @@ func ExampleWorkerCommand() {
 		log.Fatal(err)
 	}
 
-	mock.Camunda.AddTask(messages.CamundaExternalTask{
+	mockCamunda.AddTask(messages.CamundaExternalTask{
 		Id:       "1",
 		TenantId: "user",
 		Variables: map[string]messages.CamundaVariable{
@@ -135,7 +136,7 @@ func ExampleWorkerCommand() {
 
 	time.Sleep(1 * time.Second)
 
-	mock.Camunda.AddTask(messages.CamundaExternalTask{
+	mockCamunda.AddTask(messages.CamundaExternalTask{
 		Id:       "2",
 		TenantId: "user",
 		Variables: map[string]messages.CamundaVariable{
@@ -148,7 +149,7 @@ func ExampleWorkerCommand() {
 
 	time.Sleep(1 * time.Second)
 
-	mock.Camunda.AddTask(messages.CamundaExternalTask{
+	mockCamunda.AddTask(messages.CamundaExternalTask{
 		Id:       "3",
 		TenantId: "user",
 		Variables: map[string]messages.CamundaVariable{
@@ -160,7 +161,7 @@ func ExampleWorkerCommand() {
 
 	time.Sleep(1 * time.Second)
 
-	mock.Camunda.AddTask(messages.CamundaExternalTask{
+	mockCamunda.AddTask(messages.CamundaExternalTask{
 		Id:       "4",
 		TenantId: "user",
 		Variables: map[string]messages.CamundaVariable{
@@ -205,8 +206,9 @@ func ExampleWorkerOnPowerCommand() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	mock.Camunda = &mock.CamundaMock{}
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mock.Camunda, mock.Marshaller)
+	mockCamunda := &mock.CamundaMock{}
+	mockCamunda.Init()
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
 
 	time.Sleep(1 * time.Second)
 
@@ -264,7 +266,7 @@ func ExampleWorkerOnPowerCommand() {
 		log.Fatal(err)
 	}
 
-	mock.Camunda.AddTask(messages.CamundaExternalTask{
+	mockCamunda.AddTask(messages.CamundaExternalTask{
 		Id:       "1",
 		TenantId: "user",
 		Variables: map[string]messages.CamundaVariable{

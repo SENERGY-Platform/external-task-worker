@@ -49,8 +49,9 @@ func TestWorkerResponseV2(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	mock.Camunda = &mock.CamundaMock{}
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mock.Camunda, mock.Marshaller)
+	mockCamunda := &mock.CamundaMock{}
+	mockCamunda.Init()
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
 
 	time.Sleep(1 * time.Second)
 
@@ -126,7 +127,7 @@ func TestWorkerResponseV2(t *testing.T) {
 		return
 	}
 
-	mock.Camunda.AddTask(messages.CamundaExternalTask{
+	mockCamunda.AddTask(messages.CamundaExternalTask{
 		Id: "1",
 		Variables: map[string]messages.CamundaVariable{
 			util.CAMUNDA_VARIABLES_PAYLOAD: {
@@ -137,7 +138,7 @@ func TestWorkerResponseV2(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 
-	mock.Camunda.AddTask(messages.CamundaExternalTask{
+	mockCamunda.AddTask(messages.CamundaExternalTask{
 		Id: "2",
 		Variables: map[string]messages.CamundaVariable{
 			util.CAMUNDA_VARIABLES_PAYLOAD: {
@@ -172,7 +173,7 @@ func TestWorkerResponseV2(t *testing.T) {
 		time.Sleep(1 * time.Second)
 	}
 
-	fetched, completed, failed := mock.Camunda.GetStatus()
+	fetched, completed, failed := mockCamunda.GetStatus()
 
 	if len(fetched) != 0 || len(failed) != 0 || len(completed) != 2 {
 		log.Println("fetched:", fetched)
@@ -217,8 +218,9 @@ func TestGroupResponses(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	mock.Camunda = &mock.CamundaMock{}
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mock.Camunda, mock.Marshaller)
+	mockCamunda := &mock.CamundaMock{}
+	mockCamunda.Init()
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
 
 	time.Sleep(1 * time.Second)
 
@@ -416,7 +418,7 @@ func TestGroupResponses(t *testing.T) {
 		return
 	}
 
-	mock.Camunda.AddTask(messages.CamundaExternalTask{
+	mockCamunda.AddTask(messages.CamundaExternalTask{
 		Id: "1",
 		Variables: map[string]messages.CamundaVariable{
 			util.CAMUNDA_VARIABLES_PAYLOAD: {
@@ -427,7 +429,7 @@ func TestGroupResponses(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 
-	mock.Camunda.AddTask(messages.CamundaExternalTask{
+	mockCamunda.AddTask(messages.CamundaExternalTask{
 		Id: "2",
 		Variables: map[string]messages.CamundaVariable{
 			util.CAMUNDA_VARIABLES_PAYLOAD: {
@@ -462,7 +464,7 @@ func TestGroupResponses(t *testing.T) {
 		time.Sleep(1 * time.Second)
 	}
 
-	fetched, completed, failed := mock.Camunda.GetStatus()
+	fetched, completed, failed := mockCamunda.GetStatus()
 
 	if len(fetched) != 0 || len(failed) != 0 || len(completed) != 2 {
 		log.Println("fetched:", fetched)
@@ -518,8 +520,9 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 	config.CamundaWorkerTimeout = 100
 	config.Debug = true
 
-	mock.Camunda = &mock.CamundaMock{}
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mock.Camunda, mock.Marshaller)
+	mockCamunda := &mock.CamundaMock{}
+	mockCamunda.Init()
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
 
 	time.Sleep(1 * time.Second)
 
@@ -717,7 +720,7 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 		return
 	}
 
-	mock.Camunda.AddTask(messages.CamundaExternalTask{
+	mockCamunda.AddTask(messages.CamundaExternalTask{
 		Id: "1",
 		Variables: map[string]messages.CamundaVariable{
 			util.CAMUNDA_VARIABLES_PAYLOAD: {
@@ -728,7 +731,7 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 
-	mock.Camunda.AddTask(messages.CamundaExternalTask{
+	mockCamunda.AddTask(messages.CamundaExternalTask{
 		Id: "2",
 		Variables: map[string]messages.CamundaVariable{
 			util.CAMUNDA_VARIABLES_PAYLOAD: {
@@ -763,7 +766,7 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 		time.Sleep(1 * time.Second)
 	}
 
-	fetched, completed, failed := mock.Camunda.GetStatus()
+	fetched, completed, failed := mockCamunda.GetStatus()
 
 	if len(fetched) != 0 || len(failed) != 0 || len(completed) != 2 {
 		log.Println("fetched:", fetched)

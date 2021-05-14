@@ -98,3 +98,7 @@ func (this *KafkaMock) GetProduced(topic string) []string {
 	}()
 	return this.Produced[topic]
 }
+
+func (this *KafkaMock) New() *KafkaMock {
+	return &KafkaMock{}
+}

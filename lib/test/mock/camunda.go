@@ -27,19 +27,20 @@ import (
 	"time"
 )
 
-var Camunda = &CamundaMock{}
+var Camunda = &CamundaMock{ResetOnGetInterface: true}
 
 type CamundaMock struct {
-	waitingTasks   []messages.CamundaExternalTask
-	fetchedTasks   map[string]messages.CamundaExternalTask
-	completedTasks map[string]interface{}
-	failedTasks    map[string]messages.CamundaExternalTask
-	config         util.Config
-	mux            sync.Mutex
-	lockTimes      map[string]time.Time
+	ResetOnGetInterface bool
+	waitingTasks        []messages.CamundaExternalTask
+	fetchedTasks        map[string]messages.CamundaExternalTask
+	completedTasks      map[string]interface{}
+	failedTasks         map[string]messages.CamundaExternalTask
+	config              util.Config
+	mux                 sync.Mutex
+	lockTimes           map[string]time.Time
 }
 
-func (this *CamundaMock) Get(config util.Config, producer kafka.ProducerInterface) (interfaces.CamundaInterface, error) {
+func (this *CamundaMock) Init() {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	this.waitingTasks = []messages.CamundaExternalTask{}
@@ -47,6 +48,14 @@ func (this *CamundaMock) Get(config util.Config, producer kafka.ProducerInterfac
 	this.completedTasks = map[string]interface{}{}
 	this.failedTasks = map[string]messages.CamundaExternalTask{}
 	this.lockTimes = map[string]time.Time{}
+}
+
+func (this *CamundaMock) Get(config util.Config, producer kafka.ProducerInterface) (interfaces.CamundaInterface, error) {
+	this.mux.Lock()
+	defer this.mux.Unlock()
+	if this.ResetOnGetInterface {
+		this.Init()
+	}
 	this.config = config
 	return this, nil
 }

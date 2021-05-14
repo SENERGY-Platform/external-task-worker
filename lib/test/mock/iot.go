@@ -23,14 +23,15 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/util"
 )
 
-var Repo = &RepoMock{}
+var Repo = &RepoMock{ResetOnGetRepoInterface: true}
 
 type RepoMock struct {
-	devices      map[string]model.Device
-	services     map[string]model.Service
-	protocols    map[string]model.Protocol
-	deviceTypes  map[string]model.DeviceType
-	deviceGroups map[string]model.DeviceGroup
+	ResetOnGetRepoInterface bool
+	devices                 map[string]model.Device
+	services                map[string]model.Service
+	protocols               map[string]model.Protocol
+	deviceTypes             map[string]model.DeviceType
+	deviceGroups            map[string]model.DeviceGroup
 }
 
 func (this *RepoMock) GetDeviceType(token devicerepository.Impersonate, id string) (model.DeviceType, error) {
@@ -50,11 +51,13 @@ func (this *RepoMock) GetDeviceGroup(token devicerepository.Impersonate, id stri
 }
 
 func (this *RepoMock) Get(configType util.Config) devicerepository.RepoInterface {
-	this.devices = map[string]model.Device{}
-	this.services = map[string]model.Service{}
-	this.protocols = map[string]model.Protocol{}
-	this.deviceTypes = map[string]model.DeviceType{}
-	this.deviceGroups = map[string]model.DeviceGroup{}
+	if this.ResetOnGetRepoInterface {
+		this.devices = map[string]model.Device{}
+		this.services = map[string]model.Service{}
+		this.protocols = map[string]model.Protocol{}
+		this.deviceTypes = map[string]model.DeviceType{}
+		this.deviceGroups = map[string]model.DeviceGroup{}
+	}
 	return this
 }
 
@@ -119,4 +122,15 @@ func (this *RepoMock) RegisterDeviceType(deviceType model.DeviceType) {
 
 func (this *RepoMock) RegisterDeviceGroup(deviceGroup model.DeviceGroup) {
 	this.deviceGroups[deviceGroup.Id] = deviceGroup
+}
+
+func (this *RepoMock) New() *RepoMock {
+	return &RepoMock{
+		ResetOnGetRepoInterface: false,
+		devices:                 map[string]model.Device{},
+		services:                map[string]model.Service{},
+		protocols:               map[string]model.Protocol{},
+		deviceTypes:             map[string]model.DeviceType{},
+		deviceGroups:            map[string]model.DeviceGroup{},
+	}
 }

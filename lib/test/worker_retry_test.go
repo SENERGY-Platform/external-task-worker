@@ -44,8 +44,9 @@ func ExampleWorkerRetries() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	mock.Camunda = &mock.CamundaMock{}
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mock.Camunda, mock.Marshaller)
+	mockCamunda := &mock.CamundaMock{}
+	mockCamunda.Init()
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
 
 	time.Sleep(1 * time.Second)
 
@@ -118,7 +119,7 @@ func ExampleWorkerRetries() {
 		log.Fatal(err)
 	}
 
-	mock.Camunda.AddTask(messages.CamundaExternalTask{
+	mockCamunda.AddTask(messages.CamundaExternalTask{
 		Id: "1",
 		Variables: map[string]messages.CamundaVariable{
 			util.CAMUNDA_VARIABLES_PAYLOAD: {
@@ -129,7 +130,7 @@ func ExampleWorkerRetries() {
 
 	time.Sleep(1 * time.Second)
 
-	mock.Camunda.AddTask(messages.CamundaExternalTask{
+	mockCamunda.AddTask(messages.CamundaExternalTask{
 		Id: "2",
 		Variables: map[string]messages.CamundaVariable{
 			util.CAMUNDA_VARIABLES_PAYLOAD: {
@@ -148,7 +149,7 @@ func ExampleWorkerRetries() {
 		return
 	}
 
-	fetched, completed, failed := mock.Camunda.GetStatus()
+	fetched, completed, failed := mockCamunda.GetStatus()
 
 	if len(fetched) != 0 || len(failed) != 2 || len(completed) != 0 {
 		fmt.Println("fetched:", fetched)

@@ -101,8 +101,9 @@ func testSequentialExecution(retries int64, lostResponseFor []int, expectedResul
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		mock.Camunda = &mock.CamundaMock{}
-		go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mock.Camunda, mock.Marshaller)
+		mockCamunda := &mock.CamundaMock{}
+		mockCamunda.Init()
+		go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
 
 		time.Sleep(100 * time.Millisecond)
 
@@ -256,7 +257,7 @@ func testSequentialExecution(retries int64, lostResponseFor []int, expectedResul
 			return
 		}
 
-		mock.Camunda.AddTask(messages.CamundaExternalTask{
+		mockCamunda.AddTask(messages.CamundaExternalTask{
 			Id: "1",
 			Variables: map[string]messages.CamundaVariable{
 				util.CAMUNDA_VARIABLES_PAYLOAD: {
@@ -269,7 +270,7 @@ func testSequentialExecution(retries int64, lostResponseFor []int, expectedResul
 		log.Println("sleep for" + sleepDuration.String())
 		time.Sleep(sleepDuration)
 
-		fetched, completed, failed := mock.Camunda.GetStatus()
+		fetched, completed, failed := mockCamunda.GetStatus()
 
 		if len(failed) > 0 != expectFailed {
 			log.Println("fetched:", fetched)

@@ -68,8 +68,9 @@ func testForConstraintGroup(sequential bool, missingResponseForRequestIndex map[
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		mock.Camunda = &mock.CamundaMock{}
-		go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mock.Camunda, mock.Marshaller)
+		mockCamunda := &mock.CamundaMock{}
+		mockCamunda.Init()
+		go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
 
 		time.Sleep(1 * time.Second)
 
@@ -217,7 +218,7 @@ func testForConstraintGroup(sequential bool, missingResponseForRequestIndex map[
 			return
 		}
 
-		mock.Camunda.AddTask(messages.CamundaExternalTask{
+		mockCamunda.AddTask(messages.CamundaExternalTask{
 			Id: "1",
 			Variables: map[string]messages.CamundaVariable{
 				util.CAMUNDA_VARIABLES_PAYLOAD: {
@@ -228,7 +229,7 @@ func testForConstraintGroup(sequential bool, missingResponseForRequestIndex map[
 
 		time.Sleep(1 * time.Second)
 
-		fetched, completed, failed := mock.Camunda.GetStatus()
+		fetched, completed, failed := mockCamunda.GetStatus()
 
 		if len(fetched) != 0 || len(failed) != 0 || len(completed) != 1 {
 			log.Println("fetched:", fetched)
