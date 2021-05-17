@@ -95,7 +95,7 @@ func Worker(ctx context.Context, config util.Config, kafkaFactory kafka.FactoryI
 	if err != nil {
 		log.Fatal("ERROR: kafkaFactory.NewProducer", err)
 	}
-	w.deviceGroupsHandler = devicegroups.New(config.SequentialGroups, w.camunda, w.repository, w.CreateProtocolMessage, config.CamundaFetchLockDuration, config.SubResultExpirationInSeconds, config.SubResultDatabaseUrls)
+	w.deviceGroupsHandler = devicegroups.New(config.GroupScheduler, w.camunda, w.repository, w.CreateProtocolMessage, config.CamundaFetchLockDuration, config.SubResultExpirationInSeconds, config.SubResultDatabaseUrls)
 	for {
 		select {
 		case <-ctx.Done():
@@ -230,6 +230,9 @@ func (this *worker) HandleTaskResponse(msg string) (err error) {
 	})
 
 	parent, results, finished, err := this.deviceGroupsHandler.ProcessResponse(message.TaskInfo.TaskId, output)
+	if err == devicegroups.ErrNotFount {
+		return nil //if parent task is not found -> can not be finished (may already be done)
+	}
 	if err != nil {
 		return err
 	}
@@ -264,10 +267,14 @@ func (this *worker) HandleTaskResponse(msg string) (err error) {
 			TimeUnit:  "unix_nano",
 			Location:  "github.com/SENERGY-Platform/external-task-worker HandleTaskResponse() after this.camunda.HandleTaskResponse()",
 		})
-	} else if this.config.SequentialGroups {
+	} else if this.isSequential() {
 		this.ExecuteTask(parent.Task)
 	}
 	return
+}
+
+func (this *worker) isSequential() bool {
+	return this.config.GroupScheduler == util.SEQUENTIAL || this.config.GroupScheduler == util.ROUND_ROBIN
 }
 
 func handleVersioning(version int, results []interface{}) interface{} {

@@ -97,7 +97,7 @@ func testSequentialExecution(retries int64, lostResponseFor []int, expectedResul
 		config.CamundaFetchLockDuration = 300
 		config.CamundaWorkerTimeout = 100
 		config.Debug = true
-		config.SequentialGroups = true
+		config.GroupScheduler = util.SEQUENTIAL
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()

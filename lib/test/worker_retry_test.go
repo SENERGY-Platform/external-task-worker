@@ -38,6 +38,7 @@ func ExampleWorkerRetries() {
 		log.Fatal(err)
 	}
 
+	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
 	config.CamundaWorkerTimeout = 100
 	config.CamundaFetchLockDuration = 100

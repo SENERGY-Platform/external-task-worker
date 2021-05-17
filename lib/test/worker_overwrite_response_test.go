@@ -40,6 +40,7 @@ func ExampleWorkerOverwriteResponse() {
 		log.Fatal(err)
 	}
 
+	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
 	config.CamundaWorkerTimeout = 100
 

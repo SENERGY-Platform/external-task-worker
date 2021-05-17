@@ -44,8 +44,7 @@ func TestGroupScheduler(t *testing.T) {
 	config.CamundaFetchLockDuration = 1000 //in ms
 	config.HealthCheckPort = ""
 
-	config.SequentialGroups = true
-
+	config.GroupScheduler = util.SEQUENTIAL
 	t.Run("simple sequential", getGroupShedullerTest(config, GroupSimConfig{
 		Retries:       1,
 		CheckAfter:    1 * time.Minute,
@@ -59,7 +58,7 @@ func TestGroupScheduler(t *testing.T) {
 		},
 	}))
 
-	config.SequentialGroups = false
+	config.GroupScheduler = util.PARALLEL
 	t.Run("simple parallel", getGroupShedullerTest(config, GroupSimConfig{
 		Retries:       1,
 		CheckAfter:    1 * time.Minute,
@@ -73,6 +72,7 @@ func TestGroupScheduler(t *testing.T) {
 		},
 	}))
 
+	config.GroupScheduler = util.SEQUENTIAL
 	t.Run("slow sequential", getGroupShedullerTest(config, GroupSimConfig{
 		Retries:       1,
 		CheckAfter:    1 * time.Minute,
@@ -86,7 +86,7 @@ func TestGroupScheduler(t *testing.T) {
 		},
 	}))
 
-	config.SequentialGroups = false
+	config.GroupScheduler = util.PARALLEL
 	t.Run("slow parallel", getGroupShedullerTest(config, GroupSimConfig{
 		Retries:       1,
 		CheckAfter:    1 * time.Minute,
@@ -100,6 +100,7 @@ func TestGroupScheduler(t *testing.T) {
 		},
 	}))
 
+	config.GroupScheduler = util.SEQUENTIAL
 	t.Run("very slow sequential", getGroupShedullerTest(config, GroupSimConfig{
 		Retries:       1,
 		CheckAfter:    1 * time.Minute,
@@ -113,7 +114,7 @@ func TestGroupScheduler(t *testing.T) {
 		},
 	}))
 
-	config.SequentialGroups = false
+	config.GroupScheduler = util.PARALLEL
 	t.Run("very slow parallel", getGroupShedullerTest(config, GroupSimConfig{
 		Retries:       1,
 		CheckAfter:    1 * time.Minute,

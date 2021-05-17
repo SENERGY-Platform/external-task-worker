@@ -22,6 +22,7 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
+	"github.com/SENERGY-Platform/external-task-worker/util"
 	"github.com/bradfitz/gomemcache/memcache"
 	"log"
 	"strconv"
@@ -31,23 +32,23 @@ import (
 
 type Callback = func(command messages.Command, task messages.CamundaExternalTask) (topic string, key string, message string, err error)
 
-func New(sequential bool, camunda interfaces.CamundaInterface, devicerepo devicerepository.RepoInterface, protocolMessageCallback Callback, currentlyRunningTimeoutInMs int64, expirationInSeconds int32, memcachedUrls []string) *DeviceGroups {
+func New(scheduler string, camunda interfaces.CamundaInterface, devicerepo devicerepository.RepoInterface, protocolMessageCallback Callback, currentlyRunningTimeoutInMs int64, expirationInSeconds int32, memcachedUrls []string) *DeviceGroups {
 	if len(memcachedUrls) == 0 {
 		log.Println("WARNING: start with local sub result storage")
-		return NewWithKeyValueStore(sequential, camunda, devicerepo, protocolMessageCallback, currentlyRunningTimeoutInMs, expirationInSeconds, NewLocalDb())
+		return NewWithKeyValueStore(scheduler, camunda, devicerepo, protocolMessageCallback, currentlyRunningTimeoutInMs, expirationInSeconds, NewLocalDb())
 	} else {
-		return NewWithKeyValueStore(sequential, camunda, devicerepo, protocolMessageCallback, currentlyRunningTimeoutInMs, expirationInSeconds, memcache.New(memcachedUrls...))
+		return NewWithKeyValueStore(scheduler, camunda, devicerepo, protocolMessageCallback, currentlyRunningTimeoutInMs, expirationInSeconds, memcache.New(memcachedUrls...))
 	}
 }
 
-func NewWithKeyValueStore(sequential bool, camunda interfaces.CamundaInterface, devicerepo devicerepository.RepoInterface, protocolMessageCallback Callback, currentlyRunningTimeoutInMs int64, expirationInSeconds int32, db DbInterface) *DeviceGroups {
+func NewWithKeyValueStore(scheduler string, camunda interfaces.CamundaInterface, devicerepo devicerepository.RepoInterface, protocolMessageCallback Callback, currentlyRunningTimeoutInMs int64, expirationInSeconds int32, db DbInterface) *DeviceGroups {
 	return &DeviceGroups{
 		protocolMessageCallback: protocolMessageCallback,
 		repo:                    devicerepo,
 		db:                      db,
 		expirationInSeconds:     expirationInSeconds,
 		camunda:                 camunda,
-		sequential:              sequential,
+		scheduler:               scheduler,
 		currentlyRunningTimeout: time.Duration(currentlyRunningTimeoutInMs) * time.Millisecond,
 	}
 }
@@ -58,7 +59,7 @@ type DeviceGroups struct {
 	db                      DbInterface
 	expirationInSeconds     int32
 	camunda                 interfaces.CamundaInterface
-	sequential              bool
+	scheduler               string
 	currentlyRunningTimeout time.Duration
 }
 
@@ -95,7 +96,8 @@ func (this *DeviceGroups) ProcessCommand(command messages.Command, task messages
 	if err != nil {
 		return completed, nextRequests.ToMessages(), finishedResults, err
 	}
-	if this.sequential {
+	switch this.scheduler {
+	case util.SEQUENTIAL:
 		nextRequests, err = this.annotateSubTaskStates(nextRequests)
 		if err != nil {
 			return completed, nextRequests.ToMessages(), finishedResults, err
@@ -115,7 +117,7 @@ func (this *DeviceGroups) ProcessCommand(command messages.Command, task messages
 		}
 		err = this.updateSubTaskState(nextRequests)
 		return completed, nextRequests.ToMessages(), finishedResults, err
-	} else {
+	case util.PARALLEL:
 		noMoreRetries := command.Retries != -1 && command.Retries < task.Retries
 		completed = len(nextRequests) == 0 || noMoreRetries
 		if completed {
@@ -131,8 +133,9 @@ func (this *DeviceGroups) ProcessCommand(command messages.Command, task messages
 			this.camunda.SetRetry(task.Id, task.TenantId, task.Retries+1)
 		}
 		return completed, nextRequests.ToMessages(), finishedResults, err
+	default:
+		return completed, nextRequests.ToMessages(), finishedResults, errors.New("unknown scheduler " + this.scheduler)
 	}
-	return
 }
 
 func (this *DeviceGroups) getNextRequests(command messages.Command, task messages.CamundaExternalTask) (missingRequests RequestInfoList, finishedResults []interface{}, err error) {
@@ -186,10 +189,6 @@ func (this *DeviceGroups) getNextRequests(command messages.Command, task message
 
 func (this *DeviceGroups) isFinished(taskId string) (parent messages.GroupTaskMetadataElement, results []interface{}, finished bool, err error) {
 	meta, results, missing, err := this.getTaskResults(taskId)
-	if err == ErrNotFount {
-		err = nil
-		return parent, results, false, err
-	}
 	if err != nil {
 		return parent, nil, false, err
 	}

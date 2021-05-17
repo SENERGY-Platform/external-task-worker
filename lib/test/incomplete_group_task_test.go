@@ -64,7 +64,11 @@ func testForConstraintGroup(sequential bool, missingResponseForRequestIndex map[
 		config.CamundaFetchLockDuration = 300
 		config.CamundaWorkerTimeout = 100
 		config.Debug = true
-		config.SequentialGroups = sequential
+		if sequential {
+			config.GroupScheduler = util.SEQUENTIAL
+		} else {
+			config.GroupScheduler = util.PARALLEL
+		}
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()

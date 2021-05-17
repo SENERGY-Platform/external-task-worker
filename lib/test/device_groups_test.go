@@ -44,6 +44,7 @@ func TestWorkerResponseV2(t *testing.T) {
 		return
 	}
 
+	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
 	config.CamundaWorkerTimeout = 100
 
@@ -212,6 +213,7 @@ func TestGroupResponses(t *testing.T) {
 		return
 	}
 
+	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
 	config.CamundaWorkerTimeout = 100
 	config.Debug = true
@@ -516,6 +518,7 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 
 	config.SubResultDatabaseUrls = []string{"localhost:" + port}
 
+	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
 	config.CamundaWorkerTimeout = 100
 	config.Debug = true

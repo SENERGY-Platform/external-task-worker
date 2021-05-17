@@ -40,6 +40,7 @@ func ExampleWorkerResponse() {
 		log.Fatal(err)
 	}
 
+	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
 	config.CamundaWorkerTimeout = 100
 
@@ -202,6 +203,7 @@ func ExampleWorkerNullResponse() {
 		log.Fatal(err)
 	}
 
+	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
 	config.CamundaWorkerTimeout = 100
 
@@ -344,6 +346,7 @@ func ExampleWorkerNullResponse2() {
 		log.Fatal(err)
 	}
 
+	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
 	config.CamundaWorkerTimeout = 100
 
