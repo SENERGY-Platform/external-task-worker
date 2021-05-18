@@ -40,7 +40,7 @@ func TestGroupScheduler(t *testing.T) {
 	}
 
 	config.CompletionStrategy = util.PESSIMISTIC
-	config.CamundaWorkerTimeout = 100      //in ms
+	config.CamundaWorkerTimeout = 300      //in ms
 	config.CamundaFetchLockDuration = 1000 //in ms
 	config.HealthCheckPort = ""
 
@@ -101,10 +101,24 @@ func TestGroupScheduler(t *testing.T) {
 	}))
 
 	config.GroupScheduler = util.SEQUENTIAL
-	t.Run("very slow sequential", getGroupShedullerTest(config, GroupSimConfig{
+	t.Run("very slow sequential flip", getGroupShedullerTest(config, GroupSimConfig{
 		Retries:       1,
 		CheckAfter:    1 * time.Minute,
 		ResponseTimes: [][]time.Duration{{1500 * time.Millisecond}, {-1}, {1500 * time.Millisecond, -1}, {1500 * time.Millisecond}, {1500 * time.Millisecond}},
+		Responses:     []string{"#c83200", "#c83201", "#c83202", "#c83203", "#c83204"},
+		ExpectedResult: []interface{}{
+			map[string]interface{}{"b": float64(0), "g": float64(50), "r": float64(200)},
+			map[string]interface{}{"b": float64(2), "g": float64(50), "r": float64(200)},
+			map[string]interface{}{"b": float64(3), "g": float64(50), "r": float64(200)},
+			map[string]interface{}{"b": float64(4), "g": float64(50), "r": float64(200)},
+		},
+	}))
+
+	config.GroupScheduler = util.SEQUENTIAL
+	t.Run("very slow sequential", getGroupShedullerTest(config, GroupSimConfig{
+		Retries:       1,
+		CheckAfter:    1 * time.Minute,
+		ResponseTimes: [][]time.Duration{{1500 * time.Millisecond}, {-1}, {-1, 1500 * time.Millisecond}, {1500 * time.Millisecond}, {1500 * time.Millisecond}},
 		Responses:     []string{"#c83200", "#c83201", "#c83202", "#c83203", "#c83204"},
 		ExpectedResult: []interface{}{
 			map[string]interface{}{"b": float64(0), "g": float64(50), "r": float64(200)},
@@ -151,6 +165,7 @@ func (this *DeviceSim) HandleRequest(resp func(value string)) {
 			if timeout > 0 {
 				time.Sleep(timeout)
 			}
+			log.Println("TEST: respond", this.Value, timeout)
 			resp(this.Value)
 		}()
 	}

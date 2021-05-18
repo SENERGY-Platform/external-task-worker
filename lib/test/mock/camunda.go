@@ -93,6 +93,7 @@ func (this *CamundaMock) GetTasks() (tasks []messages.CamundaExternalTask, err e
 }
 
 func (this *CamundaMock) CompleteTask(taskInfo messages.TaskInfo, outputName string, output interface{}) (err error) {
+	log.Println("TEST: complete task")
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	_, ok := this.fetchedTasks[taskInfo.TaskId]
@@ -120,6 +121,7 @@ func (this *CamundaMock) SetRetry(taskid string, tenantId string, number int64) 
 func (this *CamundaMock) Error(externalTaskId string, processInstanceId string, processDefinitionId string, msg string, tenantId string) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
+	log.Println("CAMUNDA-FAIL:", externalTaskId, processInstanceId, processDefinitionId, msg)
 	this.failedTasks[externalTaskId] = this.fetchedTasks[externalTaskId]
 	delete(this.fetchedTasks, externalTaskId)
 }
