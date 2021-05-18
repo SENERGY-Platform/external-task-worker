@@ -57,7 +57,7 @@ type worker struct {
 }
 
 type DeviceGroupsHandler interface {
-	ProcessCommand(request messages.Command, task messages.CamundaExternalTask) (completed bool, missingRequests []messages.KafkaMessage, finishedResults []interface{}, err error)
+	ProcessCommand(request messages.Command, task messages.CamundaExternalTask, caller string) (completed bool, missingRequests []messages.KafkaMessage, finishedResults []interface{}, err error)
 	ProcessResponse(taskId string, subResult interface{}) (parent messages.GroupTaskMetadataElement, results []interface{}, finished bool, err error)
 }
 
@@ -125,14 +125,14 @@ func (this *worker) ExecuteNextTasks() (wait bool) {
 		wg.Add(1)
 		go func(asyncTask messages.CamundaExternalTask) {
 			defer wg.Done()
-			this.ExecuteTask(asyncTask)
+			this.ExecuteTask(asyncTask, util.CALLER_CAMUNDA_LOOP)
 		}(task)
 	}
 	wg.Wait()
 	return false
 }
 
-func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
+func (this *worker) ExecuteTask(task messages.CamundaExternalTask, caller string) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Println("ERROR: ", r, "\n", debug.Stack())
@@ -152,7 +152,7 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask) {
 		return
 	}
 
-	completed, nextProtocolMessages, results, err := this.deviceGroupsHandler.ProcessCommand(request, task)
+	completed, nextProtocolMessages, results, err := this.deviceGroupsHandler.ProcessCommand(request, task, caller)
 	if err != nil {
 		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, err.Error(), task.TenantId)
 		return
@@ -268,7 +268,7 @@ func (this *worker) HandleTaskResponse(msg string) (err error) {
 			Location:  "github.com/SENERGY-Platform/external-task-worker HandleTaskResponse() after this.camunda.HandleTaskResponse()",
 		})
 	} else if this.isSequential() {
-		this.ExecuteTask(parent.Task)
+		this.ExecuteTask(parent.Task, util.CALLER_RESPONSE)
 	}
 	return
 }

@@ -25,6 +25,7 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"github.com/bradfitz/gomemcache/memcache"
 	"log"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -91,7 +92,15 @@ func (this *DeviceGroups) ProcessResponse(subTaskId string, subResult interface{
 	return
 }
 
-func (this *DeviceGroups) ProcessCommand(command messages.Command, task messages.CamundaExternalTask) (completed bool, nextMessages []messages.KafkaMessage, finishedResults []interface{}, err error) {
+func (this *DeviceGroups) ProcessCommand(command messages.Command, task messages.CamundaExternalTask, caller string) (completed bool, nextMessages []messages.KafkaMessage, finishedResults []interface{}, err error) {
+	if this.shouldIgnoreTask(caller, task) {
+		log.Println("DEBUG: ignore task execute call", caller, task)
+		return false, nil, nil, nil
+	}
+	err = this.saveCallInfo(task, caller)
+	if err != nil {
+		log.Println("WARNING: unable to save last caller", err)
+	}
 	nextRequests, finishedResults, err := this.getNextRequests(command, task)
 	if err != nil {
 		return completed, nextRequests.ToMessages(), finishedResults, err
@@ -307,6 +316,7 @@ func (this *DeviceGroups) clearTaskData(parentTaskId string) {
 	for _, element := range elements {
 		_ = this.db.Delete(METADATA_KEY_PREFIX + element.Task.Id)
 		_ = this.db.Delete(RESULT_KEY_PREFIX + element.Task.Id)
+		_ = this.db.Delete(LAST_CALL_INFO + element.Task.Id)
 	}
 }
 
@@ -315,4 +325,50 @@ func isMeasuringFunctionId(id string) bool {
 		return true
 	}
 	return false
+}
+
+func (this *DeviceGroups) shouldIgnoreTask(caller string, task messages.CamundaExternalTask) bool {
+	if this.scheduler == util.PARALLEL {
+		return caller == util.CALLER_RESPONSE
+	}
+	if caller == util.CALLER_RESPONSE {
+		return false
+	}
+	lastCaller, lastCallDuration, err := this.getLastCallInfo(task)
+	if err == ErrNotFount {
+		//is first call
+		return false
+	}
+	if err != nil {
+		log.Println("ERROR:", err)
+		debug.PrintStack()
+		return true
+	}
+	if lastCaller == util.CALLER_CAMUNDA_LOOP {
+		return false
+	}
+	return lastCallDuration < this.currentlyRunningTimeout
+}
+
+func (this *DeviceGroups) saveCallInfo(task messages.CamundaExternalTask, caller string) error {
+	if this.scheduler == util.PARALLEL {
+		return nil
+	}
+	return this.dbSet(LAST_CALL_INFO+task.Id, LastCallInfo{
+		Caller: caller,
+		Time:   time.Now(),
+	})
+}
+
+func (this *DeviceGroups) getLastCallInfo(task messages.CamundaExternalTask) (lastCaller string, lastCallDuration time.Duration, err error) {
+	lastCall := LastCallInfo{}
+	err = this.dbGet(LAST_CALL_INFO+task.Id, &lastCall)
+	lastCaller = lastCall.Caller
+	lastCallDuration = time.Since(lastCall.Time)
+	return
+}
+
+type LastCallInfo struct {
+	Caller string    `json:"caller"`
+	Time   time.Time `json:"time"`
 }

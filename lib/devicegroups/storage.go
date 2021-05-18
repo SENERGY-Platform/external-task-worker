@@ -26,6 +26,7 @@ import (
 const METADATA_KEY_PREFIX = "meta."
 const RESULT_KEY_PREFIX = "result."
 const SUB_TASK_STATE_KEY_PREFIX = "ststate."
+const LAST_CALL_INFO = "lastcall."
 
 var ErrNotFount = memcache.ErrCacheMiss
 

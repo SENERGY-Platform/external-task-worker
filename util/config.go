@@ -66,10 +66,6 @@ type Config struct {
 	GroupScheduler                  string
 }
 
-const SEQUENTIAL = "sequential"
-const ROUND_ROBIN = "round_robin"
-const PARALLEL = "parallel"
-
 func LoadConfig(location string) (config Config, err error) {
 	file, error := os.Open(location)
 	if error != nil {
