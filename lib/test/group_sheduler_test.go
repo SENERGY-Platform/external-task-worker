@@ -58,6 +58,20 @@ func TestGroupScheduler(t *testing.T) {
 		},
 	}))
 
+	config.GroupScheduler = util.ROUND_ROBIN
+	t.Run("simple round robin", getGroupShedullerTest(config, GroupSimConfig{
+		Retries:       1,
+		CheckAfter:    1 * time.Minute,
+		ResponseTimes: [][]time.Duration{{100 * time.Millisecond}, {-1}, {-1, 100 * time.Millisecond}, {100 * time.Millisecond}, {100 * time.Millisecond}},
+		Responses:     []string{"#c83200", "#c83201", "#c83202", "#c83203", "#c83204"},
+		ExpectedResult: []interface{}{
+			map[string]interface{}{"b": float64(0), "g": float64(50), "r": float64(200)},
+			map[string]interface{}{"b": float64(2), "g": float64(50), "r": float64(200)},
+			map[string]interface{}{"b": float64(3), "g": float64(50), "r": float64(200)},
+			map[string]interface{}{"b": float64(4), "g": float64(50), "r": float64(200)},
+		},
+	}))
+
 	config.GroupScheduler = util.PARALLEL
 	t.Run("simple parallel", getGroupShedullerTest(config, GroupSimConfig{
 		Retries:       1,
@@ -74,6 +88,20 @@ func TestGroupScheduler(t *testing.T) {
 
 	config.GroupScheduler = util.SEQUENTIAL
 	t.Run("slow sequential", getGroupShedullerTest(config, GroupSimConfig{
+		Retries:       1,
+		CheckAfter:    1 * time.Minute,
+		ResponseTimes: [][]time.Duration{{1000 * time.Millisecond}, {-1}, {-1, 1000 * time.Millisecond}, {1000 * time.Millisecond}, {1000 * time.Millisecond}},
+		Responses:     []string{"#c83200", "#c83201", "#c83202", "#c83203", "#c83204"},
+		ExpectedResult: []interface{}{
+			map[string]interface{}{"b": float64(0), "g": float64(50), "r": float64(200)},
+			map[string]interface{}{"b": float64(2), "g": float64(50), "r": float64(200)},
+			map[string]interface{}{"b": float64(3), "g": float64(50), "r": float64(200)},
+			map[string]interface{}{"b": float64(4), "g": float64(50), "r": float64(200)},
+		},
+	}))
+
+	config.GroupScheduler = util.ROUND_ROBIN
+	t.Run("slow round robin", getGroupShedullerTest(config, GroupSimConfig{
 		Retries:       1,
 		CheckAfter:    1 * time.Minute,
 		ResponseTimes: [][]time.Duration{{1000 * time.Millisecond}, {-1}, {-1, 1000 * time.Millisecond}, {1000 * time.Millisecond}, {1000 * time.Millisecond}},
@@ -116,6 +144,20 @@ func TestGroupScheduler(t *testing.T) {
 
 	config.GroupScheduler = util.SEQUENTIAL
 	t.Run("very slow sequential", getGroupShedullerTest(config, GroupSimConfig{
+		Retries:       1,
+		CheckAfter:    1 * time.Minute,
+		ResponseTimes: [][]time.Duration{{1500 * time.Millisecond}, {-1}, {-1, 1500 * time.Millisecond}, {1500 * time.Millisecond}, {1500 * time.Millisecond}},
+		Responses:     []string{"#c83200", "#c83201", "#c83202", "#c83203", "#c83204"},
+		ExpectedResult: []interface{}{
+			map[string]interface{}{"b": float64(0), "g": float64(50), "r": float64(200)},
+			map[string]interface{}{"b": float64(2), "g": float64(50), "r": float64(200)},
+			map[string]interface{}{"b": float64(3), "g": float64(50), "r": float64(200)},
+			map[string]interface{}{"b": float64(4), "g": float64(50), "r": float64(200)},
+		},
+	}))
+
+	config.GroupScheduler = util.ROUND_ROBIN
+	t.Run("very slow round robin", getGroupShedullerTest(config, GroupSimConfig{
 		Retries:       1,
 		CheckAfter:    1 * time.Minute,
 		ResponseTimes: [][]time.Duration{{1500 * time.Millisecond}, {-1}, {-1, 1500 * time.Millisecond}, {1500 * time.Millisecond}, {1500 * time.Millisecond}},

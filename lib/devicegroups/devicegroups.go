@@ -26,6 +26,7 @@ import (
 	"github.com/bradfitz/gomemcache/memcache"
 	"log"
 	"runtime/debug"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -121,6 +122,29 @@ func (this *DeviceGroups) ProcessCommand(command messages.Command, task messages
 			return completed, nextRequests.ToMessages(), finishedResults, err
 		}
 		nextRequests = this.filterCurrentlyRunning(nextRequests)
+		if len(nextRequests) > 0 {
+			nextRequests = nextRequests[:1] // possible place to implement batches in sequence
+		}
+		err = this.updateSubTaskState(nextRequests)
+		return completed, nextRequests.ToMessages(), finishedResults, err
+	case util.ROUND_ROBIN:
+		nextRequests, err = this.annotateSubTaskStates(nextRequests)
+		if err != nil {
+			return completed, nextRequests.ToMessages(), finishedResults, err
+		}
+		nextRequests = this.filterRetries(nextRequests, command.Retries)
+		completed = len(nextRequests) == 0
+		if completed {
+			this.clearTaskData(task.Id)
+			if len(finishedResults) == 0 {
+				err = errors.New("unable to get any results for device-group")
+			}
+			return completed, nextRequests.ToMessages(), finishedResults, err
+		}
+		nextRequests = this.filterCurrentlyRunning(nextRequests)
+		sort.Slice(nextRequests, func(i, j int) bool {
+			return nextRequests[i].SubTaskState.TryCount < nextRequests[j].SubTaskState.TryCount
+		})
 		if len(nextRequests) > 0 {
 			nextRequests = nextRequests[:1] // possible place to implement batches in sequence
 		}
