@@ -78,7 +78,11 @@ func LoadConfig(location string) (config Config, err error) {
 		return config, error
 	}
 	handleEnvironmentVars(&config)
-	return config, nil
+	if config.CompletionStrategy == OPTIMISTIC && config.GroupScheduler != PARALLEL {
+		log.Println("WARNING: CompletionStrategy == optimistic && GroupScheduler != parallel --> set GroupScheduler to parallel")
+		config.GroupScheduler = PARALLEL
+	}
+	return config, err
 }
 
 var camel = regexp.MustCompile("(^[^A-Z]*|[A-Z]*)([A-Z][^A-Z]+|$)")
