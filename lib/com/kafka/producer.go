@@ -53,7 +53,7 @@ func (this *AsyncProducer) Close() {
 	this.producer.Close()
 }
 
-func PrepareProducer(ctx context.Context, kafkaBootstrapUrl string, sync bool, syncIdempotent bool) (result com.ProducerInterface, err error) {
+func PrepareProducer(ctx context.Context, kafkaBootstrapUrl string, sync bool, syncIdempotent bool, debug bool) (result com.ProducerInterface, err error) {
 	broker, err := GetBroker(kafkaBootstrapUrl)
 	if err != nil {
 		return nil, err
@@ -81,6 +81,9 @@ func PrepareProducer(ctx context.Context, kafkaBootstrapUrl string, sync bool, s
 		if err != nil {
 			return result, err
 		}
+		if debug {
+			temp.Log(log.New(log.Writer(), "[CONNECTOR-KAFKA] ", 0))
+		}
 		result = temp
 		go func() {
 			<-ctx.Done()
@@ -106,6 +109,9 @@ func PrepareProducer(ctx context.Context, kafkaBootstrapUrl string, sync bool, s
 				log.Fatal(err)
 			}
 		}()
+		if debug {
+			temp.Log(log.New(log.Writer(), "[CONNECTOR-KAFKA] ", 0))
+		}
 		result = temp
 		go func() {
 			<-ctx.Done()
@@ -187,7 +193,7 @@ func (this *SyncProducer) ProduceWithKey(topic string, key string, message strin
 	return err
 }
 
-func (this *AsyncProducer) ProduceWithKey(topic string, message string, key string) (err error) {
+func (this *AsyncProducer) ProduceWithKey(topic string, key string, message string) (err error) {
 	if this.logger != nil {
 		this.logger.Println("DEBUG: produce ", topic, message)
 	}

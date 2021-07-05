@@ -75,7 +75,7 @@ func TestProducer_Produce(t *testing.T) {
 		t.Error(err)
 	})
 
-	producer, err := kafka.PrepareProducer(ctx, kafkaUrl, true, true)
+	producer, err := kafka.PrepareProducer(ctx, kafkaUrl, true, true, true)
 	if err != nil {
 		t.Error(err)
 		return
@@ -160,7 +160,7 @@ func TestProducer_ProduceWithKey(t *testing.T) {
 		t.Error(err)
 	})
 
-	producer, err := kafka.PrepareProducer(ctx, kafkaUrl, true, true)
+	producer, err := kafka.PrepareProducer(ctx, kafkaUrl, true, true, true)
 	if err != nil {
 		t.Error(err)
 		return

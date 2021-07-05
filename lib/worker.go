@@ -84,9 +84,6 @@ func Worker(ctx context.Context, config util.Config, comFactory com.FactoryInter
 	if err != nil {
 		log.Fatal("ERROR: comFactory.NewProducer", err)
 	}
-	if config.Debug {
-		w.producer.Log(log.New(log.Writer(), "[CONNECTOR-KAFKA] ", 0))
-	}
 	w.repository = repoFactory.Get(config)
 	w.camunda, err = camundaFactory.Get(config, w.producer)
 	if err != nil {

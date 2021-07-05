@@ -64,6 +64,8 @@ type Config struct {
 	SubResultExpirationInSeconds    int32
 	SubResultDatabaseUrls           []string
 	GroupScheduler                  string
+
+	ApiPort string
 }
 
 func LoadConfig(location string) (config Config, err error) {

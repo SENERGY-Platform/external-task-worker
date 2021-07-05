@@ -38,5 +38,5 @@ func (FactoryType) NewConsumer(ctx context.Context, config util.Config, listener
 }
 
 func (FactoryType) NewProducer(ctx context.Context, config util.Config) (com.ProducerInterface, error) {
-	return PrepareProducer(ctx, config.KafkaUrl, true, false)
+	return PrepareProducer(ctx, config.KafkaUrl, true, false, config.Debug)
 }

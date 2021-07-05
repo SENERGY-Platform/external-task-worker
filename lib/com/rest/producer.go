@@ -14,19 +14,35 @@
  * limitations under the License.
  */
 
-package com
+package rest
 
 import (
-	"context"
+	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/util"
+	"io"
+	"log"
+	"net/http"
+	"strings"
 )
 
-type FactoryInterface interface {
-	NewConsumer(ctx context.Context, config util.Config, listener func(msg string) error) (err error)
-	NewProducer(ctx context.Context, config util.Config) (ProducerInterface, error)
+type Producer struct {
+	config util.Config
 }
 
-type ProducerInterface interface {
-	Produce(topic string, message string) (err error)
-	ProduceWithKey(topic string, key string, message string) (err error)
+func (this *Producer) Produce(topic string, message string) (err error) {
+	resp, err := http.Post(topic, "application/json", strings.NewReader(message))
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		respMsg, _ := io.ReadAll(resp.Body)
+		err = errors.New("http producer: " + resp.Status + " " + string(respMsg))
+		log.Println("ERROR:", topic, err)
+		return err
+	}
+	return nil
+}
+
+func (this *Producer) ProduceWithKey(topic string, key string, message string) (err error) {
+	return this.Produce(topic, message)
 }

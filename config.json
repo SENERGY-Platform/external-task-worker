@@ -26,5 +26,6 @@
   "HealthCheckPort": "8080",
   "SubResultExpirationInSeconds": 6000,
   "SubResultDatabaseUrls": [],
-  "GroupScheduler": "sequential"
+  "GroupScheduler": "sequential",
+  "ApiPort": "8080"
 }
