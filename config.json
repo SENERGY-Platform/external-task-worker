@@ -27,5 +27,6 @@
   "SubResultExpirationInSeconds": 6000,
   "SubResultDatabaseUrls": [],
   "GroupScheduler": "sequential",
-  "ApiPort": "8080"
+  "ApiPort": "8080",
+  "MetadataResponseTo": "response"
 }

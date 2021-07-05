@@ -40,9 +40,11 @@ func (this FactoryType) NewConsumer(basectx context.Context, config util.Config,
 	if err != nil {
 		return err
 	}
-	err = kafka.Factory.NewConsumer(ctx, config, listener)
-	if err != nil {
-		return err
+	if config.ResponseTopic != "" && config.ResponseTopic != "-" {
+		err = kafka.Factory.NewConsumer(ctx, config, listener)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
