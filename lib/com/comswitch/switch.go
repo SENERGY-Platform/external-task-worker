@@ -71,7 +71,7 @@ type Producer struct {
 }
 
 func (this Producer) getChildProducer(topic string) com.ProducerInterface {
-	if strings.HasPrefix("http://", topic) || strings.HasPrefix("https://", topic) {
+	if strings.HasPrefix(topic, "http://") || strings.HasPrefix(topic, "https://") {
 		return this.restProducer
 	}
 	return this.kafkaProducer
