@@ -17,7 +17,8 @@
 package mock
 
 import (
-	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
+	"context"
+	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"log"
 	"sync"
@@ -39,9 +40,9 @@ func (this *KafkaMock) Log(logger *log.Logger) {
 
 }
 
-func (this *KafkaMock) NewConsumer(config util.Config, listener func(msg string) error) (consumer kafka.ConsumerInterface, err error) {
+func (this *KafkaMock) NewConsumer(ctx context.Context, config util.Config, listener func(msg string) error) (err error) {
 	this.Subscribe(config.ResponseTopic, listener)
-	return this, nil
+	return nil
 }
 
 func (this *KafkaMock) Subscribe(topic string, listener func(msg string) error) {
@@ -54,7 +55,7 @@ func (this *KafkaMock) Subscribe(topic string, listener func(msg string) error) 
 	this.listeners[topic] = append(this.listeners[topic], listener)
 }
 
-func (this *KafkaMock) NewProducer(config util.Config) (kafka.ProducerInterface, error) {
+func (this *KafkaMock) NewProducer(ctx context.Context, config util.Config) (com.ProducerInterface, error) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	this.Produced = map[string][]string{}

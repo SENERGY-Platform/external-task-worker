@@ -19,7 +19,7 @@ package mock
 import (
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/interfaces"
-	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
+	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"log"
@@ -50,7 +50,7 @@ func (this *CamundaMock) Init() {
 	this.lockTimes = map[string]time.Time{}
 }
 
-func (this *CamundaMock) Get(config util.Config, producer kafka.ProducerInterface) (interfaces.CamundaInterface, error) {
+func (this *CamundaMock) Get(config util.Config, producer com.ProducerInterface) (interfaces.CamundaInterface, error) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	if this.ResetOnGetInterface {

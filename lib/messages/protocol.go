@@ -37,12 +37,15 @@ type ProtocolResponse struct {
 }
 
 type Metadata struct {
-	Device               model.Device   `json:"device"`
-	Service              model.Service  `json:"service"`
-	Protocol             model.Protocol `json:"protocol"`
-	InputCharacteristic  string         `json:"input_characteristic,omitempty"`
-	OutputCharacteristic string         `json:"output_characteristic,omitempty"`
-	ContentVariableHints []string       `json:"content_variable_hints,omitempty"`
+	Device               model.Device           `json:"device"`
+	Service              model.Service          `json:"service"`
+	Protocol             model.Protocol         `json:"protocol"`
+	InputCharacteristic  string                 `json:"input_characteristic,omitempty"`
+	OutputCharacteristic string                 `json:"output_characteristic,omitempty"`
+	ContentVariableHints []string               `json:"content_variable_hints,omitempty"`
+	RequestBy            string                 `json:"request_by,omitempty"`
+	RespondTo            string                 `json:"respond_to,omitempty"`
+	Other                map[string]interface{} `json:"other,omitempty"`
 }
 
 type ProtocolMsg struct {

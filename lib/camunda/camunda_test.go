@@ -69,7 +69,7 @@ func TestGetTask(t *testing.T) {
 		return
 	}
 
-	_, err = mock.Kafka.NewProducer(util.Config{})
+	_, err = mock.Kafka.NewProducer(ctx, util.Config{})
 	if err != nil {
 		t.Fatal(err)
 	}

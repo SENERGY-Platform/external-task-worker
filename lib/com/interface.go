@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 InfAI (CC SES)
+ * Copyright 2020 InfAI (CC SES)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,21 @@
  * limitations under the License.
  */
 
-package kafka
+package com
 
 import (
+	"context"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"log"
 )
 
 type FactoryInterface interface {
-	NewConsumer(config util.Config, listener func(msg string) error) (consumer ConsumerInterface, err error)
-	NewProducer(config util.Config) (ProducerInterface, error)
-}
-
-type ConsumerInterface interface {
-	Stop()
+	NewConsumer(ctx context.Context, config util.Config, listener func(msg string) error) (err error)
+	NewProducer(ctx context.Context, config util.Config) (ProducerInterface, error)
 }
 
 type ProducerInterface interface {
 	Produce(topic string, message string) (err error)
 	ProduceWithKey(topic string, key string, message string) (err error)
-	Close()
 	Log(logger *log.Logger)
 }

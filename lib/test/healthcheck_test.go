@@ -22,8 +22,8 @@ import (
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/interfaces"
+	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
-	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/lib/test/mock"
 	"github.com/SENERGY-Platform/external-task-worker/util"
@@ -211,11 +211,11 @@ func (this *StoppableTestKafka) ProduceWithKey(topic string, message string, key
 
 func (this *StoppableTestKafka) Close() {}
 
-func (this *StoppableTestKafka) NewConsumer(config util.Config, listener func(msg string) error) (consumer kafka.ConsumerInterface, err error) {
-	return this, nil
+func (this *StoppableTestKafka) NewConsumer(ctx context.Context, config util.Config, listener func(msg string) error) (err error) {
+	return nil
 }
 
-func (this *StoppableTestKafka) NewProducer(config util.Config) (kafka.ProducerInterface, error) {
+func (this *StoppableTestKafka) NewProducer(ctx context.Context, config util.Config) (com.ProducerInterface, error) {
 	return this, nil
 }
 
@@ -228,7 +228,7 @@ type StoppableTestCamunda struct {
 	tasks []messages.CamundaExternalTask
 }
 
-func (this *StoppableTestCamunda) Get(configType util.Config, producer kafka.ProducerInterface) (interfaces.CamundaInterface, error) {
+func (this *StoppableTestCamunda) Get(configType util.Config, producer com.ProducerInterface) (interfaces.CamundaInterface, error) {
 	return this, nil
 }
 

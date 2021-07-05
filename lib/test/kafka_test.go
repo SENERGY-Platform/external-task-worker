@@ -17,7 +17,8 @@
 package test
 
 import (
-	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
+	"context"
+	"github.com/SENERGY-Platform/external-task-worker/lib/com/kafka"
 	"github.com/SENERGY-Platform/external-task-worker/lib/test/docker"
 	"github.com/ory/dockertest/v3"
 	"log"
@@ -64,15 +65,17 @@ func TestProducer_Produce(t *testing.T) {
 
 	result := [][]byte{}
 
-	consumer, err := kafka.NewConsumer(kafkaUrl, "test", "test", func(topic string, msg []byte, t time.Time) error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	err = kafka.NewConsumer(ctx, kafkaUrl, "test", "test", func(topic string, msg []byte, t time.Time) error {
 		result = append(result, msg)
 		return nil
 	}, func(err error, consumer *kafka.Consumer) {
 		t.Error(err)
 	})
-	defer consumer.Stop()
 
-	producer, err := kafka.PrepareProducer(kafkaUrl, true, true)
+	producer, err := kafka.PrepareProducer(ctx, kafkaUrl, true, true)
 	if err != nil {
 		t.Error(err)
 		return
@@ -147,15 +150,17 @@ func TestProducer_ProduceWithKey(t *testing.T) {
 
 	result := [][]byte{}
 
-	consumer, err := kafka.NewConsumer(kafkaUrl, "test", "test", func(topic string, msg []byte, t time.Time) error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	err = kafka.NewConsumer(ctx, kafkaUrl, "test", "test", func(topic string, msg []byte, t time.Time) error {
 		result = append(result, msg)
 		return nil
 	}, func(err error, consumer *kafka.Consumer) {
 		t.Error(err)
 	})
-	defer consumer.Stop()
 
-	producer, err := kafka.PrepareProducer(kafkaUrl, true, true)
+	producer, err := kafka.PrepareProducer(ctx, kafkaUrl, true, true)
 	if err != nil {
 		t.Error(err)
 		return
