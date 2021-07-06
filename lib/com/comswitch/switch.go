@@ -18,6 +18,7 @@ package comswitch
 
 import (
 	"context"
+	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/SENERGY-Platform/external-task-worker/lib/com/kafka"
 	"github.com/SENERGY-Platform/external-task-worker/lib/com/rest"
@@ -36,15 +37,23 @@ func (this FactoryType) NewConsumer(basectx context.Context, config util.Config,
 			cancel()
 		}
 	}()
-	err = rest.Factory.NewConsumer(ctx, config, listener)
-	if err != nil {
-		return err
+	used := false
+	if config.ApiPort != "" && config.ApiPort != "-" {
+		used = true
+		err = rest.Factory.NewConsumer(ctx, config, listener)
+		if err != nil {
+			return err
+		}
 	}
 	if config.ResponseTopic != "" && config.ResponseTopic != "-" {
+		used = true
 		err = kafka.Factory.NewConsumer(ctx, config, listener)
 		if err != nil {
 			return err
 		}
+	}
+	if !used {
+		return errors.New("no response consumer set; at least one of the following config fields must be set: ApiPort, ResponseTopic")
 	}
 	return nil
 }
