@@ -60,16 +60,16 @@ func (this FactoryType) NewConsumer(ctx context.Context, config util.Config, lis
 		log.Println("Listening on ", server.Addr)
 		if err := server.ListenAndServe(); err != nil {
 			if err != http.ErrServerClosed {
-				log.Println("ERROR: api server error", err)
+				log.Println("ERROR: http response consumer server error", err)
 				log.Fatal(err)
 			} else {
-				log.Println("closing api server")
+				log.Println("closing http response consumer server")
 			}
 		}
 	}()
 	go func() {
 		<-ctx.Done()
-		log.Println("DEBUG: api shutdown", server.Shutdown(context.Background()))
+		log.Println("http response consumer shutdown", server.Shutdown(context.Background()))
 	}()
 	return nil
 }
