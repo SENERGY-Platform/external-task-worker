@@ -32,6 +32,7 @@ type Producer struct {
 func (this *Producer) Produce(topic string, message string) (err error) {
 	resp, err := http.Post(topic, "application/json", strings.NewReader(message))
 	if err != nil {
+		log.Println("ERROR:", topic, err)
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
