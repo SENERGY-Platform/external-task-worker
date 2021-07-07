@@ -79,11 +79,11 @@ func TestComswitch(t *testing.T) {
 	}
 
 	config := util.Config{
-		KafkaUrl:           kafkaUrl,
-		KafkaConsumerGroup: "test",
-		ResponseTopic:      "test",
-		ApiPort:            strconv.Itoa(apiPort),
-		Debug:              true,
+		KafkaUrl:                kafkaUrl,
+		KafkaConsumerGroup:      "test",
+		ResponseTopic:           "test",
+		HttpCommandConsumerPort: strconv.Itoa(apiPort),
+		Debug:                   true,
 	}
 
 	err = comswitch.Factory.NewConsumer(ctx, config, func(msg string) error {
@@ -97,13 +97,13 @@ func TestComswitch(t *testing.T) {
 		return
 	}
 	log.Println("http produce 1")
-	err = producer.Produce("http://localhost:"+config.ApiPort+"/responses", "http_msg1")
+	err = producer.Produce("http://localhost:"+config.HttpCommandConsumerPort+"/responses", "http_msg1")
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	log.Println("http produce 2")
-	err = producer.Produce("http://localhost:"+config.ApiPort+"/responses", "http_msg2")
+	err = producer.Produce("http://localhost:"+config.HttpCommandConsumerPort+"/responses", "http_msg2")
 	if err != nil {
 		t.Error(err)
 		return
@@ -186,11 +186,11 @@ func TestComswitchProduceWithKey(t *testing.T) {
 	}
 
 	config := util.Config{
-		KafkaUrl:           kafkaUrl,
-		KafkaConsumerGroup: "test",
-		ResponseTopic:      "test",
-		ApiPort:            strconv.Itoa(apiPort),
-		Debug:              true,
+		KafkaUrl:                kafkaUrl,
+		KafkaConsumerGroup:      "test",
+		ResponseTopic:           "test",
+		HttpCommandConsumerPort: strconv.Itoa(apiPort),
+		Debug:                   true,
 	}
 
 	err = comswitch.Factory.NewConsumer(ctx, config, func(msg string) error {
@@ -204,13 +204,13 @@ func TestComswitchProduceWithKey(t *testing.T) {
 		return
 	}
 	log.Println("http produce 1")
-	err = producer.ProduceWithKey("http://localhost:"+config.ApiPort+"/responses", "key", "http_msg1")
+	err = producer.ProduceWithKey("http://localhost:"+config.HttpCommandConsumerPort+"/responses", "key", "http_msg1")
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	log.Println("http produce 2")
-	err = producer.ProduceWithKey("http://localhost:"+config.ApiPort+"/responses", "key", "http_msg2")
+	err = producer.ProduceWithKey("http://localhost:"+config.HttpCommandConsumerPort+"/responses", "key", "http_msg2")
 	if err != nil {
 		t.Error(err)
 		return

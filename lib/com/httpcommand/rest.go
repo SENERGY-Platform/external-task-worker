@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package rest
+package httpcommand
 
 import (
 	"context"
@@ -40,12 +40,23 @@ func (this FactoryType) NewConsumer(ctx context.Context, config util.Config, lis
 				http.Error(writer, err.Error(), http.StatusBadRequest)
 				return
 			}
-			err = listener(string(msg))
-			if err != nil {
-				log.Println("ERROR:", err)
-				http.Error(writer, err.Error(), http.StatusBadRequest)
-				return
+			if config.HttpCommandConsumerSync {
+				err = listener(string(msg))
+				if err != nil {
+					log.Println("ERROR:", err)
+					http.Error(writer, err.Error(), http.StatusBadRequest)
+					return
+				}
+			} else {
+				go func() {
+					err = listener(string(msg))
+					if err != nil {
+						log.Println("ERROR: http response consumer listener: ", err)
+						return
+					}
+				}()
 			}
+
 			writer.WriteHeader(http.StatusOK)
 			return
 		} else {
@@ -55,7 +66,7 @@ func (this FactoryType) NewConsumer(ctx context.Context, config util.Config, lis
 	})
 	corsHandler := NewCors(router)
 	logger := NewLogger(corsHandler)
-	server := &http.Server{Addr: ":" + config.ApiPort, Handler: logger, WriteTimeout: 10 * time.Second, ReadTimeout: 10 * time.Second, ReadHeaderTimeout: 2 * time.Second}
+	server := &http.Server{Addr: ":" + config.HttpCommandConsumerPort, Handler: logger, WriteTimeout: 10 * time.Second, ReadTimeout: 10 * time.Second, ReadHeaderTimeout: 2 * time.Second}
 	go func() {
 		log.Println("Listening on ", server.Addr)
 		if err := server.ListenAndServe(); err != nil {

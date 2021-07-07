@@ -27,6 +27,7 @@
   "SubResultExpirationInSeconds": 6000,
   "SubResultDatabaseUrls": [],
   "GroupScheduler": "sequential",
-  "ApiPort": "8080",
+  "HttpCommandConsumerPort": "8080",
+  "HttpCommandConsumerSync": true,
   "MetadataResponseTo": "response"
 }

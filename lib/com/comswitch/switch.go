@@ -20,8 +20,8 @@ import (
 	"context"
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/com"
+	"github.com/SENERGY-Platform/external-task-worker/lib/com/httpcommand"
 	"github.com/SENERGY-Platform/external-task-worker/lib/com/kafka"
-	"github.com/SENERGY-Platform/external-task-worker/lib/com/rest"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"strings"
 )
@@ -38,9 +38,9 @@ func (this FactoryType) NewConsumer(basectx context.Context, config util.Config,
 		}
 	}()
 	used := false
-	if config.ApiPort != "" && config.ApiPort != "-" {
+	if config.HttpCommandConsumerPort != "" && config.HttpCommandConsumerPort != "-" {
 		used = true
-		err = rest.Factory.NewConsumer(ctx, config, listener)
+		err = httpcommand.Factory.NewConsumer(ctx, config, listener)
 		if err != nil {
 			return err
 		}
@@ -53,7 +53,7 @@ func (this FactoryType) NewConsumer(basectx context.Context, config util.Config,
 		}
 	}
 	if !used {
-		return errors.New("no response consumer set; at least one of the following config fields must be set: ApiPort, ResponseTopic")
+		return errors.New("no response consumer set; at least one of the following config fields must be set: HttpCommandConsumerPort, ResponseTopic")
 	}
 	return nil
 }
@@ -69,7 +69,7 @@ func (this FactoryType) NewProducer(basectx context.Context, config util.Config)
 	if err != nil {
 		return result, err
 	}
-	restProducer, err := rest.Factory.NewProducer(ctx, config)
+	restProducer, err := httpcommand.Factory.NewProducer(ctx, config)
 	if err != nil {
 		return result, err
 	}

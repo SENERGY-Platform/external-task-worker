@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package rest
+package httpcommand
 
 import (
 	"errors"

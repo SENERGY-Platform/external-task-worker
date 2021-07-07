@@ -191,6 +191,11 @@ func getFreePort() (int, error) {
 	return listener.Addr().(*net.TCPAddr).Port, nil
 }
 
+func GetFreePort() (string, error) {
+	temp, err := getFreePort()
+	return strconv.Itoa(temp), err
+}
+
 type StoppableTestKafka struct {
 	On bool
 }

@@ -65,8 +65,9 @@ type Config struct {
 	SubResultDatabaseUrls           []string
 	GroupScheduler                  string
 
-	ApiPort            string
-	MetadataResponseTo string
+	HttpCommandConsumerPort string
+	HttpCommandConsumerSync bool
+	MetadataResponseTo      string
 }
 
 func LoadConfig(location string) (config Config, err error) {
