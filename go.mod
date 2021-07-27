@@ -9,7 +9,7 @@ require (
 	github.com/Shopify/sarama v1.22.0
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/coocood/freecache v1.1.0
-	github.com/dgrijalva/jwt-go v3.1.0+incompatible
+	github.com/golang-jwt/jwt v3.2.1+incompatible
 	github.com/google/uuid v1.1.1
 	github.com/lib/pq v1.0.0
 	github.com/ory/dockertest/v3 v3.6.0

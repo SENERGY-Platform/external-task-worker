@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/util"
+	"github.com/golang-jwt/jwt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -31,8 +32,6 @@ import (
 	"time"
 
 	"log"
-
-	"github.com/dgrijalva/jwt-go"
 )
 
 type RoleMapping struct {
