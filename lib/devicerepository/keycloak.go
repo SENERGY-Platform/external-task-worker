@@ -69,7 +69,7 @@ type RealmAccess struct {
 	Roles []string `json:"roles"`
 }
 
-func (this Keycloak) GetUserToken(userid string) (token Impersonate, err error) {
+func (this Keycloak) GetUserToken(userid string) (token Impersonate, expirationInSec float64, err error) {
 	resp, err := http.PostForm(this.config.AuthEndpoint+"/auth/realms/master/protocol/openid-connect/token", url.Values{
 		"client_id":         {this.config.AuthClientId},
 		"client_secret":     {this.config.AuthClientSecret},
@@ -91,7 +91,7 @@ func (this Keycloak) GetUserToken(userid string) (token Impersonate, err error) 
 	if err != nil {
 		return
 	}
-	return Impersonate("Bearer " + openIdToken.AccessToken), nil
+	return Impersonate("Bearer " + openIdToken.AccessToken), openIdToken.ExpiresIn, nil
 }
 
 func (this Keycloak) ForgeUserToken(user string) (token Impersonate, err error) {

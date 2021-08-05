@@ -23,7 +23,7 @@ import (
 	"log"
 )
 
-var L1Expiration = 60         // 60sec
+var DefaultExpiration = 60    // 60sec
 var L1Size = 40 * 1024 * 1024 //40MB
 var Debug = false
 
@@ -51,7 +51,11 @@ func (this *Cache) Get(key string) (item Item, err error) {
 }
 
 func (this *Cache) Set(key string, value []byte) {
-	err := this.l1.Set([]byte(key), value, L1Expiration)
+	this.SetWithExpiration(key, value, DefaultExpiration)
+}
+
+func (this *Cache) SetWithExpiration(key string, value []byte, expirationInSec int) {
+	err := this.l1.Set([]byte(key), value, expirationInSec)
 	if err != nil {
 		log.Println("ERROR: in Cache::l1.Set()", err)
 	}
@@ -73,5 +77,23 @@ func (this *Cache) Use(key string, getter func() (interface{}, error), result in
 		return err
 	}
 	this.Set(key, value)
+	return json.Unmarshal(value, &result)
+}
+
+func (this *Cache) UseWithExpiration(key string, getter func() (result interface{}, expirationInSec int, err error), result interface{}) (err error) {
+	item, err := this.Get(key)
+	if err == nil {
+		err = json.Unmarshal(item.Value, result)
+		return
+	}
+	temp, expiration, err := getter()
+	if err != nil {
+		return err
+	}
+	value, err := json.Marshal(temp)
+	if err != nil {
+		return err
+	}
+	this.SetWithExpiration(key, value, expiration)
 	return json.Unmarshal(value, &result)
 }

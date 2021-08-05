@@ -36,8 +36,12 @@ func NewIot(config util.Config) *Iot {
 	return &Iot{repoUrl: config.DeviceRepoUrl, cache: NewCache(), permsearchUrl: config.PermissionsUrl, keycloak: Keycloak{config: config}}
 }
 
-func (this *Iot) GetToken(user string) (Impersonate, error) {
-	return this.keycloak.GetUserToken(user)
+func (this *Iot) GetToken(user string) (result Impersonate, err error) {
+	err = this.cache.UseWithExpiration("user_token."+user, func() (interface{}, int, error) {
+		token, expirationInSec, err := this.keycloak.GetUserToken(user)
+		return token, int(expirationInSec) - 10, err
+	}, &result)
+	return
 }
 
 func (this *Iot) GetDevice(token Impersonate, id string) (result model.Device, err error) {
