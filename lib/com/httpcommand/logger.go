@@ -14,25 +14,32 @@
  * limitations under the License.
  */
 
-package kafka
+package httpcommand
 
 import (
-	"github.com/SENERGY-Platform/external-task-worker/util"
 	"log"
+	"net/http"
 )
 
-type FactoryInterface interface {
-	NewConsumer(config util.Config, listener func(msg string) error) (consumer ConsumerInterface, err error)
-	NewProducer(config util.Config) (ProducerInterface, error)
+func NewLogger(handler http.Handler) *LoggerMiddleWare {
+	return &LoggerMiddleWare{handler: handler}
 }
 
-type ConsumerInterface interface {
-	Stop()
+type LoggerMiddleWare struct {
+	handler http.Handler
 }
 
-type ProducerInterface interface {
-	Produce(topic string, message string) (err error)
-	ProduceWithKey(topic string, key string, message string) (err error)
-	Close()
-	Log(logger *log.Logger)
+func (this *LoggerMiddleWare) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	this.log(r)
+	if this.handler != nil {
+		this.handler.ServeHTTP(w, r)
+	} else {
+		http.Error(w, "Forbidden", 403)
+	}
+}
+
+func (this *LoggerMiddleWare) log(request *http.Request) {
+	method := request.Method
+	path := request.URL
+	log.Printf("%v [%v] %v \n", request.RemoteAddr, method, path)
 }

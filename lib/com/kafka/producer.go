@@ -17,14 +17,16 @@
 package kafka
 
 import (
+	"context"
 	"errors"
+	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/Shopify/sarama"
 	"log"
-	"sync"
 	"time"
 )
 
 var Fatal = false
+var SlowProducerTimeout time.Duration = 2 * time.Second
 
 type SyncProducer struct {
 	broker            []string
@@ -32,7 +34,6 @@ type SyncProducer struct {
 	producer          sarama.SyncProducer
 	kafkaBootstrapUrl string
 	syncIdempotent    bool
-	mux               sync.Mutex
 	usedTopics        map[string]bool
 }
 
@@ -52,8 +53,7 @@ func (this *AsyncProducer) Close() {
 	this.producer.Close()
 }
 
-func PrepareProducer(kafkaBootstrapUrl string, sync bool, syncIdempotent bool) (ProducerInterface, error) {
-	var err error
+func PrepareProducer(ctx context.Context, kafkaBootstrapUrl string, sync bool, syncIdempotent bool, debug bool) (result com.ProducerInterface, err error) {
 	broker, err := GetBroker(kafkaBootstrapUrl)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,12 @@ func PrepareProducer(kafkaBootstrapUrl string, sync bool, syncIdempotent bool) (
 		return nil, errors.New("missing kafka broker")
 	}
 	if sync {
-		result := &SyncProducer{broker: broker, kafkaBootstrapUrl: kafkaBootstrapUrl, syncIdempotent: syncIdempotent, usedTopics: map[string]bool{}}
+		temp := &SyncProducer{
+			broker:            broker,
+			kafkaBootstrapUrl: kafkaBootstrapUrl,
+			syncIdempotent:    syncIdempotent,
+			usedTopics:        map[string]bool{},
+		}
 		sarama_conf := sarama.NewConfig()
 		sarama_conf.Version = sarama.V2_2_0_0
 		sarama_conf.Producer.Return.Errors = true
@@ -72,23 +77,48 @@ func PrepareProducer(kafkaBootstrapUrl string, sync bool, syncIdempotent bool) (
 			sarama_conf.Net.MaxOpenRequests = 1
 			sarama_conf.Producer.RequiredAcks = sarama.WaitForAll
 		}
-		result.producer, err = sarama.NewSyncProducer(result.broker, sarama_conf)
-		return result, err
+		temp.producer, err = sarama.NewSyncProducer(temp.broker, sarama_conf)
+		if err != nil {
+			return result, err
+		}
+		if debug {
+			temp.Log(log.New(log.Writer(), "[CONNECTOR-KAFKA] ", 0))
+		}
+		result = temp
+		go func() {
+			<-ctx.Done()
+			temp.producer.Close()
+		}()
 	} else {
-		result := &AsyncProducer{broker: broker, kafkaBootstrapUrl: kafkaBootstrapUrl, usedTopics: map[string]bool{}}
+		temp := &AsyncProducer{
+			broker:            broker,
+			kafkaBootstrapUrl: kafkaBootstrapUrl,
+			usedTopics:        map[string]bool{},
+		}
 		sarama_conf := sarama.NewConfig()
 		sarama_conf.Version = sarama.V2_2_0_0
 		sarama_conf.Producer.Return.Errors = true
 		sarama_conf.Producer.Return.Successes = false
-		result.producer, err = sarama.NewAsyncProducer(result.broker, sarama_conf)
+		temp.producer, err = sarama.NewAsyncProducer(temp.broker, sarama_conf)
+		if err != nil {
+			return result, err
+		}
 		go func() {
-			err, ok := <-result.producer.Errors()
+			err, ok := <-temp.producer.Errors()
 			if ok {
 				log.Fatal(err)
 			}
 		}()
-		return result, err
+		if debug {
+			temp.Log(log.New(log.Writer(), "[CONNECTOR-KAFKA] ", 0))
+		}
+		result = temp
+		go func() {
+			<-ctx.Done()
+			temp.producer.Close()
+		}()
 	}
+	return result, nil
 }
 
 func (this *SyncProducer) Log(logger *log.Logger) {
@@ -96,16 +126,30 @@ func (this *SyncProducer) Log(logger *log.Logger) {
 }
 
 func (this *SyncProducer) Produce(topic string, message string) (err error) {
-	this.mux.Lock()
-	defer this.mux.Unlock()
 	if this.logger != nil {
 		this.logger.Println("DEBUG: produce ", topic, message)
 	}
 	err = EnsureTopic(topic, this.kafkaBootstrapUrl, &this.usedTopics)
 	if err != nil {
-		return err
+		log.Println("WARNING: unable to ensure topic", err)
+		err = nil
+	}
+
+	start := time.Now()
+	if SlowProducerTimeout > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), SlowProducerTimeout)
+		defer cancel()
+		go func() {
+			<-ctx.Done()
+			if ctx.Err() != nil && ctx.Err() != context.Canceled {
+				log.Println("WARNING: slow produce call", topic, message)
+			}
+		}()
 	}
 	_, _, err = this.producer.SendMessage(&sarama.ProducerMessage{Topic: topic, Key: nil, Value: sarama.StringEncoder(message), Timestamp: time.Now()})
+	if SlowProducerTimeout > 0 && time.Since(start) >= SlowProducerTimeout {
+		log.Println("WARNING: finished slow produce call", topic, time.Since(start), message)
+	}
 	return err
 }
 
@@ -115,23 +159,37 @@ func (this *AsyncProducer) Produce(topic string, message string) (err error) {
 	}
 	err = EnsureTopic(topic, this.kafkaBootstrapUrl, &this.usedTopics)
 	if err != nil {
-		return err
+		log.Println("WARNING: unable to ensure topic", err)
+		err = nil
 	}
 	this.producer.Input() <- &sarama.ProducerMessage{Topic: topic, Key: nil, Value: sarama.StringEncoder(message), Timestamp: time.Now()}
 	return
 }
 
 func (this *SyncProducer) ProduceWithKey(topic string, key string, message string) (err error) {
-	this.mux.Lock()
-	defer this.mux.Unlock()
 	if this.logger != nil {
 		this.logger.Println("DEBUG: produce ", topic, message)
 	}
 	err = EnsureTopic(topic, this.kafkaBootstrapUrl, &this.usedTopics)
 	if err != nil {
-		return err
+		log.Println("WARNING: unable to ensure topic", err)
+		err = nil
+	}
+	start := time.Now()
+	if SlowProducerTimeout > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), SlowProducerTimeout)
+		defer cancel()
+		go func() {
+			<-ctx.Done()
+			if ctx.Err() != nil && ctx.Err() != context.Canceled {
+				log.Println("WARNING: slow produce call", topic, key, message)
+			}
+		}()
 	}
 	_, _, err = this.producer.SendMessage(&sarama.ProducerMessage{Topic: topic, Key: sarama.StringEncoder(key), Value: sarama.StringEncoder(message), Timestamp: time.Now()})
+	if SlowProducerTimeout > 0 && time.Since(start) >= SlowProducerTimeout {
+		log.Println("WARNING: finished slow produce call", topic, key, time.Since(start), message)
+	}
 	return err
 }
 
@@ -141,7 +199,8 @@ func (this *AsyncProducer) ProduceWithKey(topic string, key string, message stri
 	}
 	err = EnsureTopic(topic, this.kafkaBootstrapUrl, &this.usedTopics)
 	if err != nil {
-		return err
+		log.Println("WARNING: unable to ensure topic", err)
+		err = nil
 	}
 	this.producer.Input() <- &sarama.ProducerMessage{Topic: topic, Key: sarama.StringEncoder(key), Value: sarama.StringEncoder(message), Timestamp: time.Now()}
 	return

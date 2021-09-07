@@ -42,6 +42,8 @@ func ExampleWorkerRetries() {
 	config.CompletionStrategy = util.PESSIMISTIC
 	config.CamundaWorkerTimeout = 100
 	config.CamundaFetchLockDuration = 100
+	config.HttpCommandConsumerPort = ""
+	mock.CleanKafkaMock()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

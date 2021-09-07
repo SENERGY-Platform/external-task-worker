@@ -128,6 +128,7 @@ func (this *worker) createMessageForProtocolHandler(command messages.Command, ta
 			InputCharacteristic:  inputCharacteristicId,
 			OutputCharacteristic: outputCharacteristicId,
 			ContentVariableHints: command.ContentVariableHints,
+			ResponseTo:           this.config.MetadataResponseTo,
 		},
 		Trace: trace,
 	}

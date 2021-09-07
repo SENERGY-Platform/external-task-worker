@@ -17,13 +17,13 @@
 package interfaces
 
 import (
-	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
+	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 )
 
 type FactoryInterface interface {
-	Get(configType util.Config, producer kafka.ProducerInterface) (CamundaInterface, error)
+	Get(configType util.Config, producer com.ProducerInterface) (CamundaInterface, error)
 }
 
 type CamundaInterface interface {

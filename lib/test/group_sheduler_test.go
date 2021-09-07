@@ -43,6 +43,7 @@ func TestGroupScheduler(t *testing.T) {
 	config.CamundaWorkerTimeout = 300      //in ms
 	config.CamundaFetchLockDuration = 1000 //in ms
 	config.HealthCheckPort = ""
+	mock.CleanKafkaMock()
 
 	config.GroupScheduler = util.SEQUENTIAL
 	t.Run("simple sequential", getGroupShedullerTest(config, GroupSimConfig{
@@ -338,7 +339,7 @@ func getGroupShedullerTest(config util.Config, simConfig GroupSimConfig) func(t 
 			},
 		})
 
-		go lib.Worker(ctx, config, mockKafka, mockRepo, mockCamunda, mock.Marshaller)
+		go lib.Worker(ctx, config, mockKafka, mockRepo, mockCamunda, &mock.MarshallerMock{})
 
 		time.Sleep(simConfig.CheckAfter)
 

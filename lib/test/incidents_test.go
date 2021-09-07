@@ -17,6 +17,7 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
 	"github.com/SENERGY-Platform/external-task-worker/lib/test/mock"
@@ -45,7 +46,10 @@ func ExampleIncidents() {
 		log.Fatal(err)
 	}
 
-	kafka, err := mock.Kafka.NewProducer(config)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	kafka, err := mock.Kafka.NewProducer(ctx, config)
 	if err != nil {
 		fmt.Println(err)
 		return

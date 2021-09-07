@@ -47,6 +47,11 @@ func TestWorkerResponseV2(t *testing.T) {
 	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
 	config.CamundaWorkerTimeout = 100
+	config.HttpCommandConsumerPort, err = GetFreePort()
+	if err != nil {
+		t.Error(err)
+		return
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -217,6 +222,11 @@ func TestGroupResponses(t *testing.T) {
 	config.CompletionStrategy = util.PESSIMISTIC
 	config.CamundaWorkerTimeout = 100
 	config.Debug = true
+	config.HttpCommandConsumerPort, err = GetFreePort()
+	if err != nil {
+		t.Error(err)
+		return
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

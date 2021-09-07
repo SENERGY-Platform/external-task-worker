@@ -23,10 +23,10 @@ import (
 	"fmt"
 	"github.com/SENERGY-Platform/converter/lib/converter/base"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/interfaces"
+	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicegroups"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
-	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
 	"log"
 	"reflect"
@@ -43,8 +43,7 @@ import (
 const CheckCamundaDuration = false
 
 type worker struct {
-	consumer                  kafka.ConsumerInterface
-	producer                  kafka.ProducerInterface
+	producer                  com.ProducerInterface
 	repository                devicerepository.RepoInterface
 	camunda                   interfaces.CamundaInterface
 	config                    util.Config
@@ -61,7 +60,7 @@ type DeviceGroupsHandler interface {
 	ProcessResponse(taskId string, subResult interface{}) (parent messages.GroupTaskMetadataElement, results []interface{}, finished bool, err error)
 }
 
-func Worker(ctx context.Context, config util.Config, kafkaFactory kafka.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory interfaces.FactoryInterface, marshallerFactory marshaller.FactoryInterface) {
+func Worker(ctx context.Context, config util.Config, comFactory com.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory interfaces.FactoryInterface, marshallerFactory marshaller.FactoryInterface) {
 	log.Println("start camunda worker")
 	base.DEBUG = config.Debug
 	var err error
@@ -76,24 +75,19 @@ func Worker(ctx context.Context, config util.Config, kafkaFactory kafka.FactoryI
 	StartHealthCheckEndpoint(ctx, config, &w)
 
 	if config.CompletionStrategy != util.OPTIMISTIC {
-		w.consumer, err = kafkaFactory.NewConsumer(config, w.HandleTaskResponse)
+		err = comFactory.NewConsumer(ctx, config, w.HandleTaskResponse)
 		if err != nil {
-			log.Fatal("ERROR: kafkaFactory.NewConsumer", err)
+			log.Fatal("ERROR: comFactory.NewConsumer", err)
 		}
-		defer w.consumer.Stop()
 	}
-	w.producer, err = kafkaFactory.NewProducer(config)
+	w.producer, err = comFactory.NewProducer(ctx, config)
 	if err != nil {
-		log.Fatal("ERROR: kafkaFactory.NewProducer", err)
+		log.Fatal("ERROR: comFactory.NewProducer", err)
 	}
-	if config.Debug {
-		w.producer.Log(log.New(log.Writer(), "[CONNECTOR-KAFKA] ", 0))
-	}
-	defer w.producer.Close()
 	w.repository = repoFactory.Get(config)
 	w.camunda, err = camundaFactory.Get(config, w.producer)
 	if err != nil {
-		log.Fatal("ERROR: kafkaFactory.NewProducer", err)
+		log.Fatal("ERROR: comFactory.NewProducer", err)
 	}
 	w.deviceGroupsHandler = devicegroups.New(config.GroupScheduler, w.camunda, w.repository, w.CreateProtocolMessage, config.CamundaFetchLockDuration, config.SubResultExpirationInSeconds, config.SubResultDatabaseUrls)
 	for {

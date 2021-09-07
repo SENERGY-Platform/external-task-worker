@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 InfAI (CC SES)
+ * Copyright 2020 InfAI (CC SES)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-package camunda
+package com
 
 import (
-	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/interfaces"
-	"github.com/SENERGY-Platform/external-task-worker/lib/com"
+	"context"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 )
 
-type FactoryType struct{}
+type FactoryInterface interface {
+	NewConsumer(ctx context.Context, config util.Config, listener func(msg string) error) (err error)
+	NewProducer(ctx context.Context, config util.Config) (ProducerInterface, error)
+}
 
-var Factory FactoryType
-
-func (FactoryType) Get(config util.Config, producer com.ProducerInterface) (interfaces.CamundaInterface, error) {
-	return NewCamunda(config, producer)
+type ProducerInterface interface {
+	Produce(topic string, message string) (err error)
+	ProduceWithKey(topic string, key string, message string) (err error)
 }

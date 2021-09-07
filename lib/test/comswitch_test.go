@@ -18,15 +18,19 @@ package test
 
 import (
 	"context"
+	"github.com/SENERGY-Platform/external-task-worker/lib/com/comswitch"
 	"github.com/SENERGY-Platform/external-task-worker/lib/com/kafka"
 	"github.com/SENERGY-Platform/external-task-worker/lib/test/docker"
+	"github.com/SENERGY-Platform/external-task-worker/util"
 	"github.com/ory/dockertest/v3"
 	"log"
+	"reflect"
+	"strconv"
 	"testing"
 	"time"
 )
 
-func TestProducer_Produce(t *testing.T) {
+func TestComswitch(t *testing.T) {
 	pool, err := dockertest.NewPool("")
 	if err != nil {
 		t.Error(err)
@@ -63,55 +67,77 @@ func TestProducer_Produce(t *testing.T) {
 		return
 	}
 
-	result := [][]byte{}
+	messages := []string{}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err = kafka.NewConsumer(ctx, kafkaUrl, "test", "test", func(topic string, msg []byte, t time.Time) error {
-		result = append(result, msg)
-		return nil
-	}, func(err error, consumer *kafka.Consumer) {
-		t.Error(err)
-	})
-
-	producer, err := kafka.PrepareProducer(ctx, kafkaUrl, true, true, true)
+	apiPort, err := getFreePort()
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	log.Println("produce 1")
+
+	config := util.Config{
+		KafkaUrl:                kafkaUrl,
+		KafkaConsumerGroup:      "test",
+		ResponseTopic:           "test",
+		HttpCommandConsumerPort: strconv.Itoa(apiPort),
+		Debug:                   true,
+	}
+
+	err = comswitch.Factory.NewConsumer(ctx, config, func(msg string) error {
+		messages = append(messages, msg)
+		return nil
+	})
+
+	producer, err := comswitch.Factory.NewProducer(ctx, config)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	log.Println("http produce 1")
+	err = producer.Produce("http://localhost:"+config.HttpCommandConsumerPort+"/responses", "http_msg1")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	log.Println("http produce 2")
+	err = producer.Produce("http://localhost:"+config.HttpCommandConsumerPort+"/responses", "http_msg2")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	log.Println("kafka produce 1")
 	err = producer.Produce("test", "msg1")
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	log.Println("produce 2")
+	log.Println("kafka produce 2")
 	err = producer.Produce("test", "msg2")
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	log.Println("produce 3")
+	log.Println("kafka produce 3")
 	err = producer.Produce("test2", "msg3")
 	if err != nil {
 		t.Error(err)
 		return
 	}
+
 	log.Println("produced")
 
 	time.Sleep(20 * time.Second)
 
-	if len(result) != 2 {
-		t.Error(len(result))
-	}
-
-	if len(result) > 0 && string(result[0]) != "msg1" {
-		t.Error(string(result[0]))
+	if !reflect.DeepEqual(messages, []string{"http_msg1", "http_msg2", "msg1", "msg2"}) {
+		t.Error(messages)
 	}
 }
 
-func TestProducer_ProduceWithKey(t *testing.T) {
+func TestComswitchProduceWithKey(t *testing.T) {
 	pool, err := dockertest.NewPool("")
 	if err != nil {
 		t.Error(err)
@@ -148,50 +174,72 @@ func TestProducer_ProduceWithKey(t *testing.T) {
 		return
 	}
 
-	result := [][]byte{}
+	messages := []string{}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err = kafka.NewConsumer(ctx, kafkaUrl, "test", "test", func(topic string, msg []byte, t time.Time) error {
-		result = append(result, msg)
-		return nil
-	}, func(err error, consumer *kafka.Consumer) {
-		t.Error(err)
-	})
-
-	producer, err := kafka.PrepareProducer(ctx, kafkaUrl, true, true, true)
+	apiPort, err := getFreePort()
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	log.Println("produce 1")
+
+	config := util.Config{
+		KafkaUrl:                kafkaUrl,
+		KafkaConsumerGroup:      "test",
+		ResponseTopic:           "test",
+		HttpCommandConsumerPort: strconv.Itoa(apiPort),
+		Debug:                   true,
+	}
+
+	err = comswitch.Factory.NewConsumer(ctx, config, func(msg string) error {
+		messages = append(messages, msg)
+		return nil
+	})
+
+	producer, err := comswitch.Factory.NewProducer(ctx, config)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	log.Println("http produce 1")
+	err = producer.ProduceWithKey("http://localhost:"+config.HttpCommandConsumerPort+"/responses", "key", "http_msg1")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	log.Println("http produce 2")
+	err = producer.ProduceWithKey("http://localhost:"+config.HttpCommandConsumerPort+"/responses", "key", "http_msg2")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	log.Println("kafka produce 1")
 	err = producer.ProduceWithKey("test", "key", "msg1")
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	log.Println("produce 2")
+	log.Println("kafka produce 2")
 	err = producer.ProduceWithKey("test", "key", "msg2")
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	log.Println("produce 3")
+	log.Println("kafka produce 3")
 	err = producer.ProduceWithKey("test2", "key", "msg3")
 	if err != nil {
 		t.Error(err)
 		return
 	}
+
 	log.Println("produced")
 
 	time.Sleep(20 * time.Second)
 
-	if len(result) != 2 {
-		t.Error(len(result))
-	}
-
-	if len(result) > 0 && string(result[0]) != "msg1" {
-		t.Error(string(result[0]))
+	if !reflect.DeepEqual(messages, []string{"http_msg1", "http_msg2", "msg1", "msg2"}) {
+		t.Error(messages)
 	}
 }

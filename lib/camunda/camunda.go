@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/cache"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/shards"
-	"github.com/SENERGY-Platform/external-task-worker/lib/kafka"
+	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"io/ioutil"
@@ -36,7 +36,7 @@ import (
 type Camunda struct {
 	config   util.Config
 	workerId string
-	producer kafka.ProducerInterface
+	producer com.ProducerInterface
 	shards   Shards
 }
 
@@ -45,11 +45,11 @@ type Shards interface {
 	GetShardForUser(userId string) (shardUrl string, err error)
 }
 
-func NewCamundaWithShards(config util.Config, producer kafka.ProducerInterface, shards Shards) (result *Camunda) {
+func NewCamundaWithShards(config util.Config, producer com.ProducerInterface, shards Shards) (result *Camunda) {
 	return &Camunda{config: config, workerId: util.GetId(), producer: producer, shards: shards}
 }
 
-func NewCamunda(config util.Config, producer kafka.ProducerInterface) (result *Camunda, err error) {
+func NewCamunda(config util.Config, producer com.ProducerInterface) (result *Camunda, err error) {
 	s, err := shards.New(config.ShardsDb, cache.New(&cache.CacheConfig{
 		L1Expiration: 60,
 	}))
