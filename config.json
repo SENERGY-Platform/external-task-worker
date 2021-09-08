@@ -28,6 +28,6 @@
   "SubResultDatabaseUrls": [],
   "GroupScheduler": "sequential",
   "HttpCommandConsumerPort": "8081",
-  "HttpCommandConsumerSync": true,
+  "HttpCommandConsumerSync": false,
   "MetadataResponseTo": "response"
 }
