@@ -192,6 +192,9 @@ func (this *worker) HandleTaskResponse(msg string) (err error) {
 	defer func() {
 		if this.config.Debug {
 			log.Println("TRACE: ", message.Trace)
+			if len(message.Trace) >= 2 {
+				log.Println("TRACE-DURATION:", time.Unix(0, message.Trace[len(message.Trace)-1].Timestamp).Sub(time.Unix(0, message.Trace[0].Timestamp)).String())
+			}
 		}
 	}()
 
