@@ -68,6 +68,8 @@ type Config struct {
 	HttpCommandConsumerPort string
 	HttpCommandConsumerSync bool
 	MetadataResponseTo      string
+	DisableKafkaConsumer    bool
+	DisableHttpConsumer     bool
 }
 
 func LoadConfig(location string) (config Config, err error) {

@@ -38,14 +38,14 @@ func (this FactoryType) NewConsumer(basectx context.Context, config util.Config,
 		}
 	}()
 	used := false
-	if config.HttpCommandConsumerPort != "" && config.HttpCommandConsumerPort != "-" {
+	if config.HttpCommandConsumerPort != "" && config.HttpCommandConsumerPort != "-" && !config.DisableHttpConsumer {
 		used = true
 		err = httpcommand.Factory.NewConsumer(ctx, config, listener)
 		if err != nil {
 			return err
 		}
 	}
-	if config.ResponseTopic != "" && config.ResponseTopic != "-" {
+	if config.KafkaUrl != "" && config.KafkaUrl != "-" && !config.DisableKafkaConsumer {
 		used = true
 		err = kafka.Factory.NewConsumer(ctx, config, listener)
 		if err != nil {
@@ -53,7 +53,7 @@ func (this FactoryType) NewConsumer(basectx context.Context, config util.Config,
 		}
 	}
 	if !used {
-		return errors.New("no response consumer set; at least one of the following config fields must be set: HttpCommandConsumerPort, ResponseTopic")
+		return errors.New("no response consumer set; at least one of the following config fields must be set: HttpCommandConsumerPort, KafkaUrl; consumers my be disabled by DisableHttpConsumer or DisableKafkaConsumer")
 	}
 	return nil
 }
@@ -82,7 +82,7 @@ type Producer struct {
 }
 
 func (this Producer) getChildProducer(topic string) com.ProducerInterface {
-	if strings.HasPrefix(topic, "http://") || strings.HasPrefix(topic, "https://") {
+	if IsHttpHandler(topic) {
 		return this.restProducer
 	}
 	return this.kafkaProducer
@@ -94,4 +94,8 @@ func (this *Producer) Produce(topic string, message string) (err error) {
 
 func (this *Producer) ProduceWithKey(topic string, key string, message string) (err error) {
 	return this.getChildProducer(topic).ProduceWithKey(topic, key, message)
+}
+
+func IsHttpHandler(handler string) bool {
+	return strings.HasPrefix(handler, "http://") || strings.HasPrefix(handler, "https://")
 }

@@ -29,5 +29,7 @@
   "GroupScheduler": "sequential",
   "HttpCommandConsumerPort": "8081",
   "HttpCommandConsumerSync": false,
-  "MetadataResponseTo": "response"
+  "MetadataResponseTo": "response",
+  "DisableKafkaConsumer": false,
+  "DisableHttpConsumer": false
 }
