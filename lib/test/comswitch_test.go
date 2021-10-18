@@ -78,13 +78,17 @@ func TestComswitch(t *testing.T) {
 		return
 	}
 
-	config := util.Config{
-		KafkaUrl:                kafkaUrl,
-		KafkaConsumerGroup:      "test",
-		ResponseTopic:           "test",
-		HttpCommandConsumerPort: strconv.Itoa(apiPort),
-		Debug:                   true,
+	config, err := util.LoadConfig("../../config.json")
+	if err != nil {
+		t.Error(err)
+		return
 	}
+
+	config.KafkaUrl = kafkaUrl
+	config.KafkaConsumerGroup = "test"
+	config.ResponseTopic = "test"
+	config.HttpCommandConsumerPort = strconv.Itoa(apiPort)
+	config.Debug = true
 
 	err = comswitch.Factory.NewConsumer(ctx, config, func(msg string) error {
 		messages = append(messages, msg)
@@ -185,13 +189,17 @@ func TestComswitchProduceWithKey(t *testing.T) {
 		return
 	}
 
-	config := util.Config{
-		KafkaUrl:                kafkaUrl,
-		KafkaConsumerGroup:      "test",
-		ResponseTopic:           "test",
-		HttpCommandConsumerPort: strconv.Itoa(apiPort),
-		Debug:                   true,
+	config, err := util.LoadConfig("../../config.json")
+	if err != nil {
+		t.Error(err)
+		return
 	}
+
+	config.KafkaUrl = kafkaUrl
+	config.KafkaConsumerGroup = "test"
+	config.ResponseTopic = "test"
+	config.HttpCommandConsumerPort = strconv.Itoa(apiPort)
+	config.Debug = true
 
 	err = comswitch.Factory.NewConsumer(ctx, config, func(msg string) error {
 		messages = append(messages, msg)

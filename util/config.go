@@ -39,16 +39,12 @@ type Config struct {
 	OptimisticTaskCompletionTimeout int64
 	CamundaWorkerTimeout            int64
 	CamundaWorkerTasks              int64
-	CamundaAsyncResponseTimeout     int64
 	CamundaFetchLockDuration        int64
 	CamundaTopic                    string
 	CamundaTaskResultName           string
 	KafkaUrl                        string
 	KafkaConsumerGroup              string
 	ResponseTopic                   string
-	KafkaTimeout                    int64
-	SaramaLog                       string
-	FatalKafkaErrors                string
 	AuthExpirationTimeBuffer        float64
 	AuthEndpoint                    string
 	AuthClientId                    string
@@ -70,6 +66,19 @@ type Config struct {
 	MetadataResponseTo      string
 	DisableKafkaConsumer    bool
 	DisableHttpConsumer     bool
+
+	AsyncFlushFrequency string
+	AsyncCompression    string
+	SyncCompression     string
+	Sync                bool
+	SyncIdempotent      bool
+	PartitionNum        int64
+	ReplicationFactor   int64
+	AsyncFlushMessages  int64
+
+	KafkaConsumerMaxWait  string
+	KafkaConsumerMinBytes int64
+	KafkaConsumerMaxBytes int64
 }
 
 func LoadConfig(location string) (config Config, err error) {

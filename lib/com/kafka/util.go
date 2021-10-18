@@ -24,11 +24,11 @@ import (
 	"strconv"
 )
 
-func EnsureTopic(topic string, kafkaUrl string, knownTopics *map[string]bool) (err error) {
+func EnsureTopic(topic string, kafkaUrl string, knownTopics *map[string]bool, partitions int, replicationFactor int) (err error) {
 	if (*knownTopics)[topic] {
 		return nil
 	}
-	err = InitTopicWithConfig(kafkaUrl, topic)
+	err = InitTopicWithConfig(kafkaUrl, partitions, replicationFactor, topic)
 	if err != nil {
 		log.Println("ERROR:", err)
 		debug.PrintStack()
@@ -59,10 +59,10 @@ func getBroker(bootstrapUrl string) (result []string, err error) {
 }
 
 func InitTopic(kafkaUrl string, topics ...string) (err error) {
-	return InitTopicWithConfig(kafkaUrl, topics...)
+	return InitTopicWithConfig(kafkaUrl, 1, 1, topics...)
 }
 
-func InitTopicWithConfig(bootstrapUrl string, topics ...string) (err error) {
+func InitTopicWithConfig(bootstrapUrl string, numPartitions int, replicationFactor int, topics ...string) (err error) {
 	conn, err := kafka.Dial("tcp", bootstrapUrl)
 	if err != nil {
 		return err
@@ -85,8 +85,8 @@ func InitTopicWithConfig(bootstrapUrl string, topics ...string) (err error) {
 	for _, topic := range topics {
 		topicConfigs = append(topicConfigs, kafka.TopicConfig{
 			Topic:             topic,
-			NumPartitions:     -1,
-			ReplicationFactor: -1,
+			NumPartitions:     numPartitions,
+			ReplicationFactor: replicationFactor,
 		})
 	}
 

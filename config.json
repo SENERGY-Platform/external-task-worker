@@ -4,7 +4,7 @@
   "CompletionStrategy": "optimistic",
   "OptimisticTaskCompletionTimeout": 100,
   "CamundaWorkerTimeout": 1000,
-  "CamundaWorkerTasks": 10,
+  "CamundaWorkerTasks": 500,
   "CamundaFetchLockDuration": 60000,
   "CamundaTopic": "execute_in_dose",
   "KafkaUrl": "kafka:9092",
@@ -31,5 +31,18 @@
   "HttpCommandConsumerSync": false,
   "MetadataResponseTo": "response",
   "DisableKafkaConsumer": false,
-  "DisableHttpConsumer": false
+  "DisableHttpConsumer": false,
+
+  "AsyncFlushFrequency": "500ms",
+  "AsyncCompression": "snappy",
+  "SyncCompression": "snappy",
+  "Sync": false,
+  "SyncIdempotent": false,
+  "PartitionNum": 1,
+  "ReplicationFactor": 1,
+  "AsyncFlushMessages": 200,
+
+  "KafkaConsumerMaxWait": "100ms",
+  "KafkaConsumerMinBytes": 1000,
+  "KafkaConsumerMaxBytes": 1000000
 }

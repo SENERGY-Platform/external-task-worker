@@ -68,14 +68,21 @@ func TestProducer_Produce(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err = kafka.NewConsumer(ctx, kafkaUrl, "test", "test", func(topic string, msg []byte, t time.Time) error {
+	err = kafka.NewConsumer(ctx, kafka.ConsumerConfig{
+		KafkaUrl: kafkaUrl,
+		GroupId:  "test",
+		Topic:    "test",
+		MinBytes: 1000,
+		MaxBytes: 1000000,
+		MaxWait:  100 * time.Millisecond,
+	}, func(topic string, msg []byte, t time.Time) error {
 		result = append(result, msg)
 		return nil
-	}, func(err error, consumer *kafka.Consumer) {
+	}, func(err error) {
 		t.Error(err)
 	})
 
-	producer, err := kafka.PrepareProducer(ctx, kafkaUrl, true, true, true)
+	producer, err := kafka.PrepareProducer(ctx, kafkaUrl, true, true, 1, 1)
 	if err != nil {
 		t.Error(err)
 		return
@@ -153,14 +160,21 @@ func TestProducer_ProduceWithKey(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	err = kafka.NewConsumer(ctx, kafkaUrl, "test", "test", func(topic string, msg []byte, t time.Time) error {
+	err = kafka.NewConsumer(ctx, kafka.ConsumerConfig{
+		KafkaUrl: kafkaUrl,
+		GroupId:  "test",
+		Topic:    "test",
+		MinBytes: 1000,
+		MaxBytes: 1000000,
+		MaxWait:  100 * time.Millisecond,
+	}, func(topic string, msg []byte, t time.Time) error {
 		result = append(result, msg)
 		return nil
-	}, func(err error, consumer *kafka.Consumer) {
+	}, func(err error) {
 		t.Error(err)
 	})
 
-	producer, err := kafka.PrepareProducer(ctx, kafkaUrl, true, true, true)
+	producer, err := kafka.PrepareProducer(ctx, kafkaUrl, true, true, 1, 1)
 	if err != nil {
 		t.Error(err)
 		return

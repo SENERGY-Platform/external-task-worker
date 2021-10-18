@@ -18,9 +18,12 @@ package kafka
 
 import (
 	"context"
+	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/SENERGY-Platform/external-task-worker/util"
+	"github.com/Shopify/sarama"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -29,14 +32,55 @@ type FactoryType struct{}
 var Factory = FactoryType{}
 
 func (FactoryType) NewConsumer(ctx context.Context, config util.Config, listener func(msg string) error) (err error) {
-	return NewConsumer(ctx, config.KafkaUrl, config.KafkaConsumerGroup, config.ResponseTopic, func(topic string, msg []byte, time time.Time) error {
+	maxWait, err := time.ParseDuration(config.KafkaConsumerMaxWait)
+	if err != nil {
+		return errors.New("unable to parse KafkaConsumerMaxWait as duration: " + err.Error())
+	}
+	return NewConsumer(ctx, ConsumerConfig{
+		KafkaUrl: config.KafkaUrl,
+		GroupId:  config.KafkaConsumerGroup,
+		Topic:    config.ResponseTopic,
+		MinBytes: int(config.KafkaConsumerMinBytes),
+		MaxBytes: int(config.KafkaConsumerMaxBytes),
+		MaxWait:  maxWait,
+	}, func(topic string, msg []byte, time time.Time) error {
 		return listener(string(msg))
-	}, func(err error, consumer *Consumer) {
+	}, func(err error) {
 		log.Println("FATAL ERROR: kafka", err)
 		log.Fatal(err)
 	})
 }
 
 func (FactoryType) NewProducer(ctx context.Context, config util.Config) (com.ProducerInterface, error) {
-	return PrepareProducer(ctx, config.KafkaUrl, true, false, config.Debug)
+	flushFrequency, err := time.ParseDuration(config.AsyncFlushFrequency)
+	if err != nil {
+		return nil, err
+	}
+	return PrepareProducerWithConfig(ctx, config.KafkaUrl, ProducerConfig{
+		AsyncFlushFrequency: flushFrequency,
+		AsyncCompression:    getKafkaCompression(config.AsyncCompression),
+		SyncCompression:     getKafkaCompression(config.SyncCompression),
+		Sync:                config.Sync,
+		SyncIdempotent:      config.SyncIdempotent,
+		PartitionNum:        int(config.PartitionNum),
+		ReplicationFactor:   int(config.ReplicationFactor),
+		AsyncFlushMessages:  int(config.AsyncFlushMessages),
+	})
+}
+
+func getKafkaCompression(compression string) sarama.CompressionCodec {
+	switch strings.ToLower(compression) {
+	case "":
+		return sarama.CompressionNone
+	case "-":
+		return sarama.CompressionNone
+	case "none":
+		return sarama.CompressionNone
+	case "gzip":
+		return sarama.CompressionGZIP
+	case "snappy":
+		return sarama.CompressionSnappy
+	}
+	log.Println("WARNING: unknown compression", compression, "fallback to none")
+	return sarama.CompressionNone
 }
