@@ -51,7 +51,9 @@ func NewConsumer(ctx context.Context, config ConsumerConfig, listener func(topic
 		Brokers:        broker,
 		GroupID:        config.GroupId,
 		Topic:          config.Topic,
-		MaxWait:        1 * time.Second,
+		MinBytes:       config.MinBytes,
+		MaxBytes:       config.MaxBytes,
+		MaxWait:        config.MaxWait,
 		Logger:         log.New(ioutil.Discard, "", 0),
 		ErrorLogger:    log.New(ioutil.Discard, "", 0),
 	})
