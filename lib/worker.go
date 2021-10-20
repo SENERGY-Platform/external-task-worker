@@ -89,7 +89,7 @@ func Worker(ctx context.Context, config util.Config, comFactory com.FactoryInter
 	if err != nil {
 		log.Fatal("ERROR: comFactory.NewProducer", err)
 	}
-	w.deviceGroupsHandler = devicegroups.New(config.GroupScheduler, w.camunda, w.repository, w.CreateProtocolMessage, config.CamundaFetchLockDuration, config.SubResultExpirationInSeconds, config.SubResultDatabaseUrls)
+	w.deviceGroupsHandler = devicegroups.New(config.GroupScheduler, w.camunda, w.repository, w.CreateProtocolMessage, config.CamundaFetchLockDuration, config.SubResultExpirationInSeconds, config.SubResultDatabaseUrls, config.MemcachedTimeout, config.MemcachedMaxIdleConns)
 	for {
 		select {
 		case <-ctx.Done():

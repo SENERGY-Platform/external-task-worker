@@ -57,8 +57,6 @@ type Config struct {
 	Debug                           bool
 	MarshallerUrl                   string
 	HealthCheckPort                 string
-	SubResultExpirationInSeconds    int32
-	SubResultDatabaseUrls           []string
 	GroupScheduler                  string
 
 	HttpCommandConsumerPort string
@@ -79,6 +77,11 @@ type Config struct {
 	KafkaConsumerMaxWait  string
 	KafkaConsumerMinBytes int64
 	KafkaConsumerMaxBytes int64
+
+	SubResultExpirationInSeconds int32
+	SubResultDatabaseUrls        []string
+	MemcachedTimeout             string
+	MemcachedMaxIdleConns        int64
 }
 
 func LoadConfig(location string) (config Config, err error) {

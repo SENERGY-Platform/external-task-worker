@@ -7,6 +7,7 @@ import (
 	"github.com/coocood/freecache"
 	"log"
 	"sync"
+	"time"
 )
 
 var DefaultL1Expiration = 10          //10sec
@@ -27,10 +28,12 @@ type Item struct {
 }
 
 type CacheConfig struct {
-	L1Expiration   int
-	L1Size         int
-	L2Expiration   int32
-	L2MemcacheUrls []string
+	L1Expiration            int
+	L1Size                  int
+	L2Expiration            int32
+	L2MemcacheUrls          []string
+	L2MemcachedTimeout      time.Duration
+	L2MemcachedMaxIdleConns int
 }
 
 var ErrNotFound = errors.New("key not found in cache")
@@ -51,6 +54,8 @@ func New(config *CacheConfig) (result *LayeredCache) {
 	result = &LayeredCache{config: config, l1: freecache.NewCache(config.L1Size)}
 	if len(config.L2MemcacheUrls) > 0 {
 		result.l2 = memcache.New(config.L2MemcacheUrls...)
+		result.l2.Timeout = config.L2MemcachedTimeout
+		result.l2.MaxIdleConns = config.L2MemcachedMaxIdleConns
 	}
 	return
 }

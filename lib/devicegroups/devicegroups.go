@@ -34,12 +34,20 @@ import (
 
 type Callback = func(command messages.Command, task messages.CamundaExternalTask) (topic string, key string, message string, err error)
 
-func New(scheduler string, camunda interfaces.CamundaInterface, devicerepo devicerepository.RepoInterface, protocolMessageCallback Callback, currentlyRunningTimeoutInMs int64, expirationInSeconds int32, memcachedUrls []string) *DeviceGroups {
+func New(scheduler string, camunda interfaces.CamundaInterface, devicerepo devicerepository.RepoInterface, protocolMessageCallback Callback, currentlyRunningTimeoutInMs int64, expirationInSeconds int32, memcachedUrls []string, memcachedTimeout string, memcachedMaxIdleConns int64) *DeviceGroups {
 	if len(memcachedUrls) == 0 {
 		log.Println("WARNING: start with local sub result storage")
 		return NewWithKeyValueStore(scheduler, camunda, devicerepo, protocolMessageCallback, currentlyRunningTimeoutInMs, expirationInSeconds, NewLocalDb())
 	} else {
-		return NewWithKeyValueStore(scheduler, camunda, devicerepo, protocolMessageCallback, currentlyRunningTimeoutInMs, expirationInSeconds, memcache.New(memcachedUrls...))
+		client := memcache.New(memcachedUrls...)
+		client.MaxIdleConns = int(memcachedMaxIdleConns)
+		timeout, err := time.ParseDuration(memcachedTimeout)
+		if err != nil {
+			log.Println("WARNING: invalid memcached timeout; use default")
+		} else {
+			client.Timeout = timeout
+		}
+		return NewWithKeyValueStore(scheduler, camunda, devicerepo, protocolMessageCallback, currentlyRunningTimeoutInMs, expirationInSeconds, client)
 	}
 }
 
