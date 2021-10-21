@@ -82,6 +82,8 @@ type Config struct {
 	SubResultDatabaseUrls        []string
 	MemcachedTimeout             string
 	MemcachedMaxIdleConns        int64
+
+	ResponseWorkerCount int64
 }
 
 func LoadConfig(location string) (config Config, err error) {

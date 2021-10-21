@@ -47,5 +47,7 @@
   "KafkaConsumerMaxBytes": 1000000,
 
   "MemcachedTimeout": "200ms",
-  "MemcachedMaxIdleConns": 100
+  "MemcachedMaxIdleConns": 100,
+
+  "ResponseWorkerCount": 20
 }

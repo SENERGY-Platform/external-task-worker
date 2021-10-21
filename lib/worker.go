@@ -75,7 +75,11 @@ func Worker(ctx context.Context, config util.Config, comFactory com.FactoryInter
 	StartHealthCheckEndpoint(ctx, config, &w)
 
 	if config.CompletionStrategy != util.OPTIMISTIC {
-		err = comFactory.NewConsumer(ctx, config, w.HandleTaskResponse)
+		if config.ResponseWorkerCount > 1 {
+			err = comFactory.NewConsumer(ctx, config, w.GetQueuedResponseHandler(ctx, config.ResponseWorkerCount, config.ResponseWorkerCount))
+		} else {
+			err = comFactory.NewConsumer(ctx, config, w.HandleTaskResponse)
+		}
 		if err != nil {
 			log.Fatal("ERROR: comFactory.NewConsumer", err)
 		}
@@ -180,6 +184,33 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask, caller string
 		} else {
 			this.logProducerSuccess()
 		}
+	}
+}
+
+func (this *worker) GetQueuedResponseHandler(ctx context.Context, workerCount int64, queueSize int64) func(msg string) (err error) {
+	queue := make(chan string, queueSize)
+	for i := int64(0); i < workerCount; i++ {
+		go func() {
+			for msg := range queue {
+				err := this.HandleTaskResponse(msg)
+				if err != nil {
+					log.Println("ERROR: ", err)
+				}
+			}
+		}()
+	}
+	go func() {
+		<-ctx.Done()
+		close(queue)
+	}()
+	return func(msg string) (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = errors.New(fmt.Sprint(r))
+			}
+		}()
+		queue <- msg
+		return err
 	}
 }
 
