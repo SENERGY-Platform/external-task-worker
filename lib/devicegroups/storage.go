@@ -46,8 +46,17 @@ type SubTaskState struct {
 	TryCount int64
 }
 
-func (this *DeviceGroups) dbGet(key string, value interface{}) error {
-	item, err := this.db.Get(key)
+var MaxRetries = 10
+
+func (this *DeviceGroups) dbGet(key string, value interface{}) (err error) {
+	var item *memcache.Item
+	for i := 0; i < MaxRetries; i++ {
+		item, err = this.db.Get(key)
+		if err == nil || err == ErrNotFount {
+			break
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
 	if err != nil {
 		return err
 	}
@@ -60,7 +69,14 @@ func (this *DeviceGroups) dbSet(key string, value interface{}) error {
 	if err != nil {
 		return err
 	}
-	return this.db.Set(&memcache.Item{Value: jsonValue, Expiration: this.expirationInSeconds, Key: key})
+	for i := 0; i < MaxRetries; i++ {
+		err = this.db.Set(&memcache.Item{Value: jsonValue, Expiration: this.expirationInSeconds, Key: key})
+		if err == nil {
+			return err
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
+	return err
 }
 
 func (this *DeviceGroups) getGroupMetadata(taskId string) (metadata messages.GroupTaskMetadata, err error) {
