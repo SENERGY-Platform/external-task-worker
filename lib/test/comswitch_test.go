@@ -55,13 +55,13 @@ func TestComswitch(t *testing.T) {
 
 	time.Sleep(2 * time.Second)
 
-	err = kafka.InitTopic(kafkaUrl, "test")
+	err = kafka.InitTopic(kafkaUrl, nil, "test")
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	err = kafka.InitTopic(kafkaUrl, "test2")
+	err = kafka.InitTopic(kafkaUrl, nil, "test2")
 	if err != nil {
 		t.Error(err)
 		return
@@ -166,13 +166,13 @@ func TestComswitchProduceWithKey(t *testing.T) {
 
 	time.Sleep(2 * time.Second)
 
-	err = kafka.InitTopic(kafkaUrl, "test")
+	err = kafka.InitTopic(kafkaUrl, nil, "test")
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	err = kafka.InitTopic(kafkaUrl, "test2")
+	err = kafka.InitTopic(kafkaUrl, nil, "test2")
 	if err != nil {
 		t.Error(err)
 		return

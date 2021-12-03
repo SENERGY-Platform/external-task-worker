@@ -49,5 +49,38 @@
   "MemcachedTimeout": "200ms",
   "MemcachedMaxIdleConns": 100,
 
-  "ResponseWorkerCount": 20
+  "ResponseWorkerCount": 20,
+
+  "KafkaTopicConfigs": {
+    "camunda_incident": [
+      {
+        "ConfigName":  "retention.ms",
+        "ConfigValue": "604800000"
+      }
+    ],
+    "response": [
+      {
+        "ConfigName":  "retention.ms",
+        "ConfigValue": "86400000"
+      }
+    ],
+    "connector": [
+      {
+        "ConfigName":  "retention.ms",
+        "ConfigValue": "86400000"
+      }
+    ],
+    "mqtt": [
+      {
+        "ConfigName":  "retention.ms",
+        "ConfigValue": "86400000"
+      }
+    ],
+    "nimbus": [
+      {
+        "ConfigName":  "retention.ms",
+        "ConfigValue": "86400000"
+      }
+    ]
+  }
 }

@@ -19,6 +19,7 @@ package util
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/segmentio/kafka-go"
 	"log"
 	"os"
 	"reflect"
@@ -84,6 +85,8 @@ type Config struct {
 	MemcachedMaxIdleConns        int64
 
 	ResponseWorkerCount int64
+
+	KafkaTopicConfigs map[string][]kafka.ConfigEntry
 }
 
 func LoadConfig(location string) (config Config, err error) {

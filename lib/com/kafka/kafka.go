@@ -37,12 +37,13 @@ func (FactoryType) NewConsumer(ctx context.Context, config util.Config, listener
 		return errors.New("unable to parse KafkaConsumerMaxWait as duration: " + err.Error())
 	}
 	return NewConsumer(ctx, ConsumerConfig{
-		KafkaUrl: config.KafkaUrl,
-		GroupId:  config.KafkaConsumerGroup,
-		Topic:    config.ResponseTopic,
-		MinBytes: int(config.KafkaConsumerMinBytes),
-		MaxBytes: int(config.KafkaConsumerMaxBytes),
-		MaxWait:  maxWait,
+		KafkaUrl:       config.KafkaUrl,
+		GroupId:        config.KafkaConsumerGroup,
+		Topic:          config.ResponseTopic,
+		MinBytes:       int(config.KafkaConsumerMinBytes),
+		MaxBytes:       int(config.KafkaConsumerMaxBytes),
+		MaxWait:        maxWait,
+		TopicConfigMap: config.KafkaTopicConfigs,
 	}, func(topic string, msg []byte, time time.Time) error {
 		return listener(string(msg))
 	}, func(err error) {
@@ -65,6 +66,7 @@ func (FactoryType) NewProducer(ctx context.Context, config util.Config) (com.Pro
 		PartitionNum:        int(config.PartitionNum),
 		ReplicationFactor:   int(config.ReplicationFactor),
 		AsyncFlushMessages:  int(config.AsyncFlushMessages),
+		TopicConfigMap:      config.KafkaTopicConfigs,
 	})
 }
 
