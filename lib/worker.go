@@ -76,9 +76,9 @@ func Worker(ctx context.Context, config util.Config, comFactory com.FactoryInter
 
 	if config.CompletionStrategy != util.OPTIMISTIC {
 		if config.ResponseWorkerCount > 1 {
-			err = comFactory.NewConsumer(ctx, config, w.GetQueuedResponseHandler(ctx, config.ResponseWorkerCount, config.ResponseWorkerCount))
+			err = comFactory.NewConsumer(ctx, config, w.GetQueuedResponseHandler(ctx, config.ResponseWorkerCount, config.ResponseWorkerCount), w.ErrorMessageHandler)
 		} else {
-			err = comFactory.NewConsumer(ctx, config, w.HandleTaskResponse)
+			err = comFactory.NewConsumer(ctx, config, w.HandleTaskResponse, w.ErrorMessageHandler)
 		}
 		if err != nil {
 			log.Fatal("ERROR: comFactory.NewConsumer", err)

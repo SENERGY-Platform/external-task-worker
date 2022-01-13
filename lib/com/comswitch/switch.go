@@ -30,7 +30,7 @@ type FactoryType struct{}
 
 var Factory = FactoryType{}
 
-func (this FactoryType) NewConsumer(basectx context.Context, config util.Config, listener func(msg string) error) (err error) {
+func (this FactoryType) NewConsumer(basectx context.Context, config util.Config, responseListener func(msg string) error, errorListener func(msg string) error) (err error) {
 	ctx, cancel := context.WithCancel(basectx)
 	defer func() {
 		if err != nil {
@@ -40,14 +40,14 @@ func (this FactoryType) NewConsumer(basectx context.Context, config util.Config,
 	used := false
 	if config.HttpCommandConsumerPort != "" && config.HttpCommandConsumerPort != "-" && !config.DisableHttpConsumer {
 		used = true
-		err = httpcommand.Factory.NewConsumer(ctx, config, listener)
+		err = httpcommand.Factory.NewConsumer(ctx, config, responseListener, errorListener)
 		if err != nil {
 			return err
 		}
 	}
 	if config.KafkaUrl != "" && config.KafkaUrl != "-" && !config.DisableKafkaConsumer {
 		used = true
-		err = kafka.Factory.NewConsumer(ctx, config, listener)
+		err = kafka.Factory.NewConsumer(ctx, config, responseListener, errorListener)
 		if err != nil {
 			return err
 		}

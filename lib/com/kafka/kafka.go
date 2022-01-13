@@ -31,25 +31,52 @@ type FactoryType struct{}
 
 var Factory = FactoryType{}
 
-func (FactoryType) NewConsumer(ctx context.Context, config util.Config, listener func(msg string) error) (err error) {
+func (FactoryType) NewConsumer(ctx context.Context, config util.Config, responseListener func(msg string) error, errorListener func(msg string) error) (err error) {
 	maxWait, err := time.ParseDuration(config.KafkaConsumerMaxWait)
 	if err != nil {
 		return errors.New("unable to parse KafkaConsumerMaxWait as duration: " + err.Error())
 	}
-	return NewConsumer(ctx, ConsumerConfig{
-		KafkaUrl:       config.KafkaUrl,
-		GroupId:        config.KafkaConsumerGroup,
-		Topic:          config.ResponseTopic,
-		MinBytes:       int(config.KafkaConsumerMinBytes),
-		MaxBytes:       int(config.KafkaConsumerMaxBytes),
-		MaxWait:        maxWait,
-		TopicConfigMap: config.KafkaTopicConfigs,
-	}, func(topic string, msg []byte, time time.Time) error {
-		return listener(string(msg))
-	}, func(err error) {
-		log.Println("FATAL ERROR: kafka", err)
-		log.Fatal(err)
-	})
+	if config.ResponseTopic != "" && config.ResponseTopic != "-" {
+		err = NewConsumer(ctx, ConsumerConfig{
+			KafkaUrl:       config.KafkaUrl,
+			GroupId:        config.KafkaConsumerGroup,
+			Topic:          config.ResponseTopic,
+			MinBytes:       int(config.KafkaConsumerMinBytes),
+			MaxBytes:       int(config.KafkaConsumerMaxBytes),
+			MaxWait:        maxWait,
+			TopicConfigMap: config.KafkaTopicConfigs,
+		}, func(topic string, msg []byte, time time.Time) error {
+			return responseListener(string(msg))
+		}, func(err error) {
+			log.Println("FATAL ERROR: kafka", err)
+			log.Fatal(err)
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	if config.MetadataErrorTo != "" && config.MetadataErrorTo != "-" && !(strings.HasPrefix(config.ErrorTopic, "http://") || strings.HasPrefix(config.ErrorTopic, "https://")) {
+		err = NewConsumer(ctx, ConsumerConfig{
+			KafkaUrl:       config.KafkaUrl,
+			GroupId:        config.KafkaConsumerGroup,
+			Topic:          config.ErrorTopic,
+			MinBytes:       int(config.KafkaConsumerMinBytes),
+			MaxBytes:       int(config.KafkaConsumerMaxBytes),
+			MaxWait:        maxWait,
+			TopicConfigMap: config.KafkaTopicConfigs,
+		}, func(topic string, msg []byte, time time.Time) error {
+			return errorListener(string(msg))
+		}, func(err error) {
+			log.Println("FATAL ERROR: kafka", err)
+			log.Fatal(err)
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (FactoryType) NewProducer(ctx context.Context, config util.Config) (com.ProducerInterface, error) {

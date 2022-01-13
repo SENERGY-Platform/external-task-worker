@@ -14,19 +14,27 @@
  * limitations under the License.
  */
 
-package com
+package lib
 
 import (
-	"context"
-	"github.com/SENERGY-Platform/external-task-worker/util"
+	"encoding/json"
+	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
+	"log"
+	"runtime/debug"
 )
 
-type FactoryInterface interface {
-	NewConsumer(ctx context.Context, config util.Config, respoinseListener func(msg string) error, errorListener func(msg string) error) (err error)
-	NewProducer(ctx context.Context, config util.Config) (ProducerInterface, error)
-}
-
-type ProducerInterface interface {
-	Produce(topic string, message string) (err error)
-	ProduceWithKey(topic string, key string, message string) (err error)
+func (this *worker) ErrorMessageHandler(msg string) error {
+	var message messages.ProtocolMsg
+	err := json.Unmarshal([]byte(msg), &message)
+	if err != nil {
+		log.Println("ERROR:", err)
+		debug.PrintStack()
+		return nil
+	}
+	err = this.camunda.UnlockTask(message.TaskInfo)
+	if err != nil {
+		log.Println("ERROR: unable to unlock task", err)
+		return nil
+	}
+	return nil
 }

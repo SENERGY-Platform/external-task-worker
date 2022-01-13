@@ -31,38 +31,41 @@ type FactoryType struct{}
 
 var Factory = FactoryType{}
 
-func (this FactoryType) NewConsumer(ctx context.Context, config util.Config, listener func(msg string) error) (err error) {
+func (this FactoryType) NewConsumer(ctx context.Context, config util.Config, responseListener func(msg string) error, errorListener func(msg string) error) (err error) {
 	router := http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if request.Method == http.MethodPost && strings.TrimPrefix(request.URL.Path, "/") == "responses" {
-			msg, err := io.ReadAll(request.Body)
+		var handler func(msg string) error
+		if request.Method == http.MethodPost && strings.TrimPrefix(request.URL.Path, "/") == config.ErrorTopic {
+			handler = errorListener
+		} else if request.Method == http.MethodPost && strings.TrimPrefix(request.URL.Path, "/") == "responses" {
+			handler = responseListener
+		} else {
+			http.Error(writer, "unknown endpoint", http.StatusNotFound)
+			return
+		}
+		msg, err := io.ReadAll(request.Body)
+		if err != nil {
+			log.Println("ERROR:", err)
+			http.Error(writer, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if config.HttpCommandConsumerSync {
+			err = handler(string(msg))
 			if err != nil {
 				log.Println("ERROR:", err)
 				http.Error(writer, err.Error(), http.StatusBadRequest)
 				return
 			}
-			if config.HttpCommandConsumerSync {
-				err = listener(string(msg))
+		} else {
+			go func() {
+				err = handler(string(msg))
 				if err != nil {
-					log.Println("ERROR:", err)
-					http.Error(writer, err.Error(), http.StatusBadRequest)
+					log.Println("ERROR: http response consumer listener: ", err)
 					return
 				}
-			} else {
-				go func() {
-					err = listener(string(msg))
-					if err != nil {
-						log.Println("ERROR: http response consumer listener: ", err)
-						return
-					}
-				}()
-			}
-
-			writer.WriteHeader(http.StatusOK)
-			return
-		} else {
-			http.Error(writer, "unknown endpoint", http.StatusNotFound)
-			return
+			}()
 		}
+
+		writer.WriteHeader(http.StatusOK)
 	})
 	corsHandler := NewCors(router)
 	logger := NewLogger(corsHandler)

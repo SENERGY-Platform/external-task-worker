@@ -51,6 +51,9 @@
 
   "ResponseWorkerCount": 20,
 
+  "MetadataErrorTo": "errors",
+  "ErrorTopic": "errors",
+
   "KafkaTopicConfigs": {
     "camunda_incident": [
       {
@@ -59,6 +62,12 @@
       }
     ],
     "response": [
+      {
+        "ConfigName":  "retention.ms",
+        "ConfigValue": "86400000"
+      }
+    ],
+    "errors": [
       {
         "ConfigName":  "retention.ms",
         "ConfigValue": "86400000"

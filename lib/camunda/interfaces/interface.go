@@ -32,4 +32,5 @@ type CamundaInterface interface {
 	SetRetry(taskid string, tenantId string, number int64)
 	Error(externalTaskId string, processInstanceId string, processDefinitionId string, msg string, tenantId string)
 	GetWorkerId() string
+	UnlockTask(taskInfo messages.TaskInfo) (err error)
 }

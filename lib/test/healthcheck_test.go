@@ -216,7 +216,7 @@ func (this *StoppableTestKafka) ProduceWithKey(topic string, message string, key
 
 func (this *StoppableTestKafka) Close() {}
 
-func (this *StoppableTestKafka) NewConsumer(ctx context.Context, config util.Config, listener func(msg string) error) (err error) {
+func (this *StoppableTestKafka) NewConsumer(ctx context.Context, config util.Config, respListener func(msg string) error, errListener func(msg string) error) (err error) {
 	return nil
 }
 
@@ -260,4 +260,8 @@ func (this *StoppableTestCamunda) GetWorkerId() string {
 
 func (this *StoppableTestCamunda) SetTask(task messages.CamundaExternalTask) {
 	this.tasks = []messages.CamundaExternalTask{task}
+}
+
+func (this *StoppableTestCamunda) UnlockTask(taskInfo messages.TaskInfo) (err error) {
+	return nil
 }

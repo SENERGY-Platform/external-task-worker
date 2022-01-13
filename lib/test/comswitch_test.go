@@ -93,6 +93,8 @@ func TestComswitch(t *testing.T) {
 	err = comswitch.Factory.NewConsumer(ctx, config, func(msg string) error {
 		messages = append(messages, msg)
 		return nil
+	}, func(msg string) error {
+		return nil
 	})
 
 	producer, err := comswitch.Factory.NewProducer(ctx, config)
@@ -203,6 +205,8 @@ func TestComswitchProduceWithKey(t *testing.T) {
 
 	err = comswitch.Factory.NewConsumer(ctx, config, func(msg string) error {
 		messages = append(messages, msg)
+		return nil
+	}, func(msg string) error {
 		return nil
 	})
 

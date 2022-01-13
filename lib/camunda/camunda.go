@@ -149,6 +149,32 @@ func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string,
 	return
 }
 
+func (this *Camunda) UnlockTask(taskInfo messages.TaskInfo) (err error) {
+	shard, err := this.shards.GetShardForUser(taskInfo.TenantId)
+	if err != nil {
+		return err
+	}
+
+	client := http.Client{Timeout: 5 * time.Second}
+	resp, err := client.Post(shard+"/engine-rest/external-task/"+taskInfo.TaskId+"/unlock", "application/json", nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	pl, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode >= 300 {
+		//this.Error(taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, string(pl), taskInfo.TenantId)
+		log.Println("WARNING: unable to unlock task", taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, string(pl), taskInfo.TenantId)
+	} else {
+		log.Println("unlock camunda task: ", taskInfo)
+	}
+	return
+}
+
 func (this *Camunda) SetRetry(taskid string, tenantId string, retries int64) {
 	shard, err := this.shards.GetShardForUser(tenantId)
 	if err != nil {

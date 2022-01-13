@@ -86,6 +86,9 @@ type Config struct {
 
 	ResponseWorkerCount int64
 
+	MetadataErrorTo string
+	ErrorTopic      string
+
 	KafkaTopicConfigs map[string][]kafka.ConfigEntry
 }
 

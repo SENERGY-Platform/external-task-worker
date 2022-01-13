@@ -135,3 +135,8 @@ func (this *CamundaMock) GetStatus() (fetched map[string]messages.CamundaExterna
 	defer this.mux.Unlock()
 	return this.fetchedTasks, this.completedTasks, this.failedTasks
 }
+
+func (this *CamundaMock) UnlockTask(taskInfo messages.TaskInfo) (err error) {
+	log.Println("DEBUG: UnlockTask()", taskInfo)
+	return nil
+}
