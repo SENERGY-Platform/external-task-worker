@@ -29,6 +29,7 @@ func Camunda(ctx context.Context, wg *sync.WaitGroup, pgIp string, pgPort string
 	if err != nil {
 		return "", err
 	}
+	go Dockerlog(pool, ctx, container, "CAMUNDA")
 	wg.Add(1)
 	go func() {
 		<-ctx.Done()

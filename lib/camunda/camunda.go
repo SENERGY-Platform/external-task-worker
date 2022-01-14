@@ -150,6 +150,9 @@ func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string,
 }
 
 func (this *Camunda) UnlockTask(taskInfo messages.TaskInfo) (err error) {
+	if this.config.Debug {
+		log.Println("unlock task for retry", taskInfo.TaskId)
+	}
 	shard, err := this.shards.GetShardForUser(taskInfo.TenantId)
 	if err != nil {
 		return err

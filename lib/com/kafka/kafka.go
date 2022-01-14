@@ -56,7 +56,7 @@ func (FactoryType) NewConsumer(ctx context.Context, config util.Config, response
 		}
 	}
 
-	if config.MetadataErrorTo != "" && config.MetadataErrorTo != "-" && !(strings.HasPrefix(config.ErrorTopic, "http://") || strings.HasPrefix(config.ErrorTopic, "https://")) {
+	if config.ErrorTopic != "" && config.ErrorTopic != "-" && !(strings.HasPrefix(config.ErrorTopic, "http://") || strings.HasPrefix(config.ErrorTopic, "https://")) {
 		err = NewConsumer(ctx, ConsumerConfig{
 			KafkaUrl:       config.KafkaUrl,
 			GroupId:        config.KafkaConsumerGroup,

@@ -42,7 +42,7 @@ func (this *KafkaMock) Log(logger *log.Logger) {
 
 func (this *KafkaMock) NewConsumer(ctx context.Context, config util.Config, respListener func(msg string) error, errListener func(msg string) error) (err error) {
 	this.Subscribe(config.ResponseTopic, respListener)
-	this.Subscribe(config.ErrorTopic, respListener)
+	this.Subscribe(config.ErrorTopic, errListener)
 	return nil
 }
 
