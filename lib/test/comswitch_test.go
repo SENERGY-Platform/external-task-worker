@@ -181,6 +181,7 @@ func TestComswitchProduceWithKey(t *testing.T) {
 	}
 
 	messages := []string{}
+	errMessages := []string{}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -200,6 +201,7 @@ func TestComswitchProduceWithKey(t *testing.T) {
 	config.KafkaUrl = kafkaUrl
 	config.KafkaConsumerGroup = "test"
 	config.ResponseTopic = "test"
+	config.ErrorTopic = "err"
 	config.HttpCommandConsumerPort = strconv.Itoa(apiPort)
 	config.Debug = true
 
@@ -207,6 +209,7 @@ func TestComswitchProduceWithKey(t *testing.T) {
 		messages = append(messages, msg)
 		return nil
 	}, func(msg string) error {
+		errMessages = append(errMessages, msg)
 		return nil
 	})
 
@@ -223,6 +226,19 @@ func TestComswitchProduceWithKey(t *testing.T) {
 	}
 	log.Println("http produce 2")
 	err = producer.ProduceWithKey("http://localhost:"+config.HttpCommandConsumerPort+"/responses", "key", "http_msg2")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	log.Println("http produce err 1")
+	err = producer.ProduceWithKey("http://localhost:"+config.HttpCommandConsumerPort+"/err", "key", "http_err_msg1")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	log.Println("http produce err 2")
+	err = producer.ProduceWithKey("http://localhost:"+config.HttpCommandConsumerPort+"/err", "key", "http_err_msg2")
 	if err != nil {
 		t.Error(err)
 		return
@@ -247,11 +263,34 @@ func TestComswitchProduceWithKey(t *testing.T) {
 		return
 	}
 
+	log.Println("kafka produce err 1")
+	err = producer.ProduceWithKey("err", "key", "err_msg1")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	log.Println("kafka produce err 2")
+	err = producer.ProduceWithKey("err", "key", "err_msg2")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	log.Println("kafka produce err 3")
+	err = producer.ProduceWithKey("err2", "key", "err_msg3")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
 	log.Println("produced")
 
 	time.Sleep(20 * time.Second)
 
 	if !reflect.DeepEqual(messages, []string{"http_msg1", "http_msg2", "msg1", "msg2"}) {
 		t.Error(messages)
+	}
+
+	if !reflect.DeepEqual(errMessages, []string{"http_err_msg1", "http_err_msg2", "err_msg1", "err_msg2"}) {
+		t.Error(errMessages)
 	}
 }
