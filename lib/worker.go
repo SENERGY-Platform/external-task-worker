@@ -42,7 +42,7 @@ import (
 
 const CheckCamundaDuration = false
 
-type worker struct {
+type CmdWorker struct {
 	producer                  com.ProducerInterface
 	repository                devicerepository.RepoInterface
 	camunda                   interfaces.CamundaInterface
@@ -62,17 +62,21 @@ type DeviceGroupsHandler interface {
 
 func Worker(ctx context.Context, config util.Config, comFactory com.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory interfaces.FactoryInterface, marshallerFactory marshaller.FactoryInterface) {
 	log.Println("start camunda worker")
+	w := New(ctx, config, comFactory, repoFactory, camundaFactory, marshallerFactory)
+	StartHealthCheckEndpoint(ctx, config, w)
+	w.Loop(ctx)
+}
+
+func New(ctx context.Context, config util.Config, comFactory com.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory interfaces.FactoryInterface, marshallerFactory marshaller.FactoryInterface) (w *CmdWorker) {
 	base.DEBUG = config.Debug
 	var err error
 
-	w := worker{
+	w = &CmdWorker{
 		config:                    config,
 		marshaller:                marshallerFactory.New(config.MarshallerUrl),
 		lastProducerCallSuccess:   true,
 		lastSuccessfulCamundaCall: time.Now(),
 	}
-
-	StartHealthCheckEndpoint(ctx, config, &w)
 
 	if config.CompletionStrategy != util.OPTIMISTIC {
 		if config.ResponseWorkerCount > 1 {
@@ -94,6 +98,11 @@ func Worker(ctx context.Context, config util.Config, comFactory com.FactoryInter
 		log.Fatal("ERROR: comFactory.NewProducer", err)
 	}
 	w.deviceGroupsHandler = devicegroups.New(config.GroupScheduler, w.camunda, w.repository, w.CreateProtocolMessage, config.CamundaFetchLockDuration, config.SubResultExpirationInSeconds, config.SubResultDatabaseUrls, config.MemcachedTimeout, config.MemcachedMaxIdleConns)
+
+	return
+}
+
+func (w *CmdWorker) Loop(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -101,14 +110,14 @@ func Worker(ctx context.Context, config util.Config, comFactory com.FactoryInter
 		default:
 			wait := w.ExecuteNextTasks()
 			if wait {
-				duration := time.Duration(config.CamundaWorkerTimeout) * time.Millisecond
+				duration := time.Duration(w.config.CamundaWorkerTimeout) * time.Millisecond
 				time.Sleep(duration)
 			}
 		}
 	}
 }
 
-func (this *worker) ExecuteNextTasks() (wait bool) {
+func (this *CmdWorker) ExecuteNextTasks() (wait bool) {
 	tasks, err := this.camunda.GetTasks()
 	if err != nil {
 		log.Println("error on ExecuteNextTasks getTask", err)
@@ -130,7 +139,7 @@ func (this *worker) ExecuteNextTasks() (wait bool) {
 	return false
 }
 
-func (this *worker) ExecuteTask(task messages.CamundaExternalTask, caller string) {
+func (this *CmdWorker) ExecuteTask(task messages.CamundaExternalTask, caller string) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Println("ERROR: ", r, "\n", debug.Stack())
@@ -150,7 +159,11 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask, caller string
 		return
 	}
 
-	completed, nextProtocolMessages, results, err := this.deviceGroupsHandler.ProcessCommand(request, task, caller)
+	this.ExecuteCommand(request, task, caller)
+}
+
+func (this *CmdWorker) ExecuteCommand(command messages.Command, task messages.CamundaExternalTask, caller string) {
+	completed, nextProtocolMessages, results, err := this.deviceGroupsHandler.ProcessCommand(command, task, caller)
 	if err != nil {
 		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, err.Error(), task.TenantId)
 		return
@@ -164,7 +177,7 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask, caller string
 			ProcessInstanceId:   task.ProcessInstanceId,
 			ProcessDefinitionId: task.ProcessDefinitionId,
 			TenantId:            task.TenantId,
-		}, this.config.CamundaTaskResultName, handleVersioning(request.Version, results))
+		}, this.config.CamundaTaskResultName, handleVersioning(command.Version, results))
 		if err != nil {
 			log.Println("error on completeCamundaTask(): ", err)
 			return
@@ -187,7 +200,7 @@ func (this *worker) ExecuteTask(task messages.CamundaExternalTask, caller string
 	}
 }
 
-func (this *worker) GetQueuedResponseHandler(ctx context.Context, workerCount int64, queueSize int64) func(msg string) (err error) {
+func (this *CmdWorker) GetQueuedResponseHandler(ctx context.Context, workerCount int64, queueSize int64) func(msg string) (err error) {
 	queue := make(chan string, queueSize)
 	for i := int64(0); i < workerCount; i++ {
 		go func() {
@@ -214,7 +227,7 @@ func (this *worker) GetQueuedResponseHandler(ctx context.Context, workerCount in
 	}
 }
 
-func (this *worker) HandleTaskResponse(msg string) (err error) {
+func (this *CmdWorker) HandleTaskResponse(msg string) (err error) {
 	var message messages.ProtocolMsg
 	err = json.Unmarshal([]byte(msg), &message)
 	if err != nil {
@@ -301,7 +314,7 @@ func (this *worker) HandleTaskResponse(msg string) (err error) {
 	return
 }
 
-func (this *worker) isSequential() bool {
+func (this *CmdWorker) isSequential() bool {
 	return this.config.GroupScheduler == util.SEQUENTIAL || this.config.GroupScheduler == util.ROUND_ROBIN
 }
 
@@ -313,7 +326,7 @@ func handleVersioning(version int, results []interface{}) interface{} {
 	}
 }
 
-func (this *worker) missesCamundaDuration(msg messages.ProtocolMsg) bool {
+func (this *CmdWorker) missesCamundaDuration(msg messages.ProtocolMsg) bool {
 	if msg.TaskInfo.Time == "" {
 		return true
 	}
@@ -330,38 +343,38 @@ type WorkerState struct {
 	LastSuccessfulCamundaCall time.Duration
 }
 
-func (this *worker) GetState() WorkerState {
+func (this *CmdWorker) GetState() WorkerState {
 	return WorkerState{
 		ProducerOk:                this.LastProducerCallSuccessful(),
 		LastSuccessfulCamundaCall: this.SinceLastSuccessfulCamundaCall(),
 	}
 }
 
-func (this *worker) SinceLastSuccessfulCamundaCall() time.Duration {
+func (this *CmdWorker) SinceLastSuccessfulCamundaCall() time.Duration {
 	this.camundaCallMux.Lock()
 	defer this.camundaCallMux.Unlock()
 	return time.Since(this.lastSuccessfulCamundaCall)
 }
 
-func (this *worker) logSuccessfulCamundaCall() {
+func (this *CmdWorker) logSuccessfulCamundaCall() {
 	this.camundaCallMux.Lock()
 	defer this.camundaCallMux.Unlock()
 	this.lastSuccessfulCamundaCall = time.Now()
 }
 
-func (this *worker) LastProducerCallSuccessful() bool {
+func (this *CmdWorker) LastProducerCallSuccessful() bool {
 	this.producerCallMux.Lock()
 	defer this.producerCallMux.Unlock()
 	return this.lastProducerCallSuccess
 }
 
-func (this *worker) logProducerError() {
+func (this *CmdWorker) logProducerError() {
 	this.producerCallMux.Lock()
 	defer this.producerCallMux.Unlock()
 	this.lastProducerCallSuccess = false
 }
 
-func (this *worker) logProducerSuccess() {
+func (this *CmdWorker) logProducerSuccess() {
 	this.producerCallMux.Lock()
 	defer this.producerCallMux.Unlock()
 	this.lastProducerCallSuccess = true

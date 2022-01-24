@@ -23,7 +23,7 @@ import (
 	"runtime/debug"
 )
 
-func (this *worker) ErrorMessageHandler(msg string) error {
+func (this *CmdWorker) ErrorMessageHandler(msg string) error {
 	var message messages.ProtocolMsg
 	err := json.Unmarshal([]byte(msg), &message)
 	if err != nil {

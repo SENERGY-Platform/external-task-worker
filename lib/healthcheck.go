@@ -25,7 +25,7 @@ import (
 	"time"
 )
 
-func StartHealthCheckEndpoint(ctx context.Context, config util.Config, worker *worker) {
+func StartHealthCheckEndpoint(ctx context.Context, config util.Config, worker *CmdWorker) {
 	if config.HealthCheckPort != "" {
 		log.Println("start health-check api on " + config.HealthCheckPort)
 		server := &http.Server{Addr: ":" + config.HealthCheckPort, Handler: getHealthCheckEndpoint(config, worker), WriteTimeout: 10 * time.Second, ReadTimeout: 2 * time.Second, ReadHeaderTimeout: 2 * time.Second}
@@ -43,7 +43,7 @@ func StartHealthCheckEndpoint(ctx context.Context, config util.Config, worker *w
 	return
 }
 
-func getHealthCheckEndpoint(config util.Config, worker *worker) http.HandlerFunc {
+func getHealthCheckEndpoint(config util.Config, worker *CmdWorker) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		state := worker.GetState()
 		timeout := time.Duration(config.CamundaWorkerTimeout) * time.Millisecond * 2

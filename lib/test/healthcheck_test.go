@@ -124,6 +124,8 @@ func TestHealthCheckBy(t *testing.T) {
 		},
 	})
 
+	t.Log((time.Duration(config.CamundaWorkerTimeout) * time.Millisecond * 2).String())
+
 	t.Run("check immediately", testHealtCheck(config, true))
 	time.Sleep(time.Duration(config.CamundaWorkerTimeout) * time.Millisecond)
 	t.Run("check after timeout", testHealtCheck(config, true))
