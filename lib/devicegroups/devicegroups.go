@@ -36,7 +36,7 @@ type Callback = func(command messages.Command, task messages.CamundaExternalTask
 
 func New(scheduler string, camunda interfaces.CamundaInterface, devicerepo devicerepository.RepoInterface, protocolMessageCallback Callback, currentlyRunningTimeoutInMs int64, expirationInSeconds int32, memcachedUrls []string, memcachedTimeout string, memcachedMaxIdleConns int64) *DeviceGroups {
 	if len(memcachedUrls) == 0 {
-		log.Println("WARNING: start with local sub result storage")
+		log.Println("start with local sub result storage")
 		return NewWithKeyValueStore(scheduler, camunda, devicerepo, protocolMessageCallback, currentlyRunningTimeoutInMs, expirationInSeconds, NewLocalDb())
 	} else {
 		client := memcache.New(memcachedUrls...)
