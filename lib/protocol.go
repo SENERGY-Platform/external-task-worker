@@ -95,6 +95,9 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 		inputCharacteristicId = command.CharacteristicId
 	} else {
 		outputCharacteristicId = command.CharacteristicId
+		if service.Interaction == model.EVENT {
+			return result, errors.New("command to measuring-function function with event interaction is not possible")
+		}
 	}
 
 	marshalledInput, err := this.marshaller.MarshalFromServiceAndProtocol(inputCharacteristicId, *service, *protocol, command.Input, command.Configurables)
