@@ -30,7 +30,7 @@ var SlowProducerTimeout time.Duration = 2 * time.Second
 
 type ProducerInterface interface {
 	Produce(topic string, message string) (err error)
-	ProduceWithKey(topic string, message string, key string) (err error)
+	ProduceWithKey(topic string, key string, message string) (err error)
 	Log(logger *log.Logger)
 }
 
