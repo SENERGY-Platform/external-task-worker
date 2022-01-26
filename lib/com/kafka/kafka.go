@@ -48,8 +48,12 @@ func (FactoryType) NewConsumer(ctx context.Context, config util.Config, response
 		}, func(topic string, msg []byte, time time.Time) error {
 			return responseListener(string(msg))
 		}, func(err error) {
-			log.Println("FATAL ERROR: kafka", err)
-			log.Fatal(err)
+			if err != context.Canceled {
+				log.Println("FATAL ERROR: kafka", err)
+				log.Fatal(err)
+			} else {
+				log.Println("KAFKA CTX CANCELED", err)
+			}
 		})
 		if err != nil {
 			return err
@@ -68,8 +72,12 @@ func (FactoryType) NewConsumer(ctx context.Context, config util.Config, response
 		}, func(topic string, msg []byte, time time.Time) error {
 			return errorListener(string(msg))
 		}, func(err error) {
-			log.Println("FATAL ERROR: kafka", err)
-			log.Fatal(err)
+			if err != context.Canceled {
+				log.Println("FATAL ERROR: kafka", err)
+				log.Fatal(err)
+			} else {
+				log.Println("KAFKA CTX CANCELED", err)
+			}
 		})
 		if err != nil {
 			return err
