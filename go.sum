@@ -10,10 +10,11 @@ github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 h1:TngWCqHvy9oXAN6lEV
 github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5/go.mod h1:lmUJ/7eu/Q8D7ML55dXQrVaamCz2vxCfdQBasLZfHKk=
 github.com/OneOfOne/xxhash v1.2.2 h1:KMrpdQIwFcEqXDklaen+P1axHaj9BSKzvpUUfnHldSE=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
-github.com/SENERGY-Platform/converter v0.0.0-20200114152115-63d2a698b3c4 h1:NjPjdgPMfl4vmF04CwHpASVu0uUlOjgUlP+WWcYm7vA=
 github.com/SENERGY-Platform/converter v0.0.0-20200114152115-63d2a698b3c4/go.mod h1:9g7L104dDpSMLj3pSP5cPB+9+5SYhphHfZbqeT1f18E=
-github.com/SENERGY-Platform/marshaller v0.0.0-20200819115755-79a11cda1994 h1:O9KtjQEIVxjd6d5krePtVL8BcZPWLN5rVD4qAYXfiPQ=
-github.com/SENERGY-Platform/marshaller v0.0.0-20200819115755-79a11cda1994/go.mod h1:cc9gdkVBIbmFs9saRaB/EyiTRzeJArbu+eD024mgmaE=
+github.com/SENERGY-Platform/converter v0.0.0-20220201091046-236e7b8313ab h1:H2PFvQYha5Q+deeItcPd35+NX/sGiPZ2mbpaNbOgdF4=
+github.com/SENERGY-Platform/converter v0.0.0-20220201091046-236e7b8313ab/go.mod h1:Sg6B31RO1UYv5D4LEbv1ElSO9gceHDBaba6cifsWQQo=
+github.com/SENERGY-Platform/marshaller v0.0.0-20210720115427-e647c7c0fe71 h1:BQFyc7ddG8cMEXHWaDs2b0qj6BSF4JQ9SE5D4Km+iEI=
+github.com/SENERGY-Platform/marshaller v0.0.0-20210720115427-e647c7c0fe71/go.mod h1:REvJw3MoGMDlZNelakUmP8JQpavCObQQActw20mveJQ=
 github.com/Shopify/sarama v1.22.0 h1:rtiODsvY4jW6nUV6n3K+0gx/8WlAwVt+Ixt6RIvpYyo=
 github.com/Shopify/sarama v1.22.0/go.mod h1:lm3THZ8reqBDBQKQyb5HB3sY1lKp3grEbQ81aWSgPp4=
 github.com/Shopify/toxiproxy v2.1.4+incompatible h1:TKdv8HiTLgE5wdJuEML90aBgNWsokNbMijUGhmcoBJc=
