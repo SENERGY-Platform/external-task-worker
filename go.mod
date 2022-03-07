@@ -4,8 +4,7 @@ go 1.17
 
 require (
 	github.com/DataDog/zstd v1.4.0 // indirect
-	github.com/SENERGY-Platform/converter v0.0.0-20220201091046-236e7b8313ab
-	github.com/SENERGY-Platform/marshaller v0.0.0-20210720115427-e647c7c0fe71
+	github.com/SENERGY-Platform/marshaller v0.0.0-20220304080045-23c65cd37920
 	github.com/Shopify/sarama v1.22.0
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/coocood/freecache v1.1.0
@@ -24,6 +23,8 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
+	github.com/RyanCarrier/dijkstra v1.1.0 // indirect
+	github.com/SENERGY-Platform/converter v0.0.0-20220302112210-0325026a0e9f // indirect
 	github.com/cenkalti/backoff/v4 v4.1.0 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/clbanning/mxj v1.8.4 // indirect

@@ -21,6 +21,7 @@ import (
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
+	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"log"
@@ -100,9 +101,34 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 		}
 	}
 
-	marshalledInput, err := this.marshaller.MarshalFromServiceAndProtocol(inputCharacteristicId, *service, *protocol, command.Input, command.Configurables)
-	if err != nil {
-		return result, err
+	marshalledInput := map[string]string{}
+	if command.Version < 3 {
+		marshalledInput, err = this.marshaller.MarshalFromServiceAndProtocol(inputCharacteristicId, *service, *protocol, command.Input, command.Configurables)
+		if err != nil {
+			return result, err
+		}
+	} else {
+		data := []marshaller.MarshallingV2RequestData{}
+		if len(command.InputPaths) > 0 {
+			data = append(data, marshaller.MarshallingV2RequestData{
+				Value:            command.Input,
+				CharacteristicId: inputCharacteristicId,
+				Paths:            command.InputPaths,
+				FunctionId:       command.Function.Id,
+			})
+		}
+		for _, configurable := range command.ConfigurablesV2 {
+			data = append(data, marshaller.MarshallingV2RequestData{
+				Value:            configurable.Value,
+				CharacteristicId: configurable.CharacteristicId,
+				Paths:            []string{configurable.Path},
+				FunctionId:       configurable.FunctionId,
+			})
+		}
+		marshalledInput, err = this.marshaller.MarshalV2(*service, *protocol, data)
+		if err != nil {
+			return result, err
+		}
 	}
 
 	trace = append(trace, messages.Trace{
@@ -135,6 +161,13 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 			ErrorTo:              this.config.MetadataErrorTo,
 		},
 		Trace: trace,
+	}
+
+	if command.Version >= 3 {
+		result.Metadata.Version = command.Version
+		result.Metadata.OutputPath = command.OutputPath
+		result.Metadata.OutputFunctionId = command.Function.Id
+		result.Metadata.OutputAspectNode = command.Aspect
 	}
 
 	return result, err

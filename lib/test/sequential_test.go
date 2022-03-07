@@ -182,12 +182,12 @@ func testSequentialExecution(retries int64, lostResponseFor []int, expectedResul
 			DeviceClassId: "dc1",
 			Services: []model.Service{
 				{
-					Id:          "service_3",
-					Name:        "s3",
-					LocalId:     "s3u",
-					ProtocolId:  "p1",
-					FunctionIds: []string{model.MEASURING_FUNCTION_PREFIX + "f1", model.MEASURING_FUNCTION_PREFIX + "f2"},
-					AspectIds:   []string{"a1", "a2"},
+					Id:         "service_3",
+					Name:       "s3",
+					LocalId:    "s3u",
+					ProtocolId: "p1",
+					//FunctionIds: []string{model.MEASURING_FUNCTION_PREFIX + "f1", model.MEASURING_FUNCTION_PREFIX + "f2"},
+					//AspectIds:   []string{"a1", "a2"},
 					Interaction: model.REQUEST,
 					Outputs: []model.Content{
 						{
@@ -202,6 +202,8 @@ func testSequentialExecution(retries int64, lostResponseFor []int, expectedResul
 										Name:             "level",
 										Type:             model.Integer,
 										CharacteristicId: example.Hex,
+										FunctionId:       model.MEASURING_FUNCTION_PREFIX + "f1",
+										AspectId:         "a1",
 									},
 								},
 							},
@@ -215,8 +217,6 @@ func testSequentialExecution(retries int64, lostResponseFor []int, expectedResul
 					Name:        "s4",
 					LocalId:     "s4u",
 					ProtocolId:  "p1",
-					FunctionIds: []string{model.MEASURING_FUNCTION_PREFIX + "f2"},
-					AspectIds:   []string{"a2"},
 					Interaction: model.REQUEST,
 					Outputs: []model.Content{
 						{
@@ -231,6 +231,8 @@ func testSequentialExecution(retries int64, lostResponseFor []int, expectedResul
 										Name:             "level",
 										Type:             model.Integer,
 										CharacteristicId: example.Hex,
+										FunctionId:       model.MEASURING_FUNCTION_PREFIX + "f2",
+										AspectId:         "a2",
 									},
 								},
 							},
@@ -245,7 +247,7 @@ func testSequentialExecution(retries int64, lostResponseFor []int, expectedResul
 		cmd := messages.Command{
 			Version:          2,
 			Function:         model.Function{Id: model.MEASURING_FUNCTION_PREFIX + "f1", RdfType: model.SES_ONTOLOGY_MEASURING_FUNCTION},
-			Aspect:           &model.Aspect{Id: "a1"},
+			Aspect:           &model.AspectNode{Id: "a1"},
 			CharacteristicId: example.Rgb,
 			DeviceGroupId:    "dg1",
 			Retries:          retries,
@@ -307,6 +309,9 @@ func testSequentialExecution(retries int64, lostResponseFor []int, expectedResul
 
 		if !reflect.DeepEqual(completed["1"], expectedResult) {
 			t.Error(completed, expectedResult)
+			rjson, _ := json.Marshal(completed["1"])
+			ejson, _ := json.Marshal(expectedResult)
+			t.Log("\n", string(rjson), "\n", string(ejson))
 		}
 
 	}

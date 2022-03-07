@@ -22,7 +22,7 @@ import (
 )
 
 type Command struct {
-	Version int `json:"version"`
+	Version int64 `json:"version"`
 
 	//modeling time
 	Function         model.Function `json:"function"`
@@ -30,18 +30,25 @@ type Command struct {
 
 	//optional modeling time (used to limit/filter device and service selection in deployment)
 	DeviceClass *model.DeviceClass `json:"device_class,omitempty"`
-	Aspect      *model.Aspect      `json:"aspect,omitempty"`
+	Aspect      *model.AspectNode  `json:"aspect,omitempty"`
 
 	//deployment time
-	DeviceGroupId        string                    `json:"device_group_id"`
-	DeviceId             string                    `json:"device_id,omitempty"`
-	Device               *model.Device             `json:"device,omitempty"`
-	ServiceId            string                    `json:"service_id,omitempty"`
-	Service              *model.Service            `json:"service,omitempty"`
-	Protocol             *model.Protocol           `json:"protocol,omitempty"`
-	ProtocolId           string                    `json:"protocol_id,omitempty"`
+	DeviceGroupId string          `json:"device_group_id"`
+	DeviceId      string          `json:"device_id,omitempty"`
+	Device        *model.Device   `json:"device,omitempty"`
+	ServiceId     string          `json:"service_id,omitempty"`
+	Service       *model.Service  `json:"service,omitempty"`
+	Protocol      *model.Protocol `json:"protocol,omitempty"`
+	ProtocolId    string          `json:"protocol_id,omitempty"`
+
+	//version <= 2
 	Configurables        []marshaller.Configurable `json:"configurables,omitempty"`
 	ContentVariableHints []string                  `json:"content_variable_hints,omitempty"`
+
+	//version >= 3
+	InputPaths      []string                    `json:"input_paths,omitempty"`
+	OutputPath      string                      `json:"output_path,omitempty"`
+	ConfigurablesV2 []marshaller.ConfigurableV2 `json:"configurables_v2,omitempty"`
 
 	//runtime
 	Input  interface{} `json:"input,omitempty"`

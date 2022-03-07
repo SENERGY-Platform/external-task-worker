@@ -273,12 +273,12 @@ func TestGroupResponses(t *testing.T) {
 		DeviceClassId: "dc1",
 		Services: []model.Service{
 			{
-				Id:          "service_1",
-				Name:        "s1",
-				LocalId:     "s1u",
-				ProtocolId:  "p1",
-				FunctionIds: []string{model.MEASURING_FUNCTION_PREFIX + "f1", model.MEASURING_FUNCTION_PREFIX + "f2"},
-				AspectIds:   []string{"a1", "a2"},
+				Id:         "service_1",
+				Name:       "s1",
+				LocalId:    "s1u",
+				ProtocolId: "p1",
+				//FunctionIds: []string{model.MEASURING_FUNCTION_PREFIX + "f1", model.MEASURING_FUNCTION_PREFIX + "f2"},
+				//AspectIds:   []string{"a1", "a2"},
 				Interaction: model.REQUEST,
 				Outputs: []model.Content{
 					{
@@ -293,6 +293,8 @@ func TestGroupResponses(t *testing.T) {
 									Name:             "level",
 									Type:             model.Integer,
 									CharacteristicId: example.Hex,
+									FunctionId:       model.MEASURING_FUNCTION_PREFIX + "f1",
+									AspectId:         "a1",
 								},
 							},
 						},
@@ -306,8 +308,6 @@ func TestGroupResponses(t *testing.T) {
 				Name:        "s2",
 				LocalId:     "s2u",
 				ProtocolId:  "p1",
-				FunctionIds: []string{model.MEASURING_FUNCTION_PREFIX + "f1"},
-				AspectIds:   []string{"a1"},
 				Interaction: model.REQUEST,
 				Outputs: []model.Content{
 					{
@@ -322,6 +322,8 @@ func TestGroupResponses(t *testing.T) {
 									Name:             "level",
 									Type:             model.Integer,
 									CharacteristicId: example.Hex,
+									FunctionId:       model.MEASURING_FUNCTION_PREFIX + "f1",
+									AspectId:         "a1",
 								},
 							},
 						},
@@ -339,12 +341,12 @@ func TestGroupResponses(t *testing.T) {
 		DeviceClassId: "dc1",
 		Services: []model.Service{
 			{
-				Id:          "service_3",
-				Name:        "s3",
-				LocalId:     "s3u",
-				ProtocolId:  "p1",
-				FunctionIds: []string{model.MEASURING_FUNCTION_PREFIX + "f1", model.MEASURING_FUNCTION_PREFIX + "f2"},
-				AspectIds:   []string{"a1", "a2"},
+				Id:         "service_3",
+				Name:       "s3",
+				LocalId:    "s3u",
+				ProtocolId: "p1",
+				//FunctionIds: []string{model.MEASURING_FUNCTION_PREFIX + "f1", model.MEASURING_FUNCTION_PREFIX + "f2"},
+				//AspectIds:   []string{"a1", "a2"},
 				Interaction: model.REQUEST,
 				Outputs: []model.Content{
 					{
@@ -359,6 +361,8 @@ func TestGroupResponses(t *testing.T) {
 									Name:             "level",
 									Type:             model.Integer,
 									CharacteristicId: example.Hex,
+									FunctionId:       model.MEASURING_FUNCTION_PREFIX + "f1",
+									AspectId:         "a1",
 								},
 							},
 						},
@@ -372,8 +376,6 @@ func TestGroupResponses(t *testing.T) {
 				Name:        "s4",
 				LocalId:     "s4u",
 				ProtocolId:  "p1",
-				FunctionIds: []string{model.MEASURING_FUNCTION_PREFIX + "f2"},
-				AspectIds:   []string{"a2"},
 				Interaction: model.REQUEST,
 				Outputs: []model.Content{
 					{
@@ -388,6 +390,8 @@ func TestGroupResponses(t *testing.T) {
 									Name:             "level",
 									Type:             model.Integer,
 									CharacteristicId: example.Hex,
+									FunctionId:       model.MEASURING_FUNCTION_PREFIX + "f2",
+									AspectId:         "a2",
 								},
 							},
 						},
@@ -402,7 +406,7 @@ func TestGroupResponses(t *testing.T) {
 	cmd1 := messages.Command{
 		Version:          2,
 		Function:         model.Function{Id: model.MEASURING_FUNCTION_PREFIX + "f1", RdfType: model.SES_ONTOLOGY_MEASURING_FUNCTION},
-		Aspect:           &model.Aspect{Id: "a1"},
+		Aspect:           &model.AspectNode{Id: "a1"},
 		CharacteristicId: example.Rgb,
 		DeviceGroupId:    "dg1",
 		DeviceId:         "device_1",  //will be ignored because DeviceGroupId is set
@@ -419,7 +423,7 @@ func TestGroupResponses(t *testing.T) {
 	cmd2 := messages.Command{
 		Version:          2,
 		Function:         model.Function{Id: model.MEASURING_FUNCTION_PREFIX + "f1", RdfType: model.SES_ONTOLOGY_MEASURING_FUNCTION},
-		Aspect:           &model.Aspect{Id: "a1"},
+		Aspect:           &model.AspectNode{Id: "a1"},
 		CharacteristicId: example.Hex,
 		DeviceGroupId:    "dg1",
 	}
@@ -576,12 +580,12 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 		DeviceClassId: "dc1",
 		Services: []model.Service{
 			{
-				Id:          "service_1",
-				Name:        "s1",
-				LocalId:     "s1u",
-				ProtocolId:  "p1",
-				FunctionIds: []string{model.MEASURING_FUNCTION_PREFIX + "f1", model.MEASURING_FUNCTION_PREFIX + "f2"},
-				AspectIds:   []string{"a1", "a2"},
+				Id:         "service_1",
+				Name:       "s1",
+				LocalId:    "s1u",
+				ProtocolId: "p1",
+				//FunctionIds: []string{model.MEASURING_FUNCTION_PREFIX + "f1", model.MEASURING_FUNCTION_PREFIX + "f2"},
+				//AspectIds:   []string{"a1", "a2"},
 				Interaction: model.REQUEST,
 				Outputs: []model.Content{
 					{
@@ -596,6 +600,8 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 									Name:             "level",
 									Type:             model.Integer,
 									CharacteristicId: example.Hex,
+									FunctionId:       model.MEASURING_FUNCTION_PREFIX + "f1",
+									AspectId:         "a1",
 								},
 							},
 						},
@@ -609,8 +615,6 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 				Name:        "s2",
 				LocalId:     "s2u",
 				ProtocolId:  "p1",
-				FunctionIds: []string{model.MEASURING_FUNCTION_PREFIX + "f1"},
-				AspectIds:   []string{"a1"},
 				Interaction: model.REQUEST,
 				Outputs: []model.Content{
 					{
@@ -625,6 +629,8 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 									Name:             "level",
 									Type:             model.Integer,
 									CharacteristicId: example.Hex,
+									FunctionId:       model.MEASURING_FUNCTION_PREFIX + "f1",
+									AspectId:         "a1",
 								},
 							},
 						},
@@ -642,12 +648,12 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 		DeviceClassId: "dc1",
 		Services: []model.Service{
 			{
-				Id:          "service_3",
-				Name:        "s3",
-				LocalId:     "s3u",
-				ProtocolId:  "p1",
-				FunctionIds: []string{model.MEASURING_FUNCTION_PREFIX + "f1", model.MEASURING_FUNCTION_PREFIX + "f2"},
-				AspectIds:   []string{"a1", "a2"},
+				Id:         "service_3",
+				Name:       "s3",
+				LocalId:    "s3u",
+				ProtocolId: "p1",
+				//FunctionIds: []string{model.MEASURING_FUNCTION_PREFIX + "f1", model.MEASURING_FUNCTION_PREFIX + "f2"},
+				//AspectIds:   []string{"a1", "a2"},
 				Interaction: model.REQUEST,
 				Outputs: []model.Content{
 					{
@@ -662,6 +668,8 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 									Name:             "level",
 									Type:             model.Integer,
 									CharacteristicId: example.Hex,
+									FunctionId:       model.MEASURING_FUNCTION_PREFIX + "f1",
+									AspectId:         "a1",
 								},
 							},
 						},
@@ -675,8 +683,6 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 				Name:        "s4",
 				LocalId:     "s4u",
 				ProtocolId:  "p1",
-				FunctionIds: []string{model.MEASURING_FUNCTION_PREFIX + "f2"},
-				AspectIds:   []string{"a2"},
 				Interaction: model.REQUEST,
 				Outputs: []model.Content{
 					{
@@ -691,6 +697,8 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 									Name:             "level",
 									Type:             model.Integer,
 									CharacteristicId: example.Hex,
+									FunctionId:       model.MEASURING_FUNCTION_PREFIX + "f2",
+									AspectId:         "a2",
 								},
 							},
 						},
@@ -705,7 +713,7 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 	cmd1 := messages.Command{
 		Version:          2,
 		Function:         model.Function{Id: model.MEASURING_FUNCTION_PREFIX + "f1", RdfType: model.SES_ONTOLOGY_MEASURING_FUNCTION},
-		Aspect:           &model.Aspect{Id: "a1"},
+		Aspect:           &model.AspectNode{Id: "a1"},
 		CharacteristicId: example.Rgb,
 		DeviceGroupId:    "dg1",
 		DeviceId:         "device_1",  //will be ignored because DeviceGroupId is set
@@ -722,7 +730,7 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 	cmd2 := messages.Command{
 		Version:          2,
 		Function:         model.Function{Id: model.MEASURING_FUNCTION_PREFIX + "f1", RdfType: model.SES_ONTOLOGY_MEASURING_FUNCTION},
-		Aspect:           &model.Aspect{Id: "a1"},
+		Aspect:           &model.AspectNode{Id: "a1"},
 		CharacteristicId: example.Hex,
 		DeviceGroupId:    "dg1",
 	}

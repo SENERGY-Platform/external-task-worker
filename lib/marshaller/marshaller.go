@@ -16,7 +16,10 @@
 
 package marshaller
 
-import "github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
+import (
+	"context"
+	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
+)
 
 type Marshaller struct {
 	url string
@@ -27,17 +30,20 @@ func New(url string) *Marshaller {
 }
 
 type Interface interface {
+	MarshalV2(service model.Service, protocol model.Protocol, data []MarshallingV2RequestData) (result map[string]string, err error)
+	UnmarshalV2(request UnmarshallingV2Request) (characteristicData interface{}, err error)
+
 	MarshalFromServiceAndProtocol(characteristicId string, service model.Service, protocol model.Protocol, characteristicData interface{}, configurables []Configurable) (result map[string]string, err error)
 	UnmarshalFromServiceAndProtocol(characteristicId string, service model.Service, protocol model.Protocol, message map[string]string, hints []string) (characteristicData interface{}, err error)
 }
 
 type FactoryInterface interface {
-	New(url string) Interface
+	New(ctx context.Context, url string) Interface
 }
 
 type MarshallerFactory struct{}
 
-func (this MarshallerFactory) New(url string) Interface {
+func (this MarshallerFactory) New(ctx context.Context, url string) Interface {
 	return New(url)
 }
 

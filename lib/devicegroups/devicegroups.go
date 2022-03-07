@@ -297,7 +297,8 @@ func (this *DeviceGroups) GetSubTasks(request messages.Command, task messages.Ca
 			newCommand.Device = &device
 
 			newCommand.ServiceId = service.Id
-			newCommand.Service = &service
+			temp := service
+			newCommand.Service = &temp
 
 			result = append(result, messages.GroupTaskMetadataElement{
 				Command: newCommand,
@@ -311,27 +312,56 @@ func (this *DeviceGroups) GetSubTasks(request messages.Command, task messages.Ca
 func (this *DeviceGroups) getFilteredServices(command messages.Command, services []model.Service) (result []model.Service) {
 	serviceIndex := map[string]model.Service{}
 	for _, service := range services {
-		for _, functionId := range service.FunctionIds {
-			if !(isMeasuringFunctionId(functionId) && service.Interaction == model.EVENT) { //mqtt cannot be measured in a task
-				if functionId == command.Function.Id {
-					if command.Aspect != nil {
-						for _, aspect := range service.AspectIds {
-							if aspect == command.Aspect.Id {
-								serviceIndex[service.Id] = service
-							}
-						}
-					}
-					if command.DeviceClass != nil {
-						serviceIndex[service.Id] = service
-					}
-				}
-			}
+		contents := service.Inputs
+		if isMeasuringFunctionId(command.Function.Id) {
+			contents = service.Outputs
+		}
+		aspect := model.AspectNode{}
+		if command.Aspect != nil {
+			aspect = *command.Aspect
+		}
+		if anyContentMatchesCriteria(contents, model.DeviceGroupFilterCriteria{FunctionId: command.Function.Id, AspectId: aspect.Id}, aspect) &&
+			!(isMeasuringFunctionId(command.Function.Id) && service.Interaction == model.EVENT) {
+			serviceIndex[service.Id] = service
 		}
 	}
 	for _, service := range serviceIndex {
 		result = append(result, service)
 	}
 	return result
+}
+
+func anyContentMatchesCriteria(contents []model.Content, criteria model.DeviceGroupFilterCriteria, aspectNode model.AspectNode) bool {
+	for _, content := range contents {
+		if contentVariableContainsCriteria(content.ContentVariable, criteria, aspectNode) {
+			return true
+		}
+	}
+	return false
+}
+
+func contentVariableContainsCriteria(variable model.ContentVariable, criteria model.DeviceGroupFilterCriteria, aspectNode model.AspectNode) bool {
+	if variable.FunctionId == criteria.FunctionId &&
+		(criteria.AspectId == "" ||
+			variable.AspectId == criteria.AspectId ||
+			listContains(aspectNode.DescendentIds, variable.AspectId)) {
+		return true
+	}
+	for _, sub := range variable.SubContentVariables {
+		if contentVariableContainsCriteria(sub, criteria, aspectNode) {
+			return true
+		}
+	}
+	return false
+}
+
+func listContains(list []string, search string) bool {
+	for _, element := range list {
+		if element == search {
+			return true
+		}
+	}
+	return false
 }
 
 func (this *DeviceGroups) clearTaskData(parentTaskId string) {

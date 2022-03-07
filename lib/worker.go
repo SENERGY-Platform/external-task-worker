@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/SENERGY-Platform/converter/lib/converter/base"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/interfaces"
 	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicegroups"
@@ -68,12 +67,11 @@ func Worker(ctx context.Context, config util.Config, comFactory com.FactoryInter
 }
 
 func New(ctx context.Context, config util.Config, comFactory com.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory interfaces.FactoryInterface, marshallerFactory marshaller.FactoryInterface) (w *CmdWorker) {
-	base.DEBUG = config.Debug
 	var err error
 
 	w = &CmdWorker{
 		config:                    config,
-		marshaller:                marshallerFactory.New(config.MarshallerUrl),
+		marshaller:                marshallerFactory.New(ctx, config.MarshallerUrl),
 		lastProducerCallSuccess:   true,
 		lastSuccessfulCamundaCall: time.Now(),
 	}
@@ -259,10 +257,26 @@ func (this *CmdWorker) HandleTaskResponse(msg string) (err error) {
 
 	var output interface{}
 	if message.Metadata.OutputCharacteristic != model.NullCharacteristic.Id {
-		output, err = this.marshaller.UnmarshalFromServiceAndProtocol(message.Metadata.OutputCharacteristic, message.Metadata.Service, message.Metadata.Protocol, message.Response.Output, message.Metadata.ContentVariableHints)
-		if err != nil {
-			return err
+		if message.Metadata.Version < 3 {
+			output, err = this.marshaller.UnmarshalFromServiceAndProtocol(message.Metadata.OutputCharacteristic, message.Metadata.Service, message.Metadata.Protocol, message.Response.Output, message.Metadata.ContentVariableHints)
+		} else {
+			aspect := model.AspectNode{}
+			if message.Metadata.OutputAspectNode != nil {
+				aspect = *message.Metadata.OutputAspectNode
+			}
+			output, err = this.marshaller.UnmarshalV2(marshaller.UnmarshallingV2Request{
+				Service:          message.Metadata.Service,
+				Protocol:         message.Metadata.Protocol,
+				CharacteristicId: message.Metadata.OutputCharacteristic,
+				Message:          message.Response.Output,
+				Path:             message.Metadata.OutputPath,
+				FunctionId:       message.Metadata.OutputFunctionId,
+				AspectNode:       aspect,
+			})
 		}
+	}
+	if err != nil {
+		return err
 	}
 	message.Trace = append(message.Trace, messages.Trace{
 		Timestamp: time.Now().UnixNano(),
@@ -318,7 +332,7 @@ func (this *CmdWorker) isSequential() bool {
 	return this.config.GroupScheduler == util.SEQUENTIAL || this.config.GroupScheduler == util.ROUND_ROBIN
 }
 
-func handleVersioning(version int, results []interface{}) interface{} {
+func handleVersioning(version int64, results []interface{}) interface{} {
 	if version < 2 && len(results) > 0 {
 		return results[0]
 	} else {

@@ -288,8 +288,6 @@ func getGroupShedullerTest(config util.Config, simConfig GroupSimConfig) func(t 
 					Name:        "s3",
 					LocalId:     "s3u",
 					ProtocolId:  "p1",
-					FunctionIds: []string{model.MEASURING_FUNCTION_PREFIX + "f1"},
-					AspectIds:   []string{"a1"},
 					Interaction: model.REQUEST,
 					Outputs: []model.Content{
 						{
@@ -304,6 +302,8 @@ func getGroupShedullerTest(config util.Config, simConfig GroupSimConfig) func(t 
 										Name:             "level",
 										Type:             model.Integer,
 										CharacteristicId: example.Hex,
+										FunctionId:       model.MEASURING_FUNCTION_PREFIX + "f1",
+										AspectId:         "a1",
 									},
 								},
 							},
@@ -318,7 +318,7 @@ func getGroupShedullerTest(config util.Config, simConfig GroupSimConfig) func(t 
 		cmd := messages.Command{
 			Version:          2,
 			Function:         model.Function{Id: model.MEASURING_FUNCTION_PREFIX + "f1", RdfType: model.SES_ONTOLOGY_MEASURING_FUNCTION},
-			Aspect:           &model.Aspect{Id: "a1"},
+			Aspect:           &model.AspectNode{Id: "a1"},
 			CharacteristicId: example.Rgb,
 			DeviceGroupId:    "dg1",
 			Retries:          simConfig.Retries,

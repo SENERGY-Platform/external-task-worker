@@ -151,8 +151,6 @@ func testForConstraintGroup(sequential bool, missingResponseForRequestIndex map[
 					Name:        "s3",
 					LocalId:     "s3u",
 					ProtocolId:  "p1",
-					FunctionIds: []string{model.MEASURING_FUNCTION_PREFIX + "f1", model.MEASURING_FUNCTION_PREFIX + "f2"},
-					AspectIds:   []string{"a1", "a2"},
 					Interaction: model.REQUEST,
 					Outputs: []model.Content{
 						{
@@ -167,6 +165,8 @@ func testForConstraintGroup(sequential bool, missingResponseForRequestIndex map[
 										Name:             "level",
 										Type:             model.Integer,
 										CharacteristicId: example.Hex,
+										FunctionId:       model.MEASURING_FUNCTION_PREFIX + "f1",
+										AspectId:         "a1",
 									},
 								},
 							},
@@ -180,8 +180,6 @@ func testForConstraintGroup(sequential bool, missingResponseForRequestIndex map[
 					Name:        "s4",
 					LocalId:     "s4u",
 					ProtocolId:  "p1",
-					FunctionIds: []string{model.MEASURING_FUNCTION_PREFIX + "f2"},
-					AspectIds:   []string{"a2"},
 					Interaction: model.REQUEST,
 					Outputs: []model.Content{
 						{
@@ -196,6 +194,8 @@ func testForConstraintGroup(sequential bool, missingResponseForRequestIndex map[
 										Name:             "level",
 										Type:             model.Integer,
 										CharacteristicId: example.Hex,
+										FunctionId:       model.MEASURING_FUNCTION_PREFIX + "f2",
+										AspectId:         "a2",
 									},
 								},
 							},
@@ -210,7 +210,7 @@ func testForConstraintGroup(sequential bool, missingResponseForRequestIndex map[
 		cmd := messages.Command{
 			Version:          2,
 			Function:         model.Function{Id: model.MEASURING_FUNCTION_PREFIX + "f1", RdfType: model.SES_ONTOLOGY_MEASURING_FUNCTION},
-			Aspect:           &model.Aspect{Id: "a1"},
+			Aspect:           &model.AspectNode{Id: "a1"},
 			CharacteristicId: example.Rgb,
 			DeviceGroupId:    "dg1",
 			Retries:          0,
@@ -231,7 +231,7 @@ func testForConstraintGroup(sequential bool, missingResponseForRequestIndex map[
 			},
 		})
 
-		time.Sleep(1 * time.Second)
+		time.Sleep(2 * time.Second)
 
 		fetched, completed, failed := mockCamunda.GetStatus()
 

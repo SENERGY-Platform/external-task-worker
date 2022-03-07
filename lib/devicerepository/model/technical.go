@@ -26,8 +26,29 @@ type Hub struct {
 type Content struct {
 	Id                string          `json:"id"`
 	ContentVariable   ContentVariable `json:"content_variable"`
-	Serialization     string          `json:"serialization"`
+	Serialization     Serialization   `json:"serialization"`
 	ProtocolSegmentId string          `json:"protocol_segment_id"`
+}
+
+type Serialization string
+
+const (
+	XML       Serialization = "xml"
+	JSON      Serialization = "json"
+	PlainText Serialization = "plain-text"
+)
+
+func (this Serialization) Valid() bool {
+	switch this {
+	case XML:
+		return true
+	case JSON:
+		return true
+	case PlainText:
+		return true
+	default:
+		return false
+	}
 }
 
 type Type string
@@ -45,10 +66,13 @@ const (
 type ContentVariable struct {
 	Id                   string            `json:"id"`
 	Name                 string            `json:"name"`
+	IsVoid               bool              `json:"is_void"`
 	Type                 Type              `json:"type"`
 	SubContentVariables  []ContentVariable `json:"sub_content_variables"`
 	CharacteristicId     string            `json:"characteristic_id"`
 	Value                interface{}       `json:"value"`
 	SerializationOptions []string          `json:"serialization_options"`
 	UnitReference        string            `json:"unit_reference,omitempty"`
+	FunctionId           string            `json:"function_id,omitempty"`
+	AspectId             string            `json:"aspect_id,omitempty"`
 }

@@ -27,6 +27,14 @@ import (
 	"runtime/debug"
 )
 
+func (this *Marshaller) MarshalV2(service model.Service, protocol model.Protocol, data []MarshallingV2RequestData) (result map[string]string, err error) {
+	return SendMarshalRequest(this.url+"/v2/marshal", MarshallingV2Request{
+		Service:  service,
+		Protocol: protocol,
+		Data:     data,
+	})
+}
+
 func (this *Marshaller) Marshal(characteristicId string, serviceId string, characteristicData interface{}, configurables []Configurable) (result map[string]string, err error) {
 	return SendMarshalRequest(this.url+"/marshal/"+url.PathEscape(serviceId)+"/"+url.PathEscape(characteristicId), MarshallingRequest{
 		Configurables: configurables,
@@ -53,7 +61,7 @@ func (this *Marshaller) MarshalFromServiceAndProtocol(characteristicId string, s
 	})
 }
 
-func SendMarshalRequest(url string, request MarshallingRequest) (result map[string]string, err error) {
+func SendMarshalRequest(url string, request interface{}) (result map[string]string, err error) {
 	body, err := json.Marshal(request)
 	if err != nil {
 		debug.PrintStack()

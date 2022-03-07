@@ -27,6 +27,10 @@ import (
 	"runtime/debug"
 )
 
+func (this *Marshaller) UnmarshalV2(request UnmarshallingV2Request) (characteristicData interface{}, err error) {
+	return SendUnmarshalRequest(this.url+"/v2/unmarshal", request)
+}
+
 func (this *Marshaller) Unmarshal(characteristicId string, serviceId string, message map[string]string, hints []string) (characteristicData interface{}, err error) {
 	return SendUnmarshalRequest(this.url+"/unmarshal/"+url.PathEscape(serviceId)+"/"+url.PathEscape(characteristicId), UnmarshallingRequest{
 		Message:              message,
@@ -53,7 +57,7 @@ func (this *Marshaller) UnmarshalFromServiceAndProtocol(characteristicId string,
 	})
 }
 
-func SendUnmarshalRequest(url string, request UnmarshallingRequest) (characteristicData interface{}, err error) {
+func SendUnmarshalRequest(url string, request interface{}) (characteristicData interface{}, err error) {
 	body, err := json.Marshal(request)
 	if err != nil {
 		debug.PrintStack()

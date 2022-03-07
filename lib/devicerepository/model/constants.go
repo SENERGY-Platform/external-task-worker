@@ -23,16 +23,37 @@ const SES_ONTOLOGY_DEVICE_CLASS = "https://senergy.infai.org/ontology/DeviceClas
 const SES_ONTOLOGY_ASPECT = "https://senergy.infai.org/ontology/Aspect"
 const SES_ONTOLOGY_DEVICE_TYPE = "https://senergy.infai.org/ontology/DeviceType"
 const SES_ONTOLOGY_SERVICE = "https://senergy.infai.org/ontology/Service"
+const SES_ONTOLOGY_CONCEPT = "https://senergy.infai.org/ontology/Concept"
+const SES_ONTOLOGY_CHARACTERISTIC = "https://senergy.infai.org/ontology/Characteristic"
+const SES_ONTOLOGY_COUNT = "https://senergy.infai.org/ontology/Count"
+const SES_ONTOLOGY_LOCATION = "https://senergy.infai.org/ontology/Location"
 
 // Properties
 const SES_ONTOLOGY_HAS_CONCEPT = "https://senergy.infai.org/ontology/hasConcept"
+const SES_ONTOLOGY_HAS_CHARACTERISTIC = "https://senergy.infai.org/ontology/hasCharacteristic"
+const SES_ONTOLOGY_HAS_BASE_CHARACTERISTIC = "https://senergy.infai.org/ontology/hasBaseCharacteristic"
+const SES_ONTOLOGY_HAS_SUB_CHARACTERISTIC = "https://senergy.infai.org/ontology/hasSubCharacteristic"
+const SES_ONTOLOGY_HAS_VALUE_TYPE = "https://senergy.infai.org/ontology/hasValueType"
+const SES_ONTOLOGY_HAS_VALUE = "https://senergy.infai.org/ontology/hasValue"
+const SES_ONTOLOGY_HAS_MIN_VALUE = "https://senergy.infai.org/ontology/hasMinValue"
+const SES_ONTOLOGY_HAS_MAX_VALUE = "https://senergy.infai.org/ontology/hasMaxValue"
 const SES_ONTOLOGY_HAS_DEVICE_CLASS = "https://senergy.infai.org/ontology/hasDeviceClass"
 const SES_ONTOLOGY_HAS_SERVICE = "https://senergy.infai.org/ontology/hasService"
+const SES_ONTOLOGY_HAS_PROTOCOL = "https://senergy.infai.org/ontology/hasProtocol"
 const SES_ONTOLOGY_REFERS_TO = "https://senergy.infai.org/ontology/refersTo"
 const SES_ONTOLOGY_EXPOSES_FUNCTION = "https://senergy.infai.org/ontology/exposesFunction"
+const SES_ONTOLOGY_TOTAL_COUNT = "https://senergy.infai.org/ontology/totalCount"
+const SES_ONTOLOGY_HAS_IMAGE = "https://senergy.infai.org/ontology/hasImage"
+
+const SES_ONTOLOGY_HAS_INTERACTION = "https://senergy.infai.org/ontology/interaction"
 
 const RDFS_LABEL = "http://www.w3.org/2000/01/rdf-schema#label"
 const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+const RDFS_COMMENT = "http://www.w3.org/2000/01/rdf-schema#comment"
+
+// PREFIXES
+const PREFIX_SES = "PREFIX ses: <https://senergy.infai.org/ontology/> "
+const PREFIX_RDF = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>"
 
 const URN_PREFIX = "urn:infai:ses:"
 
