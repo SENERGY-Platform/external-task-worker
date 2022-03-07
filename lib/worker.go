@@ -140,7 +140,7 @@ func (this *CmdWorker) ExecuteNextTasks() (wait bool) {
 func (this *CmdWorker) ExecuteTask(task messages.CamundaExternalTask, caller string) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Println("ERROR: ", r, "\n", debug.Stack())
+			log.Println("ERROR: ", r, "\n", string(debug.Stack()))
 		}
 	}()
 	if this.config.Debug {

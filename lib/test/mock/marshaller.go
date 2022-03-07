@@ -22,6 +22,7 @@ import (
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
+	"github.com/SENERGY-Platform/marshaller/lib/config"
 	marshaller_service_configurables "github.com/SENERGY-Platform/marshaller/lib/configurables"
 	marshaller_service "github.com/SENERGY-Platform/marshaller/lib/marshaller"
 	marshaller_service_model "github.com/SENERGY-Platform/marshaller/lib/marshaller/model"
@@ -43,6 +44,7 @@ func (this *MarshallerMock) New(ctx context.Context, url string) marshaller.Inte
 		panic(err)
 	}
 	this.marshaller = marshaller_service.New(mocks.Converter{}, conceptRepo, mocks.DeviceRepo)
+	this.v2 = marshaller_service_v2.New(config.Config{}, mocks.Converter{}, conceptRepo)
 	return this
 }
 

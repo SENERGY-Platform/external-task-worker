@@ -165,9 +165,11 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 
 	if command.Version >= 3 {
 		result.Metadata.Version = command.Version
-		result.Metadata.OutputPath = command.OutputPath
-		result.Metadata.OutputFunctionId = command.Function.Id
-		result.Metadata.OutputAspectNode = command.Aspect
+		if outputCharacteristicId != "" {
+			result.Metadata.OutputPath = command.OutputPath
+			result.Metadata.OutputFunctionId = command.Function.Id
+			result.Metadata.OutputAspectNode = command.Aspect
+		}
 	}
 
 	return result, err
