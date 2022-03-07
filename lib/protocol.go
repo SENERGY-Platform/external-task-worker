@@ -118,11 +118,21 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 			})
 		}
 		for _, configurable := range command.ConfigurablesV2 {
+			var aspect *model.AspectNode
+			if configurable.AspectNode.Id != "" {
+				temp := configurable.AspectNode
+				aspect = &temp
+			}
+			paths := []string{}
+			if configurable.Path != "" {
+				paths = []string{configurable.Path}
+			}
 			data = append(data, marshaller.MarshallingV2RequestData{
 				Value:            configurable.Value,
 				CharacteristicId: configurable.CharacteristicId,
-				Paths:            []string{configurable.Path},
+				Paths:            paths,
 				FunctionId:       configurable.FunctionId,
+				AspectNode:       aspect,
 			})
 		}
 		marshalledInput, err = this.marshaller.MarshalV2(*service, *protocol, data)
