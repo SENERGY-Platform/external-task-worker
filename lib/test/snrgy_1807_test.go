@@ -656,6 +656,474 @@ func TestCommandWithConfigurables(t *testing.T) {
 	}
 }
 
+func TestGroupCommand(t *testing.T) {
+	util.TimeNow = func() time.Time {
+		return time.Time{}
+	}
+	config, err := util.LoadConfig("../../config.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	config.CompletionStrategy = util.OPTIMISTIC
+	config.CamundaWorkerTimeout = 100
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	mockCamunda := &mock.CamundaMock{}
+	mockCamunda.Init()
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
+
+	time.Sleep(1 * time.Second)
+
+	//populate repository
+	device1 := model.Device{
+		Id:           "device_1",
+		Name:         "d1",
+		DeviceTypeId: "dt1",
+		LocalId:      "d1u",
+	}
+	mock.Repo.RegisterDevice(device1)
+
+	device2 := model.Device{
+		Id:           "device_2",
+		Name:         "d1",
+		DeviceTypeId: "dt1",
+		LocalId:      "d1u",
+	}
+	mock.Repo.RegisterDevice(device2)
+
+	device3 := model.Device{
+		Id:           "device_3",
+		Name:         "d1",
+		DeviceTypeId: "dt2",
+		LocalId:      "d1u",
+	}
+	mock.Repo.RegisterDevice(device3)
+
+	mock.Repo.RegisterDeviceGroup(model.DeviceGroup{
+		Id:   "dg1",
+		Name: "dg1",
+		Criteria: []model.DeviceGroupFilterCriteria{
+			{FunctionId: model.MEASURING_FUNCTION_PREFIX + "f1", AspectId: "a1", Interaction: model.REQUEST},
+		},
+		DeviceIds: []string{"device_1", "device_2", "device_3"},
+	})
+
+	protocol := model.Protocol{
+		Id:               "p1",
+		Name:             "protocol1",
+		Handler:          "protocol1",
+		ProtocolSegments: []model.ProtocolSegment{{Id: "ms1", Name: "body"}},
+	}
+	mock.Repo.RegisterProtocol(protocol)
+
+	service1 := model.Service{
+		Id:          "service_1",
+		Name:        "s1",
+		LocalId:     "s1u",
+		ProtocolId:  "p1",
+		Interaction: model.REQUEST,
+		Inputs: []model.Content{
+			{
+				Id: "metrics",
+				ContentVariable: model.ContentVariable{
+					Id:   "metrics",
+					Name: "metrics",
+					Type: model.Structure,
+					SubContentVariables: []model.ContentVariable{
+						{
+							Id:               "level",
+							Name:             "level",
+							Type:             model.String,
+							CharacteristicId: example.Hex,
+							FunctionId:       model.CONTROLLING_FUNCTION_PREFIX + "f1",
+							AspectId:         "a1",
+						},
+						{
+							Id:               "duration",
+							Name:             "duration",
+							Type:             model.Integer,
+							CharacteristicId: characteristics.Seconds,
+							FunctionId:       model.CONTROLLING_FUNCTION_PREFIX + "f3",
+							AspectId:         "a3",
+							Value:            10,
+						},
+					},
+				},
+				Serialization:     "json",
+				ProtocolSegmentId: "ms1",
+			},
+		},
+	}
+
+	service2 := model.Service{
+		Id:          "service_2",
+		Name:        "s2",
+		LocalId:     "s2u",
+		ProtocolId:  "p1",
+		Interaction: model.REQUEST,
+		Inputs: []model.Content{
+			{
+				Id: "metrics",
+				ContentVariable: model.ContentVariable{
+					Id:   "metrics",
+					Name: "metrics",
+					Type: model.Structure,
+					SubContentVariables: []model.ContentVariable{
+						{
+							Id:               "level",
+							Name:             "level",
+							Type:             model.String,
+							CharacteristicId: example.Hex,
+							FunctionId:       model.CONTROLLING_FUNCTION_PREFIX + "f1",
+							AspectId:         "a1",
+						},
+					},
+				},
+				Serialization:     "json",
+				ProtocolSegmentId: "ms1",
+			},
+		},
+	}
+
+	service3 := model.Service{
+		Id:          "service_3",
+		Name:        "s3",
+		LocalId:     "s3u",
+		ProtocolId:  "p1",
+		Interaction: model.REQUEST,
+		Inputs: []model.Content{
+			{
+				Id: "metrics",
+				ContentVariable: model.ContentVariable{
+					Id:   "metrics",
+					Name: "metrics",
+					Type: model.Structure,
+					SubContentVariables: []model.ContentVariable{
+						{
+							Id:               "level",
+							Name:             "level",
+							Type:             model.String,
+							CharacteristicId: example.Hex,
+							FunctionId:       model.CONTROLLING_FUNCTION_PREFIX + "f1",
+							AspectId:         "a1",
+						},
+					},
+				},
+				Serialization:     "json",
+				ProtocolSegmentId: "ms1",
+			},
+		},
+	}
+
+	mock.Repo.RegisterDeviceType(model.DeviceType{
+		Id:            "dt1",
+		Name:          "dt1",
+		DeviceClassId: "dc1",
+		Services: []model.Service{
+			service1,
+			service2,
+		},
+	})
+
+	mock.Repo.RegisterDeviceType(model.DeviceType{
+		Id:            "dt2",
+		Name:          "dt2",
+		DeviceClassId: "dc1",
+		Services: []model.Service{
+			service3,
+			{
+				Id:          "service_4",
+				Name:        "s4",
+				LocalId:     "s4u",
+				ProtocolId:  "p1",
+				Interaction: model.REQUEST,
+				Inputs: []model.Content{
+					{
+						Id: "metrics",
+						ContentVariable: model.ContentVariable{
+							Id:   "metrics",
+							Name: "metrics",
+							Type: model.Structure,
+							SubContentVariables: []model.ContentVariable{
+								{
+									Id:               "level",
+									Name:             "level",
+									Type:             model.Integer,
+									CharacteristicId: example.Hex,
+									FunctionId:       model.CONTROLLING_FUNCTION_PREFIX + "f2",
+									AspectId:         "a2",
+								},
+							},
+						},
+						Serialization:     "json",
+						ProtocolSegmentId: "ms1",
+					},
+				},
+			},
+		},
+	})
+
+	cmd1 := messages.Command{
+		Version:          3,
+		Function:         model.Function{Id: model.CONTROLLING_FUNCTION_PREFIX + "f1"},
+		Aspect:           nil,
+		CharacteristicId: example.Rgb,
+		DeviceGroupId:    "dg1",
+		Input: map[string]float64{
+			"r": 200,
+			"g": 50,
+			"b": 0,
+		},
+	}
+
+	cmdMsg1, err := json.Marshal(cmd1)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	cmd2 := messages.Command{
+		Version:          3,
+		Function:         model.Function{Id: model.CONTROLLING_FUNCTION_PREFIX + "f1"},
+		CharacteristicId: example.Hex,
+		DeviceGroupId:    "dg1",
+		Input:            "#ff0064",
+	}
+
+	cmdMsg2, err := json.Marshal(cmd2)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	mockCamunda.AddTask(messages.CamundaExternalTask{
+		Id:       "1",
+		TenantId: "user",
+		Variables: map[string]messages.CamundaVariable{
+			util.CAMUNDA_VARIABLES_PAYLOAD: {
+				Value: string(cmdMsg1),
+			},
+		},
+	})
+
+	mockCamunda.AddTask(messages.CamundaExternalTask{
+		Id:       "2",
+		TenantId: "user",
+		Variables: map[string]messages.CamundaVariable{
+			util.CAMUNDA_VARIABLES_PAYLOAD: {
+				Value: string(cmdMsg1),
+			},
+			"inputs.b": {Value: "255"},
+		},
+	})
+
+	mockCamunda.AddTask(messages.CamundaExternalTask{
+		Id:       "3",
+		TenantId: "user",
+		Variables: map[string]messages.CamundaVariable{
+			util.CAMUNDA_VARIABLES_PAYLOAD: {
+				Value: string(cmdMsg2),
+			},
+		},
+	})
+
+	mockCamunda.AddTask(messages.CamundaExternalTask{
+		Id:       "4",
+		TenantId: "user",
+		Variables: map[string]messages.CamundaVariable{
+			util.CAMUNDA_VARIABLES_PAYLOAD: {
+				Value: string(cmdMsg2),
+			},
+			"inputs": {Value: "\"#ff00ff\""},
+		},
+	})
+
+	time.Sleep(1 * time.Second)
+
+	createExpected := func(taskIdPrefix string, characteristicId string, level string) []messages.ProtocolMsg {
+		return []messages.ProtocolMsg{
+			{
+				Request: messages.ProtocolRequest{
+					Input: map[string]string{"body": "{\"duration\":10,\"level\":\"" + level + "\"}"},
+				},
+				Response: messages.ProtocolResponse{},
+				TaskInfo: messages.TaskInfo{
+					WorkerId:            "workerid",
+					TaskId:              taskIdPrefix + "_0_0",
+					ProcessInstanceId:   "",
+					ProcessDefinitionId: "",
+					CompletionStrategy:  "optimistic",
+					Time:                "-62135596800",
+					TenantId:            "user",
+				},
+				Metadata: messages.Metadata{
+					Version:              3,
+					Device:               device1,
+					Service:              service1,
+					Protocol:             protocol,
+					OutputPath:           "",
+					OutputFunctionId:     "",
+					OutputAspectNode:     nil,
+					InputCharacteristic:  characteristicId,
+					OutputCharacteristic: "",
+					ContentVariableHints: nil,
+					ResponseTo:           "response",
+					ErrorTo:              "errors",
+				},
+				Trace: nil,
+			},
+			{
+				Request: messages.ProtocolRequest{
+					Input: map[string]string{"body": "{\"level\":\"" + level + "\"}"},
+				},
+				Response: messages.ProtocolResponse{},
+				TaskInfo: messages.TaskInfo{
+					WorkerId:            "workerid",
+					TaskId:              taskIdPrefix + "_0_1",
+					ProcessInstanceId:   "",
+					ProcessDefinitionId: "",
+					CompletionStrategy:  "optimistic",
+					Time:                "-62135596800",
+					TenantId:            "user",
+				},
+				Metadata: messages.Metadata{
+					Version:              3,
+					Device:               device1,
+					Service:              service2,
+					Protocol:             protocol,
+					OutputPath:           "",
+					OutputFunctionId:     "",
+					OutputAspectNode:     nil,
+					InputCharacteristic:  characteristicId,
+					OutputCharacteristic: "",
+					ContentVariableHints: nil,
+					ResponseTo:           "response",
+					ErrorTo:              "errors",
+				},
+				Trace: nil,
+			},
+			{
+				Request: messages.ProtocolRequest{
+					Input: map[string]string{"body": "{\"duration\":10,\"level\":\"" + level + "\"}"},
+				},
+				Response: messages.ProtocolResponse{},
+				TaskInfo: messages.TaskInfo{
+					WorkerId:            "workerid",
+					TaskId:              taskIdPrefix + "_1_0",
+					ProcessInstanceId:   "",
+					ProcessDefinitionId: "",
+					CompletionStrategy:  "optimistic",
+					Time:                "-62135596800",
+					TenantId:            "user",
+				},
+				Metadata: messages.Metadata{
+					Version:              3,
+					Device:               device2,
+					Service:              service1,
+					Protocol:             protocol,
+					OutputPath:           "",
+					OutputFunctionId:     "",
+					OutputAspectNode:     nil,
+					InputCharacteristic:  characteristicId,
+					OutputCharacteristic: "",
+					ContentVariableHints: nil,
+					ResponseTo:           "response",
+					ErrorTo:              "errors",
+				},
+				Trace: nil,
+			},
+			{
+				Request: messages.ProtocolRequest{
+					Input: map[string]string{"body": "{\"level\":\"" + level + "\"}"},
+				},
+				Response: messages.ProtocolResponse{},
+				TaskInfo: messages.TaskInfo{
+					WorkerId:            "workerid",
+					TaskId:              taskIdPrefix + "_1_1",
+					ProcessInstanceId:   "",
+					ProcessDefinitionId: "",
+					CompletionStrategy:  "optimistic",
+					Time:                "-62135596800",
+					TenantId:            "user",
+				},
+				Metadata: messages.Metadata{
+					Version:              3,
+					Device:               device2,
+					Service:              service2,
+					Protocol:             protocol,
+					OutputPath:           "",
+					OutputFunctionId:     "",
+					OutputAspectNode:     nil,
+					InputCharacteristic:  characteristicId,
+					OutputCharacteristic: "",
+					ContentVariableHints: nil,
+					ResponseTo:           "response",
+					ErrorTo:              "errors",
+				},
+				Trace: nil,
+			},
+			{
+				Request: messages.ProtocolRequest{
+					Input: map[string]string{"body": "{\"level\":\"" + level + "\"}"},
+				},
+				Response: messages.ProtocolResponse{},
+				TaskInfo: messages.TaskInfo{
+					WorkerId:            "workerid",
+					TaskId:              taskIdPrefix + "_2_0",
+					ProcessInstanceId:   "",
+					ProcessDefinitionId: "",
+					CompletionStrategy:  "optimistic",
+					Time:                "-62135596800",
+					TenantId:            "user",
+				},
+				Metadata: messages.Metadata{
+					Version:              3,
+					Device:               device3,
+					Service:              service3,
+					Protocol:             protocol,
+					OutputPath:           "",
+					OutputFunctionId:     "",
+					OutputAspectNode:     nil,
+					InputCharacteristic:  characteristicId,
+					OutputCharacteristic: "",
+					ContentVariableHints: nil,
+					ResponseTo:           "response",
+					ErrorTo:              "errors",
+				},
+				Trace: nil,
+			},
+		}
+	}
+
+	expectedProtocolMessages := []messages.ProtocolMsg{}
+
+	expectedProtocolMessages = append(expectedProtocolMessages, createExpected("1", example.Rgb, "#c83200")...)
+	expectedProtocolMessages = append(expectedProtocolMessages, createExpected("2", example.Rgb, "#c832ff")...)
+	expectedProtocolMessages = append(expectedProtocolMessages, createExpected("3", example.Hex, "#ff0064")...)
+	expectedProtocolMessages = append(expectedProtocolMessages, createExpected("4", example.Hex, "#ff00ff")...)
+
+	protocolMessageStrings := mock.Kafka.GetProduced("protocol1")
+
+	actualProtocolMessages := []messages.ProtocolMsg{}
+
+	for _, message := range protocolMessageStrings {
+		var temp messages.ProtocolMsg
+		json.Unmarshal([]byte(message), &temp)
+		temp.Trace = nil
+		actualProtocolMessages = append(actualProtocolMessages, temp)
+	}
+
+	sort.Slice(actualProtocolMessages, func(i, j int) bool {
+		return actualProtocolMessages[i].TaskInfo.TaskId < actualProtocolMessages[j].TaskInfo.TaskId
+	})
+
+	if !reflect.DeepEqual(normalize(actualProtocolMessages), normalize(expectedProtocolMessages)) {
+		actualJson, _ := json.Marshal(actualProtocolMessages)
+		expectedJson, _ := json.Marshal(expectedProtocolMessages)
+		t.Error("\n", string(actualJson), "\n", string(expectedJson))
+	}
+}
+
 func TestResponse(t *testing.T) {
 	t.Error("TODO")
 }
@@ -664,10 +1132,18 @@ func TestResponseWithConfigurables(t *testing.T) {
 	t.Error("TODO")
 }
 
-func TestGroupCommand(t *testing.T) {
+func TestGroupResponse(t *testing.T) {
 	t.Error("TODO")
 }
 
-func TestGroupResponse(t *testing.T) {
-	t.Error("TODO")
+func normalize(in interface{}) (out interface{}) {
+	temp, err := json.Marshal(in)
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(temp, &out)
+	if err != nil {
+		panic(err)
+	}
+	return
 }

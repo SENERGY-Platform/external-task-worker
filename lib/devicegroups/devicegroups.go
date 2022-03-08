@@ -320,14 +320,17 @@ func (this *DeviceGroups) getFilteredServices(command messages.Command, services
 		if command.Aspect != nil {
 			aspect = *command.Aspect
 		}
-		if anyContentMatchesCriteria(contents, model.DeviceGroupFilterCriteria{FunctionId: command.Function.Id, AspectId: aspect.Id}, aspect) &&
-			!(isMeasuringFunctionId(command.Function.Id) && service.Interaction == model.EVENT) {
+		matchesCriteria := anyContentMatchesCriteria(contents, model.DeviceGroupFilterCriteria{FunctionId: command.Function.Id, AspectId: aspect.Id}, aspect)
+		if matchesCriteria && !(isMeasuringFunctionId(command.Function.Id) && service.Interaction == model.EVENT) {
 			serviceIndex[service.Id] = service
 		}
 	}
 	for _, service := range serviceIndex {
 		result = append(result, service)
 	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Id < result[j].Id
+	})
 	return result
 }
 

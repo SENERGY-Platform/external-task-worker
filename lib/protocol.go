@@ -109,12 +109,13 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 		}
 	} else {
 		data := []marshaller.MarshallingV2RequestData{}
-		if len(command.InputPaths) > 0 {
+		if len(command.InputPaths) > 0 || isControllingFunction(command.Function) {
 			data = append(data, marshaller.MarshallingV2RequestData{
 				Value:            command.Input,
 				CharacteristicId: inputCharacteristicId,
 				Paths:            command.InputPaths,
 				FunctionId:       command.Function.Id,
+				AspectNode:       command.Aspect,
 			})
 		}
 		for _, configurable := range command.ConfigurablesV2 {
@@ -189,7 +190,7 @@ func isControllingFunction(function model.Function) bool {
 	if function.RdfType == model.SES_ONTOLOGY_CONTROLLING_FUNCTION {
 		return true
 	}
-	if strings.HasPrefix(function.Id, "urn:infai:ses:controlling-function:") {
+	if strings.HasPrefix(function.Id, model.CONTROLLING_FUNCTION_PREFIX) {
 		return true
 	}
 	return false
