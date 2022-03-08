@@ -1321,7 +1321,230 @@ func TestResponse(t *testing.T) {
 }
 
 func TestResponseWithConfigurables(t *testing.T) {
-	t.Error("TODO")
+	util.TimeNow = func() time.Time {
+		return time.Time{}
+	}
+	config, err := util.LoadConfig("../../config.json")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	config.GroupScheduler = util.PARALLEL
+	config.CompletionStrategy = util.PESSIMISTIC
+	config.CamundaWorkerTimeout = 100
+	config.HttpCommandConsumerPort = ""
+	mock.CleanKafkaMock()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	mockCamunda := &mock.CamundaMock{}
+	mockCamunda.Init()
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
+
+	time.Sleep(1 * time.Second)
+
+	//populate repository
+	mock.Repo.RegisterDevice(model.Device{
+		Id:           "device_1",
+		Name:         "d1",
+		DeviceTypeId: "dt1",
+		LocalId:      "d1u",
+	})
+
+	mock.Repo.RegisterProtocol(model.Protocol{
+		Id:               "p1",
+		Name:             "protocol1",
+		Handler:          "protocol1",
+		ProtocolSegments: []model.ProtocolSegment{{Id: "ms1", Name: "body"}},
+	})
+
+	mock.Repo.RegisterService(model.Service{
+		Id:         "service_1",
+		Name:       "s1",
+		LocalId:    "s1u",
+		ProtocolId: "p1",
+		Inputs: []model.Content{
+			{
+				Id: "metrics",
+				ContentVariable: model.ContentVariable{
+					Id:   "metrics",
+					Name: "metrics",
+					Type: model.Structure,
+					SubContentVariables: []model.ContentVariable{
+						{
+							Id:               "duration",
+							Name:             "duration",
+							Type:             model.Integer,
+							CharacteristicId: characteristics.Seconds,
+							FunctionId:       "f-duration",
+							AspectId:         "a-duration",
+						},
+					},
+				},
+				Serialization:     "json",
+				ProtocolSegmentId: "ms1",
+			},
+		},
+		Outputs: []model.Content{
+			{
+				Id: "metrics",
+				ContentVariable: model.ContentVariable{
+					Id:   "metrics",
+					Name: "metrics",
+					Type: model.Structure,
+					SubContentVariables: []model.ContentVariable{
+						{
+							Id:               "level",
+							Name:             "level",
+							Type:             model.String,
+							CharacteristicId: example.Hex,
+							FunctionId:       model.MEASURING_FUNCTION_PREFIX + "f1",
+							AspectId:         "a1",
+						},
+						{
+							Id:               "duration",
+							Name:             "duration",
+							Type:             model.Integer,
+							CharacteristicId: characteristics.Seconds,
+							FunctionId:       model.MEASURING_FUNCTION_PREFIX + "f2",
+							AspectId:         "time",
+							Value:            13,
+						},
+					},
+				},
+				Serialization:     "json",
+				ProtocolSegmentId: "ms1",
+			},
+		},
+	})
+
+	cmd1 := messages.Command{
+		Version:          3,
+		CharacteristicId: example.Rgb,
+		DeviceId:         "device_1",
+		ServiceId:        "service_1",
+		ProtocolId:       "p1",
+		Aspect:           &model.AspectNode{Id: "parent", DescendentIds: []string{"a1"}},
+		Function:         model.Function{Id: model.MEASURING_FUNCTION_PREFIX + "f1"},
+		OutputPath:       "metrics.level",
+		ConfigurablesV2: []marshaller.ConfigurableV2{
+			{
+				Path:             "metrics.duration",
+				CharacteristicId: characteristics.Minutes,
+				Value:            2,
+			},
+		},
+	}
+
+	cmdMsg1, err := json.Marshal(cmd1)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	cmd2 := messages.Command{
+		Version:          3,
+		CharacteristicId: example.Hex,
+		DeviceId:         "device_1",
+		ServiceId:        "service_1",
+		ProtocolId:       "p1",
+		Aspect:           &model.AspectNode{Id: "parent", DescendentIds: []string{"a1"}},
+		Function:         model.Function{Id: model.MEASURING_FUNCTION_PREFIX + "f1"},
+		ConfigurablesV2: []marshaller.ConfigurableV2{
+			{
+				Path:             "metrics.duration",
+				CharacteristicId: characteristics.Minutes,
+				Value:            2,
+			},
+		},
+	}
+
+	cmdMsg2, err := json.Marshal(cmd2)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	mockCamunda.AddTask(messages.CamundaExternalTask{
+		Id: "1",
+		Variables: map[string]messages.CamundaVariable{
+			util.CAMUNDA_VARIABLES_PAYLOAD: {
+				Value: string(cmdMsg1),
+			},
+		},
+	})
+
+	time.Sleep(1 * time.Second)
+
+	mockCamunda.AddTask(messages.CamundaExternalTask{
+		Id: "2",
+		Variables: map[string]messages.CamundaVariable{
+			util.CAMUNDA_VARIABLES_PAYLOAD: {
+				Value: string(cmdMsg2),
+			},
+		},
+	})
+
+	time.Sleep(1 * time.Second)
+
+	protocolMessageStrings := mock.Kafka.GetProduced("protocol1")
+
+	if len(protocolMessageStrings) != 2 {
+		t.Error(protocolMessageStrings)
+		return
+	}
+
+	for _, message := range protocolMessageStrings {
+		msg := messages.ProtocolMsg{}
+		err = json.Unmarshal([]byte(message), &msg)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		if msg.Request.Input["body"] != `{"duration":120}` {
+			t.Error(msg.Request.Input["body"])
+		}
+		msg.Response.Output = map[string]string{
+			"body": "{\"level\":\"#c83200\"}",
+		}
+		resp, err := json.Marshal(msg)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		mock.Kafka.Produce(config.ResponseTopic, string(resp))
+		time.Sleep(1 * time.Second)
+	}
+
+	fetched, completed, failed := mockCamunda.GetStatus()
+
+	if len(fetched) != 0 || len(failed) != 0 || len(completed) != 2 {
+		t.Error("fetched:", fetched)
+		t.Error("failed:", failed)
+		t.Error("completed:", completed)
+		t.Error(len(fetched), len(failed), len(completed))
+		return
+	}
+
+	result := []string{}
+
+	for _, cmd := range completed {
+		temp, err := json.Marshal(cmd)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		result = append(result, string(temp))
+	}
+	sort.Strings(result)
+
+	expected := []string{`["#c83200"]`, `[{"b":0,"g":50,"r":200}]`}
+	sort.Strings(expected)
+
+	if !reflect.DeepEqual(expected, result) {
+		t.Error("\n", result, "\n", expected)
+	}
 }
 
 func TestGroupResponse(t *testing.T) {
