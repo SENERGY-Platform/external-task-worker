@@ -16,6 +16,12 @@
 
 package test
 
+import (
+	"io"
+	"runtime/debug"
+	"strings"
+)
+
 var example = struct {
 	Brightness string
 	Lux        string
@@ -54,4 +60,18 @@ var color = struct {
 	RgbG: "urn:infai:ses:characteristic:5ef27837-4aca-43ad-b8f6-4d95cf9ed99e",
 	RgbB: "urn:infai:ses:characteristic:590af9ef-3a5e-4edb-abab-177cb1320b17",
 	Hex:  "urn:infai:ses:characteristic:0fc343ce-4627-4c88-b1e0-d3ed29754af8",
+}
+
+//helper to find log creation
+//example: log.SetOutput(StackWriter{Out: log.Writer(), Compare: "ERROR:  json: Unmarshal(nil *model.AspectNode)"})
+type StackWriter struct {
+	Out     io.Writer
+	Compare string
+}
+
+func (s StackWriter) Write(p []byte) (n int, err error) {
+	if strings.Contains(string(p), s.Compare) {
+		debug.PrintStack()
+	}
+	return s.Out.Write(p)
 }

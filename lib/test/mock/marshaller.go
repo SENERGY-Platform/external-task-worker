@@ -119,15 +119,15 @@ func (this *MarshallerMock) UnmarshalV2(request marshaller.UnmarshallingV2Reques
 	if err != nil {
 		return result, err
 	}
-	var mockAspect *marshaller_service_model.AspectNode
+	var mockAspect marshaller_service_model.AspectNode
 	if request.AspectNode.Id != "" {
-		err = jsonCast(request.AspectNode, mockAspect)
+		err = jsonCast(request.AspectNode, &mockAspect)
 		if err != nil {
 			return result, err
 		}
 	}
 	if request.Path == "" {
-		paths := this.v2.GetOutputPaths(mockService, request.FunctionId, mockAspect)
+		paths := this.v2.GetOutputPaths(mockService, request.FunctionId, &mockAspect)
 		if len(paths) > 0 {
 			log.Println("WARNING: only first path found by FunctionId and AspectNode is used for Unmarshal")
 		}
