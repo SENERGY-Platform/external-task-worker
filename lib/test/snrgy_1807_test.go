@@ -1548,7 +1548,330 @@ func TestResponseWithConfigurables(t *testing.T) {
 }
 
 func TestGroupResponse(t *testing.T) {
-	t.Error("TODO")
+	util.TimeNow = func() time.Time {
+		return time.Time{}
+	}
+	config, err := util.LoadConfig("../../config.json")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	config.CompletionStrategy = util.PESSIMISTIC
+	config.CamundaWorkerTimeout = 100
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	mockCamunda := &mock.CamundaMock{}
+	mockCamunda.Init()
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
+
+	time.Sleep(1 * time.Second)
+
+	//populate repository
+	device1 := model.Device{
+		Id:           "device_1",
+		Name:         "d1",
+		DeviceTypeId: "dt1",
+		LocalId:      "d1u",
+	}
+	mock.Repo.RegisterDevice(device1)
+
+	device2 := model.Device{
+		Id:           "device_2",
+		Name:         "d1",
+		DeviceTypeId: "dt1",
+		LocalId:      "d1u",
+	}
+	mock.Repo.RegisterDevice(device2)
+
+	device3 := model.Device{
+		Id:           "device_3",
+		Name:         "d1",
+		DeviceTypeId: "dt2",
+		LocalId:      "d1u",
+	}
+	mock.Repo.RegisterDevice(device3)
+
+	mock.Repo.RegisterDeviceGroup(model.DeviceGroup{
+		Id:   "dg1",
+		Name: "dg1",
+		Criteria: []model.DeviceGroupFilterCriteria{
+			{FunctionId: model.MEASURING_FUNCTION_PREFIX + "f1", AspectId: "a1", Interaction: model.REQUEST},
+		},
+		DeviceIds: []string{"device_1", "device_2", "device_3"},
+	})
+
+	protocol := model.Protocol{
+		Id:               "p1",
+		Name:             "protocol1",
+		Handler:          "protocol1",
+		ProtocolSegments: []model.ProtocolSegment{{Id: "ms1", Name: "body"}},
+	}
+	mock.Repo.RegisterProtocol(protocol)
+
+	service1 := model.Service{
+		Id:          "service_1",
+		Name:        "s1",
+		LocalId:     "s1u",
+		ProtocolId:  "p1",
+		Interaction: model.REQUEST,
+		Outputs: []model.Content{
+			{
+				Id: "metrics",
+				ContentVariable: model.ContentVariable{
+					Id:   "metrics",
+					Name: "metrics",
+					Type: model.Structure,
+					SubContentVariables: []model.ContentVariable{
+						{
+							Id:               "level",
+							Name:             "level",
+							Type:             model.String,
+							CharacteristicId: example.Hex,
+							FunctionId:       model.MEASURING_FUNCTION_PREFIX + "f1",
+							AspectId:         "a1",
+						},
+						{
+							Id:               "duration",
+							Name:             "duration",
+							Type:             model.Integer,
+							CharacteristicId: characteristics.Seconds,
+							FunctionId:       model.MEASURING_FUNCTION_PREFIX + "f3",
+							AspectId:         "a3",
+							Value:            10,
+						},
+					},
+				},
+				Serialization:     "json",
+				ProtocolSegmentId: "ms1",
+			},
+		},
+	}
+
+	service2 := model.Service{
+		Id:          "service_2",
+		Name:        "s2",
+		LocalId:     "s2u",
+		ProtocolId:  "p1",
+		Interaction: model.REQUEST,
+		Outputs: []model.Content{
+			{
+				Id: "metrics",
+				ContentVariable: model.ContentVariable{
+					Id:   "metrics",
+					Name: "metrics",
+					Type: model.Structure,
+					SubContentVariables: []model.ContentVariable{
+						{
+							Id:               "level2",
+							Name:             "level2",
+							Type:             model.String,
+							CharacteristicId: example.Hex,
+							FunctionId:       model.MEASURING_FUNCTION_PREFIX + "f1",
+							AspectId:         "a1",
+						},
+					},
+				},
+				Serialization:     "json",
+				ProtocolSegmentId: "ms1",
+			},
+		},
+	}
+
+	service3 := model.Service{
+		Id:          "service_3",
+		Name:        "s3",
+		LocalId:     "s3u",
+		ProtocolId:  "p1",
+		Interaction: model.REQUEST,
+		Outputs: []model.Content{
+			{
+				Id: "metrics",
+				ContentVariable: model.ContentVariable{
+					Id:   "metrics",
+					Name: "metrics",
+					Type: model.Structure,
+					SubContentVariables: []model.ContentVariable{
+						{
+							Id:               "level3",
+							Name:             "level3",
+							Type:             model.String,
+							CharacteristicId: example.Hex,
+							FunctionId:       model.MEASURING_FUNCTION_PREFIX + "f1",
+							AspectId:         "a1",
+						},
+					},
+				},
+				Serialization:     "json",
+				ProtocolSegmentId: "ms1",
+			},
+		},
+	}
+
+	mock.Repo.RegisterDeviceType(model.DeviceType{
+		Id:            "dt1",
+		Name:          "dt1",
+		DeviceClassId: "dc1",
+		Services: []model.Service{
+			service1,
+			service2,
+		},
+	})
+
+	mock.Repo.RegisterDeviceType(model.DeviceType{
+		Id:            "dt2",
+		Name:          "dt2",
+		DeviceClassId: "dc1",
+		Services: []model.Service{
+			service3,
+			{
+				Id:          "service_4",
+				Name:        "s4",
+				LocalId:     "s4u",
+				ProtocolId:  "p1",
+				Interaction: model.REQUEST,
+				Outputs: []model.Content{
+					{
+						Id: "metrics",
+						ContentVariable: model.ContentVariable{
+							Id:   "metrics",
+							Name: "metrics",
+							Type: model.Structure,
+							SubContentVariables: []model.ContentVariable{
+								{
+									Id:               "level",
+									Name:             "level",
+									Type:             model.Integer,
+									CharacteristicId: example.Hex,
+									FunctionId:       model.MEASURING_FUNCTION_PREFIX + "f2",
+									AspectId:         "a2",
+								},
+							},
+						},
+						Serialization:     "json",
+						ProtocolSegmentId: "ms1",
+					},
+				},
+			},
+		},
+	})
+
+	cmd1 := messages.Command{
+		Version:          3,
+		Function:         model.Function{Id: model.MEASURING_FUNCTION_PREFIX + "f1"},
+		Aspect:           &model.AspectNode{Id: "a1"},
+		CharacteristicId: example.Rgb,
+		DeviceGroupId:    "dg1",
+	}
+
+	cmdMsg1, err := json.Marshal(cmd1)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	cmd2 := messages.Command{
+		Version:          3,
+		Function:         model.Function{Id: model.MEASURING_FUNCTION_PREFIX + "f1"},
+		CharacteristicId: example.Hex,
+		DeviceGroupId:    "dg1",
+		Aspect:           &model.AspectNode{Id: "parent", DescendentIds: []string{"a1"}},
+	}
+
+	cmdMsg2, err := json.Marshal(cmd2)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	mockCamunda.AddTask(messages.CamundaExternalTask{
+		Id:       "1",
+		TenantId: "user",
+		Variables: map[string]messages.CamundaVariable{
+			util.CAMUNDA_VARIABLES_PAYLOAD: {
+				Value: string(cmdMsg1),
+			},
+		},
+	})
+
+	mockCamunda.AddTask(messages.CamundaExternalTask{
+		Id:       "2",
+		TenantId: "user",
+		Variables: map[string]messages.CamundaVariable{
+			util.CAMUNDA_VARIABLES_PAYLOAD: {
+				Value: string(cmdMsg2),
+			},
+		},
+	})
+
+	time.Sleep(1 * time.Second)
+
+	protocolMessageStrings := mock.Kafka.GetProduced("protocol1")
+
+	for _, message := range protocolMessageStrings {
+		msg := messages.ProtocolMsg{}
+		err = json.Unmarshal([]byte(message), &msg)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		switch msg.Metadata.Service.Id {
+		case "service_1":
+			msg.Response.Output = map[string]string{
+				"body": `{"level":"#c83200", "duration":42}`,
+			}
+		case "service_2":
+			msg.Response.Output = map[string]string{
+				"body": `{"level2":"#c83200"}`,
+			}
+		case "service_3":
+			msg.Response.Output = map[string]string{
+				"body": `{"level3":"#c83200"}`,
+			}
+		default:
+			t.Error("unexpected service id: ", msg.Metadata.Service.Id)
+		}
+
+		resp, err := json.Marshal(msg)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		mock.Kafka.Produce(config.ResponseTopic, string(resp))
+		time.Sleep(1 * time.Second)
+	}
+
+	time.Sleep(1 * time.Second)
+
+	fetched, completed, failed := mockCamunda.GetStatus()
+
+	if len(fetched) != 0 || len(failed) != 0 || len(completed) != 2 {
+		t.Error("fetched:", fetched)
+		t.Error("failed:", failed)
+		t.Error("completed:", completed)
+		t.Error(len(fetched), len(failed), len(completed))
+		return
+	}
+
+	result := []string{}
+
+	for _, cmd := range completed {
+		temp, err := json.Marshal(cmd)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		result = append(result, string(temp))
+	}
+	sort.Strings(result)
+
+	expected := []string{`["#c83200","#c83200","#c83200","#c83200","#c83200"]`, `[{"b":0,"g":50,"r":200},{"b":0,"g":50,"r":200},{"b":0,"g":50,"r":200},{"b":0,"g":50,"r":200},{"b":0,"g":50,"r":200}]`}
+	sort.Strings(expected)
+
+	if !reflect.DeepEqual(expected, result) {
+		t.Error("\n", result, "\n", expected)
+	}
 }
 
 func normalize(in interface{}) (out interface{}) {

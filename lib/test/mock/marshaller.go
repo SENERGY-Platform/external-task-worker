@@ -128,8 +128,8 @@ func (this *MarshallerMock) UnmarshalV2(request marshaller.UnmarshallingV2Reques
 	}
 	if request.Path == "" {
 		paths := this.v2.GetOutputPaths(mockService, request.FunctionId, &mockAspect)
-		if len(paths) > 0 {
-			log.Println("WARNING: only first path found by FunctionId and AspectNode is used for Unmarshal")
+		if len(paths) > 1 {
+			log.Println("WARNING: only first path found by FunctionId and AspectNode is used for Unmarshal:", paths)
 		}
 		if len(paths) == 0 {
 			return result, errors.New("no output path found for criteria")
