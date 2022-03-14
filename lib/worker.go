@@ -256,7 +256,7 @@ func (this *CmdWorker) HandleTaskResponse(msg string) (err error) {
 	}
 
 	var output interface{}
-	if message.Metadata.OutputCharacteristic != model.NullCharacteristic.Id {
+	if message.Metadata.OutputCharacteristic != model.NullCharacteristic.Id && message.Metadata.OutputCharacteristic != "" {
 		if message.Metadata.Version < 3 {
 			output, err = this.marshaller.UnmarshalFromServiceAndProtocol(message.Metadata.OutputCharacteristic, message.Metadata.Service, message.Metadata.Protocol, message.Response.Output, message.Metadata.ContentVariableHints)
 		} else {
