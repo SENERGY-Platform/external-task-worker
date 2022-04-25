@@ -1,11 +1,11 @@
 module github.com/SENERGY-Platform/external-task-worker
 
-go 1.17
+go 1.18
 
 require (
 	github.com/DataDog/zstd v1.4.0 // indirect
-	github.com/SENERGY-Platform/converter v0.0.0-20220302112210-0325026a0e9f
-	github.com/SENERGY-Platform/marshaller v0.0.0-20220308114437-ca11d6c92fcb
+	github.com/SENERGY-Platform/converter v0.0.0-20220425105113-a10447ce6df6
+	github.com/SENERGY-Platform/marshaller v0.0.0-20220425112717-7cb0d99eafc4
 	github.com/Shopify/sarama v1.22.0
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/coocood/freecache v1.1.0
@@ -41,6 +41,7 @@ require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
+	github.com/julienschmidt/httprouter v1.3.0 // indirect
 	github.com/klauspost/compress v1.9.8 // indirect
 	github.com/lucasb-eyer/go-colorful v1.0.3 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
