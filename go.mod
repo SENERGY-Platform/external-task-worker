@@ -5,12 +5,12 @@ go 1.18
 require (
 	github.com/DataDog/zstd v1.4.0 // indirect
 	github.com/SENERGY-Platform/converter v0.0.0-20220512105400-d22e8a0222db
-	github.com/SENERGY-Platform/marshaller v0.0.0-20220512112830-3f6be84d76b1
+	github.com/SENERGY-Platform/marshaller v0.0.0-20220512122627-deaeb66ecf80
 	github.com/Shopify/sarama v1.22.0
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
-	github.com/coocood/freecache v1.1.0
+	github.com/coocood/freecache v1.2.1
 	github.com/golang-jwt/jwt v3.2.1+incompatible
-	github.com/google/uuid v1.1.1
+	github.com/google/uuid v1.3.0
 	github.com/lib/pq v1.0.0
 	github.com/ory/dockertest/v3 v3.7.0
 	github.com/samuel/go-zookeeper v0.0.0-20190810000440-0ceca61e4d75 // indirect
@@ -27,7 +27,7 @@ require (
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/RyanCarrier/dijkstra v1.1.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.0 // indirect
-	github.com/cespare/xxhash v1.1.0 // indirect
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/clbanning/mxj v1.8.4 // indirect
 	github.com/containerd/continuity v0.0.0-20190827140505-75bee3e2ccb6 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -42,6 +42,7 @@ require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
+	github.com/julienschmidt/httprouter v1.3.0 // indirect
 	github.com/klauspost/compress v1.9.8 // indirect
 	github.com/lucasb-eyer/go-colorful v1.0.3 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
