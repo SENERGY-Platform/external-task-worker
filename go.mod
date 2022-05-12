@@ -4,8 +4,8 @@ go 1.18
 
 require (
 	github.com/DataDog/zstd v1.4.0 // indirect
-	github.com/SENERGY-Platform/converter v0.0.0-20220506072101-e31e4cedd586
-	github.com/SENERGY-Platform/marshaller v0.0.0-20220506082425-7a398c073b9d
+	github.com/SENERGY-Platform/converter v0.0.0-20220512105400-d22e8a0222db
+	github.com/SENERGY-Platform/marshaller v0.0.0-20220512112830-3f6be84d76b1
 	github.com/Shopify/sarama v1.22.0
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/coocood/freecache v1.1.0
@@ -22,6 +22,7 @@ require (
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
+	github.com/Knetic/govaluate v3.0.0+incompatible // indirect
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/RyanCarrier/dijkstra v1.1.0 // indirect
