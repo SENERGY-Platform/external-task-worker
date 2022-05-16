@@ -16,10 +16,14 @@ github.com/RyanCarrier/dijkstra-1 v0.0.0-20170512020943-0e5801a26345 h1:fgSpoKVi
 github.com/RyanCarrier/dijkstra-1 v0.0.0-20170512020943-0e5801a26345/go.mod h1:OK4EvWJ441LQqGzed5NGB6vKBAE34n3z7iayPcEwr30=
 github.com/SENERGY-Platform/converter v0.0.0-20220512105400-d22e8a0222db h1:8yuh3vYvjkrA+m0NHb/uk/ANU5zCuWfWAjMHCxVM1AI=
 github.com/SENERGY-Platform/converter v0.0.0-20220512105400-d22e8a0222db/go.mod h1:tNlmWollEzd2MTSMoPf2u+GXKakZnW/4v1iUxxm8YI4=
+github.com/SENERGY-Platform/converter v0.0.0-20220516061431-8ae63b7fc0f8 h1:f5WPBtq+ysbyfXKJPpVsBKahDVHC61AXDX4CPBpZIIo=
+github.com/SENERGY-Platform/converter v0.0.0-20220516061431-8ae63b7fc0f8/go.mod h1:tNlmWollEzd2MTSMoPf2u+GXKakZnW/4v1iUxxm8YI4=
 github.com/SENERGY-Platform/marshaller v0.0.0-20220512112830-3f6be84d76b1 h1:tMx66/zYQn8LxN0VirulaAvin6pfKtvOkC+C08P1U/g=
 github.com/SENERGY-Platform/marshaller v0.0.0-20220512112830-3f6be84d76b1/go.mod h1:mk+y+srU+dSbaffA4lD3kPnzDe76uVwPziBrwDM+zYM=
 github.com/SENERGY-Platform/marshaller v0.0.0-20220512122627-deaeb66ecf80 h1:7FUNcDjfQj6JSHFt5yf1d2Wc0hi70JuVFv1jgz/pgFw=
 github.com/SENERGY-Platform/marshaller v0.0.0-20220512122627-deaeb66ecf80/go.mod h1:mk+y+srU+dSbaffA4lD3kPnzDe76uVwPziBrwDM+zYM=
+github.com/SENERGY-Platform/marshaller v0.0.0-20220516061904-345a9ac10208 h1:JEnIt6QrG/3chRpWkNLkFh9uE51/eOqa/i6+0tyIQkA=
+github.com/SENERGY-Platform/marshaller v0.0.0-20220516061904-345a9ac10208/go.mod h1:+PNKM2QLina1ymqtsUQIvaGil/Mn5j/tfF1amL5JyWc=
 github.com/Shopify/sarama v1.22.0 h1:rtiODsvY4jW6nUV6n3K+0gx/8WlAwVt+Ixt6RIvpYyo=
 github.com/Shopify/sarama v1.22.0/go.mod h1:lm3THZ8reqBDBQKQyb5HB3sY1lKp3grEbQ81aWSgPp4=
 github.com/Shopify/toxiproxy v2.1.4+incompatible h1:TKdv8HiTLgE5wdJuEML90aBgNWsokNbMijUGhmcoBJc=
