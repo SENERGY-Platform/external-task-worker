@@ -260,6 +260,57 @@ func (this *DeviceGroups) getTaskResults(taskId string) (metadata messages.Group
 }
 
 func (this *DeviceGroups) GetSubTasks(request messages.Command, task messages.CamundaExternalTask) (result []messages.GroupTaskMetadataElement, err error) {
+	if request.DeviceGroupId != "" {
+		return this.GetGroupSubTasks(request, task)
+	}
+	if request.DeviceId != "" && request.ServiceId == "" {
+		return this.GetEmptyServiceSubTasks(request, task)
+	}
+	return []messages.GroupTaskMetadataElement{{
+		Command: request,
+		Task:    task,
+	}}, nil
+}
+
+func (this *DeviceGroups) GetEmptyServiceSubTasks(request messages.Command, task messages.CamundaExternalTask) (result []messages.GroupTaskMetadataElement, err error) {
+	token, err := this.repo.GetToken(task.TenantId)
+	if err != nil {
+		return nil, err
+	}
+	device, err := this.repo.GetDevice(token, request.DeviceId)
+	if err != nil {
+		return nil, err
+	}
+
+	deviceType, err := this.repo.GetDeviceType(token, device.DeviceTypeId)
+	if err != nil {
+		return nil, err
+	}
+
+	services := this.getFilteredServices(request, deviceType.Services)
+
+	for j, service := range services {
+		newTask := task
+		newCommand := request
+
+		newTask.Id = task.Id + "_0_" + strconv.Itoa(j)
+
+		newCommand.DeviceId = request.DeviceId
+		newCommand.Device = &device
+
+		newCommand.ServiceId = service.Id
+		temp := service
+		newCommand.Service = &temp
+
+		result = append(result, messages.GroupTaskMetadataElement{
+			Command: newCommand,
+			Task:    newTask,
+		})
+	}
+	return result, nil
+}
+
+func (this *DeviceGroups) GetGroupSubTasks(request messages.Command, task messages.CamundaExternalTask) (result []messages.GroupTaskMetadataElement, err error) {
 	if request.DeviceGroupId == "" {
 		return []messages.GroupTaskMetadataElement{{
 			Command: request,
