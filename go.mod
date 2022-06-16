@@ -4,8 +4,8 @@ go 1.18
 
 require (
 	github.com/DataDog/zstd v1.4.0 // indirect
-	github.com/SENERGY-Platform/converter v0.0.0-20220516061431-8ae63b7fc0f8
-	github.com/SENERGY-Platform/marshaller v0.0.0-20220516083047-e675abced587
+	github.com/SENERGY-Platform/converter v0.0.0-20220615132512-af1a6e3dceab
+	github.com/SENERGY-Platform/marshaller v0.0.0-20220616065735-86c7a3ddbf31
 	github.com/Shopify/sarama v1.22.0
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/coocood/freecache v1.2.1

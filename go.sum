@@ -18,6 +18,8 @@ github.com/SENERGY-Platform/converter v0.0.0-20220512105400-d22e8a0222db h1:8yuh
 github.com/SENERGY-Platform/converter v0.0.0-20220512105400-d22e8a0222db/go.mod h1:tNlmWollEzd2MTSMoPf2u+GXKakZnW/4v1iUxxm8YI4=
 github.com/SENERGY-Platform/converter v0.0.0-20220516061431-8ae63b7fc0f8 h1:f5WPBtq+ysbyfXKJPpVsBKahDVHC61AXDX4CPBpZIIo=
 github.com/SENERGY-Platform/converter v0.0.0-20220516061431-8ae63b7fc0f8/go.mod h1:tNlmWollEzd2MTSMoPf2u+GXKakZnW/4v1iUxxm8YI4=
+github.com/SENERGY-Platform/converter v0.0.0-20220615132512-af1a6e3dceab h1:X/UFTt15hsXoNBt0OGjj79JceDOmpala0veJcHKLjBw=
+github.com/SENERGY-Platform/converter v0.0.0-20220615132512-af1a6e3dceab/go.mod h1:tNlmWollEzd2MTSMoPf2u+GXKakZnW/4v1iUxxm8YI4=
 github.com/SENERGY-Platform/marshaller v0.0.0-20220512112830-3f6be84d76b1 h1:tMx66/zYQn8LxN0VirulaAvin6pfKtvOkC+C08P1U/g=
 github.com/SENERGY-Platform/marshaller v0.0.0-20220512112830-3f6be84d76b1/go.mod h1:mk+y+srU+dSbaffA4lD3kPnzDe76uVwPziBrwDM+zYM=
 github.com/SENERGY-Platform/marshaller v0.0.0-20220512122627-deaeb66ecf80 h1:7FUNcDjfQj6JSHFt5yf1d2Wc0hi70JuVFv1jgz/pgFw=
@@ -26,6 +28,8 @@ github.com/SENERGY-Platform/marshaller v0.0.0-20220516061904-345a9ac10208 h1:JEn
 github.com/SENERGY-Platform/marshaller v0.0.0-20220516061904-345a9ac10208/go.mod h1:+PNKM2QLina1ymqtsUQIvaGil/Mn5j/tfF1amL5JyWc=
 github.com/SENERGY-Platform/marshaller v0.0.0-20220516083047-e675abced587 h1:AArly/h5J2e3cTY7F4qErPU/zo5HZddZynzwYGw3SK4=
 github.com/SENERGY-Platform/marshaller v0.0.0-20220516083047-e675abced587/go.mod h1:+PNKM2QLina1ymqtsUQIvaGil/Mn5j/tfF1amL5JyWc=
+github.com/SENERGY-Platform/marshaller v0.0.0-20220616065735-86c7a3ddbf31 h1:Hl1KT2Dg7PW3UJL0GRLKSqSppipEw82vI/kYWuhAnXw=
+github.com/SENERGY-Platform/marshaller v0.0.0-20220616065735-86c7a3ddbf31/go.mod h1:EdqMuVGx+Gp5BVmtGRxXEo1heqepKxjooLNpluIGoB4=
 github.com/Shopify/sarama v1.22.0 h1:rtiODsvY4jW6nUV6n3K+0gx/8WlAwVt+Ixt6RIvpYyo=
 github.com/Shopify/sarama v1.22.0/go.mod h1:lm3THZ8reqBDBQKQyb5HB3sY1lKp3grEbQ81aWSgPp4=
 github.com/Shopify/toxiproxy v2.1.4+incompatible h1:TKdv8HiTLgE5wdJuEML90aBgNWsokNbMijUGhmcoBJc=
