@@ -109,7 +109,8 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 		}
 	} else {
 		data := []marshaller.MarshallingV2RequestData{}
-		if len(command.InputPaths) > 0 || isControllingFunction(command.Function) {
+		somethingToSet := command.Function.ConceptId != "" || command.Input != nil
+		if len(command.InputPaths) > 0 || (isControllingFunction(command.Function) && somethingToSet) {
 			data = append(data, marshaller.MarshallingV2RequestData{
 				Value:            command.Input,
 				CharacteristicId: inputCharacteristicId,
