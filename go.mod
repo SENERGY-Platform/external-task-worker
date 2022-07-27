@@ -4,8 +4,8 @@ go 1.18
 
 require (
 	github.com/DataDog/zstd v1.4.0 // indirect
-	github.com/SENERGY-Platform/converter v0.0.0-20220617121505-b0059b7b259e
-	github.com/SENERGY-Platform/marshaller v0.0.0-20220623062303-966cf0054855
+	github.com/SENERGY-Platform/converter v0.0.0-20220727105823-2d11887c48ce
+	github.com/SENERGY-Platform/marshaller v0.0.0-20220727111910-dd608c4e9621
 	github.com/Shopify/sarama v1.22.0
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/coocood/freecache v1.2.1
@@ -42,6 +42,7 @@ require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
+	github.com/julienschmidt/httprouter v1.3.0 // indirect
 	github.com/klauspost/compress v1.9.8 // indirect
 	github.com/lucasb-eyer/go-colorful v1.0.3 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
