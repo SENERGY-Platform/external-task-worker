@@ -260,6 +260,25 @@ func (this *DeviceGroups) getTaskResults(taskId string) (metadata messages.Group
 }
 
 func (this *DeviceGroups) GetSubTasks(request messages.Command, task messages.CamundaExternalTask) (result []messages.GroupTaskMetadataElement, err error) {
+	result, err = this.getSubTasks(request, task)
+	if err != nil {
+		return result, err
+	}
+	//remove id modifier parameter
+	for i, e := range result {
+		if e.Command.Device != nil {
+			e.Command.Device.Id, _ = SplitModifier(e.Command.Device.Id)
+			e.Command.Device.DeviceTypeId, _ = SplitModifier(e.Command.Device.DeviceTypeId)
+		}
+		if e.Command.DeviceId != "" {
+			e.Command.DeviceId, _ = SplitModifier(e.Command.DeviceId)
+		}
+		result[i] = e
+	}
+	return result, nil
+}
+
+func (this *DeviceGroups) getSubTasks(request messages.Command, task messages.CamundaExternalTask) (result []messages.GroupTaskMetadataElement, err error) {
 	if request.DeviceGroupId != "" {
 		return this.GetGroupSubTasks(request, task)
 	}
