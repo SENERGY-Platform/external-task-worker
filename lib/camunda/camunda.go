@@ -26,6 +26,7 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -123,7 +124,7 @@ func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string,
 		completeRequest = messages.CamundaCompleteRequest{WorkerId: taskInfo.WorkerId}
 	}
 
-	log.Println("Start complete Request")
+	log.Println("Start complete Request", taskInfo.TaskId)
 	client := http.Client{Timeout: 5 * time.Second}
 	b := new(bytes.Buffer)
 	err = json.NewEncoder(b).Encode(completeRequest)
@@ -135,7 +136,7 @@ func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string,
 		return err
 	}
 	defer resp.Body.Close()
-	pl, err := ioutil.ReadAll(resp.Body)
+	pl, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}

@@ -41,7 +41,7 @@ func (this *DeviceGroups) annotateSubTaskStates(requests RequestInfoList) (resul
 
 func (this *DeviceGroups) filterRetries(nextRequests RequestInfoList, retries int64) (filteredRequests RequestInfoList) {
 	for _, element := range nextRequests {
-		if element.SubTaskState.TryCount <= retries {
+		if retries == -1 || element.SubTaskState.TryCount <= retries {
 			filteredRequests = append(filteredRequests, element)
 		}
 	}

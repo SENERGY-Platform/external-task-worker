@@ -161,6 +161,9 @@ func (this *CmdWorker) ExecuteTask(task messages.CamundaExternalTask, caller str
 }
 
 func (this *CmdWorker) ExecuteCommand(command messages.Command, task messages.CamundaExternalTask, caller string) {
+	if this.config.CompletionStrategy == util.OPTIMISTIC {
+		command.Retries = -1
+	}
 	completed, nextProtocolMessages, results, err := this.deviceGroupsHandler.ProcessCommand(command, task, caller)
 	if err != nil {
 		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, err.Error(), task.TenantId)
