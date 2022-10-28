@@ -115,6 +115,8 @@ func (w *CmdWorker) Loop(ctx context.Context) {
 	}
 }
 
+const DuplicateActivitySleep = 100 * time.Millisecond
+
 func (this *CmdWorker) ExecuteNextTasks() (wait bool) {
 	tasks, err := this.camunda.GetTasks()
 	if err != nil {
@@ -125,13 +127,28 @@ func (this *CmdWorker) ExecuteNextTasks() (wait bool) {
 	if len(tasks) == 0 {
 		return true
 	}
-	wg := sync.WaitGroup{}
+
+	tasksWithDuplicateIndex := []messages.TaskWithDuplicateIndex{}
+	activityIndex := map[string][]string{}
 	for _, task := range tasks {
+		taskWithStrategy := messages.TaskWithDuplicateIndex{
+			Task:           task,
+			DuplicateIndex: len(activityIndex[task.ActivityId]),
+		}
+		activityIndex[task.ActivityId] = append(activityIndex[task.ActivityId], task.Id)
+		tasksWithDuplicateIndex = append(tasksWithDuplicateIndex, taskWithStrategy)
+	}
+
+	wg := sync.WaitGroup{}
+	for _, task := range tasksWithDuplicateIndex {
 		wg.Add(1)
-		go func(asyncTask messages.CamundaExternalTask) {
+		go func(asyncTask messages.CamundaExternalTask, duplicateIndex int) {
 			defer wg.Done()
+			if duplicateIndex > 0 {
+				time.Sleep(time.Duration(duplicateIndex) * DuplicateActivitySleep)
+			}
 			this.ExecuteTask(asyncTask, util.CALLER_CAMUNDA_LOOP)
-		}(task)
+		}(task.Task, task.DuplicateIndex)
 	}
 	wg.Wait()
 	return false

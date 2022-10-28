@@ -28,7 +28,7 @@ type CamundaOutput struct {
 	Value interface{} `json:"value,omitempty"`
 }
 
-//https://github.com/camunda/camunda-docs-manual/blob/master/content/reference/rest/external-task/fetch.md
+// https://github.com/camunda/camunda-docs-manual/blob/master/content/reference/rest/external-task/fetch.md
 type CamundaExternalTask struct {
 	Id                  string                     `json:"id,omitempty"`
 	Variables           map[string]CamundaVariable `json:"variables,omitempty"`
@@ -52,7 +52,7 @@ type CamundaFetchRequest struct {
 	Topics   []CamundaTopic `json:"topics,omitempty"`
 }
 
-//https://github.com/camunda/camunda-docs-manual/blob/master/content/reference/rest/external-task/post-complete.md
+// https://github.com/camunda/camunda-docs-manual/blob/master/content/reference/rest/external-task/post-complete.md
 type CamundaCompleteRequest struct {
 	WorkerId  string                   `json:"workerId,omitempty"`
 	Variables map[string]CamundaOutput `json:"localVariables,omitempty"`
@@ -81,4 +81,9 @@ type Incident struct {
 	Time                time.Time `json:"time" bson:"time"`
 	TenantId            string    `json:"tenant_id" bson:"tenant_id"`
 	DeploymentName      string    `json:"deployment_name" bson:"deployment_name"`
+}
+
+type TaskWithDuplicateIndex struct {
+	Task           CamundaExternalTask
+	DuplicateIndex int
 }
