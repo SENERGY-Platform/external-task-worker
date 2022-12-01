@@ -58,7 +58,7 @@ func TestWorkerGroupCommand(t *testing.T) {
 	defer cancel()
 	mockCamunda := &mock.CamundaMock{}
 	mockCamunda.Init()
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
 
 	time.Sleep(1 * time.Second)
 
@@ -879,7 +879,7 @@ func TestWorkerResponseV2(t *testing.T) {
 	defer cancel()
 	mockCamunda := &mock.CamundaMock{}
 	mockCamunda.Init()
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
 
 	time.Sleep(1 * time.Second)
 
@@ -1054,7 +1054,7 @@ func TestGroupResponses(t *testing.T) {
 	defer cancel()
 	mockCamunda := &mock.CamundaMock{}
 	mockCamunda.Init()
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
 
 	time.Sleep(1 * time.Second)
 
@@ -1361,7 +1361,7 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 
 	mockCamunda := &mock.CamundaMock{}
 	mockCamunda.Init()
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
 
 	time.Sleep(1 * time.Second)
 
@@ -1661,7 +1661,7 @@ func TestWorkerDeviceWithoutServiceCommand(t *testing.T) {
 	defer cancel()
 	mockCamunda := &mock.CamundaMock{}
 	mockCamunda.Init()
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
 
 	time.Sleep(1 * time.Second)
 
@@ -2537,7 +2537,7 @@ func TestDeviceWithoutServiceResponses(t *testing.T) {
 
 	mockCamunda := &mock.CamundaMock{}
 	mockCamunda.Init()
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
 
 	time.Sleep(1 * time.Second)
 

@@ -103,7 +103,7 @@ func testSequentialExecution(retries int64, lostResponseFor []int, expectedResul
 		defer cancel()
 		mockCamunda := &mock.CamundaMock{}
 		mockCamunda.Init()
-		go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
+		go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
 
 		time.Sleep(100 * time.Millisecond)
 

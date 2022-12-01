@@ -32,7 +32,8 @@ import (
 	"time"
 )
 
-type Callback = func(command messages.Command, task messages.CamundaExternalTask) (topic string, key string, message string, err error)
+// Callback is implemented by: lib.CmdWorker::CreateProtocolMessage()
+type Callback = func(command messages.Command, task messages.CamundaExternalTask) (request *messages.KafkaMessage, event *messages.EventRequest, err error)
 
 func New(scheduler string, camunda interfaces.CamundaInterface, devicerepo devicerepository.RepoInterface, protocolMessageCallback Callback, currentlyRunningTimeoutInMs int64, expirationInSeconds int32, memcachedUrls []string, memcachedTimeout string, memcachedMaxIdleConns int64) *DeviceGroups {
 	if len(memcachedUrls) == 0 {
@@ -73,21 +74,9 @@ type DeviceGroups struct {
 	currentlyRunningTimeout time.Duration
 }
 
-type RequestInfo struct {
-	KafkaMessage messages.KafkaMessage
-	Metadata     messages.GroupTaskMetadataElement
-	SubTaskState SubTaskState
-}
+type RequestInfo = messages.RequestInfo
 
-type RequestInfoList []RequestInfo
-
-func (this RequestInfoList) ToMessages() (result []messages.KafkaMessage) {
-	result = []messages.KafkaMessage{}
-	for _, element := range this {
-		result = append(result, element.KafkaMessage)
-	}
-	return
-}
+type RequestInfoList = messages.RequestInfoList
 
 func (this *DeviceGroups) ProcessResponse(subTaskId string, subResult interface{}) (parent messages.GroupTaskMetadataElement, results []interface{}, finished bool, err error) {
 	err = this.setSubResult(subTaskId, SubResultWrapper{Value: subResult})
@@ -101,7 +90,7 @@ func (this *DeviceGroups) ProcessResponse(subTaskId string, subResult interface{
 	return
 }
 
-func (this *DeviceGroups) ProcessCommand(command messages.Command, task messages.CamundaExternalTask, caller string) (completed bool, nextMessages []messages.KafkaMessage, finishedResults []interface{}, err error) {
+func (this *DeviceGroups) ProcessCommand(command messages.Command, task messages.CamundaExternalTask, caller string) (completed bool, nextMessages messages.RequestInfoList, finishedResults []interface{}, err error) {
 	if this.shouldIgnoreTask(caller, task) {
 		log.Println("DEBUG: ignore task execute call", caller, task)
 		return false, nil, nil, nil
@@ -112,13 +101,13 @@ func (this *DeviceGroups) ProcessCommand(command messages.Command, task messages
 	}
 	nextRequests, finishedResults, err := this.getNextRequests(command, task)
 	if err != nil {
-		return completed, nextRequests.ToMessages(), finishedResults, err
+		return completed, nextRequests, finishedResults, err
 	}
 	switch this.scheduler {
 	case util.SEQUENTIAL:
 		nextRequests, err = this.annotateSubTaskStates(nextRequests)
 		if err != nil {
-			return completed, nextRequests.ToMessages(), finishedResults, err
+			return completed, nextRequests, finishedResults, err
 		}
 		nextRequests = this.filterRetries(nextRequests, command.Retries)
 		completed = len(nextRequests) == 0
@@ -127,18 +116,18 @@ func (this *DeviceGroups) ProcessCommand(command messages.Command, task messages
 			if len(finishedResults) == 0 {
 				err = errors.New("unable to get any results for device-group")
 			}
-			return completed, nextRequests.ToMessages(), finishedResults, err
+			return completed, nextRequests, finishedResults, err
 		}
 		nextRequests = this.filterCurrentlyRunning(nextRequests)
 		if len(nextRequests) > 0 {
 			nextRequests = nextRequests[:1] // possible place to implement batches in sequence
 		}
 		err = this.updateSubTaskState(nextRequests)
-		return completed, nextRequests.ToMessages(), finishedResults, err
+		return completed, nextRequests, finishedResults, err
 	case util.ROUND_ROBIN:
 		nextRequests, err = this.annotateSubTaskStates(nextRequests)
 		if err != nil {
-			return completed, nextRequests.ToMessages(), finishedResults, err
+			return completed, nextRequests, finishedResults, err
 		}
 		nextRequests = this.filterRetries(nextRequests, command.Retries)
 		completed = len(nextRequests) == 0
@@ -147,7 +136,7 @@ func (this *DeviceGroups) ProcessCommand(command messages.Command, task messages
 			if len(finishedResults) == 0 {
 				err = errors.New("unable to get any results for device-group")
 			}
-			return completed, nextRequests.ToMessages(), finishedResults, err
+			return completed, nextRequests, finishedResults, err
 		}
 		nextRequests = this.filterCurrentlyRunning(nextRequests)
 		sort.Slice(nextRequests, func(i, j int) bool {
@@ -157,7 +146,7 @@ func (this *DeviceGroups) ProcessCommand(command messages.Command, task messages
 			nextRequests = nextRequests[:1] // possible place to implement batches in sequence
 		}
 		err = this.updateSubTaskState(nextRequests)
-		return completed, nextRequests.ToMessages(), finishedResults, err
+		return completed, nextRequests, finishedResults, err
 	case util.PARALLEL:
 		noMoreRetries := command.Retries != -1 && command.Retries < task.Retries
 		completed = len(nextRequests) == 0 || noMoreRetries
@@ -165,7 +154,6 @@ func (this *DeviceGroups) ProcessCommand(command messages.Command, task messages
 			this.clearTaskData(task.Id)
 		}
 		if noMoreRetries {
-			nextMessages = []messages.KafkaMessage{}
 			nextRequests = RequestInfoList{}
 			if len(finishedResults) == 0 {
 				err = errors.New("unable to get any results for device-group")
@@ -173,9 +161,9 @@ func (this *DeviceGroups) ProcessCommand(command messages.Command, task messages
 		} else {
 			this.camunda.SetRetry(task.Id, task.TenantId, task.Retries+1)
 		}
-		return completed, nextRequests.ToMessages(), finishedResults, err
+		return completed, nextRequests, finishedResults, err
 	default:
-		return completed, nextRequests.ToMessages(), finishedResults, errors.New("unknown scheduler " + this.scheduler)
+		return completed, nextRequests, finishedResults, errors.New("unknown scheduler " + this.scheduler)
 	}
 }
 
@@ -212,16 +200,13 @@ func (this *DeviceGroups) getNextRequests(command messages.Command, task message
 		}
 	}
 	for _, subTask := range missingSubTasks {
-		protocolTopic, key, message, err := this.protocolMessageCallback(subTask.Command, subTask.Task)
+		request, event, err := this.protocolMessageCallback(subTask.Command, subTask.Task)
 		if err != nil {
 			return nil, nil, err
 		}
 		missingRequests = append(missingRequests, RequestInfo{
-			KafkaMessage: messages.KafkaMessage{
-				Topic:   protocolTopic,
-				Key:     key,
-				Payload: message,
-			},
+			Request:  request,
+			Event:    event,
 			Metadata: subTask,
 		})
 	}

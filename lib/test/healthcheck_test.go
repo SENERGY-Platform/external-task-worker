@@ -58,7 +58,7 @@ func TestHealthCheckBy(t *testing.T) {
 	kafka := &StoppableTestKafka{On: true}
 	camunda := &StoppableTestCamunda{On: true}
 
-	go lib.Worker(ctx, config, kafka, mock.Repo, camunda, mock.Marshaller)
+	go lib.Worker(ctx, config, kafka, mock.Repo, camunda, mock.Marshaller, mock.Timescale)
 	time.Sleep(1 * time.Second)
 
 	mock.Repo.RegisterDevice(model.Device{

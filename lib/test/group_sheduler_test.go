@@ -339,7 +339,7 @@ func getGroupShedullerTest(config util.Config, simConfig GroupSimConfig) func(t 
 			},
 		})
 
-		go lib.Worker(ctx, config, mockKafka, mockRepo, mockCamunda, &mock.MarshallerMock{})
+		go lib.Worker(ctx, config, mockKafka, mockRepo, mockCamunda, &mock.MarshallerMock{}, mock.Timescale)
 
 		time.Sleep(simConfig.CheckAfter)
 

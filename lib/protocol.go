@@ -30,8 +30,9 @@ import (
 	"time"
 )
 
-func (this *CmdWorker) CreateProtocolMessage(command messages.Command, task messages.CamundaExternalTask) (topic string, key string, message string, err error) {
-	value, err := this.createMessageForProtocolHandler(command, task)
+// CreateProtocolMessage implements: devicegroups.Callback
+func (this *CmdWorker) CreateProtocolMessage(command messages.Command, task messages.CamundaExternalTask) (request *messages.KafkaMessage, event *messages.EventRequest, err error) {
+	value, event, err := this.createMessageForProtocolHandler(command, task)
 	if err != nil {
 		if this.config.Debug {
 			log.Println("DEBUG:", task.TenantId)
@@ -40,12 +41,16 @@ func (this *CmdWorker) CreateProtocolMessage(command messages.Command, task mess
 		err = errors.New("internal format error (" + err.Error() + ") (time: " + util.TimeNow().String() + ")")
 		return
 	}
-	topic = value.Metadata.Protocol.Handler
+	topic := value.Metadata.Protocol.Handler
 	msg, err := json.Marshal(value)
-	return topic, value.Metadata.Device.Id, string(msg), err
+	return &messages.KafkaMessage{
+		Topic:   topic,
+		Key:     value.Metadata.Device.Id,
+		Payload: string(msg),
+	}, event, err
 }
 
-func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command, task messages.CamundaExternalTask) (result messages.ProtocolMsg, err error) {
+func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command, task messages.CamundaExternalTask) (taskRequest *messages.ProtocolMsg, eventRequest *messages.EventRequest, err error) {
 	trace := []messages.Trace{{
 		Timestamp: time.Now().UnixNano(),
 		TimeUnit:  "unix_nano",
@@ -58,14 +63,14 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 	if device == nil || service == nil || protocol == nil {
 		token, err = this.repository.GetToken(task.TenantId)
 		if err != nil {
-			return result, err
+			return nil, nil, err
 		}
 	}
 	if device == nil {
 		temp, err := this.repository.GetDevice(token, command.DeviceId)
 		if err != nil {
 			log.Println("ERROR: unable to load device", command.DeviceId, task.TenantId, token)
-			return result, err
+			return nil, nil, err
 		}
 		device = &temp
 	}
@@ -73,7 +78,7 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 		temp, err := this.repository.GetService(token, *device, command.ServiceId)
 		if err != nil {
 			log.Println("ERROR: unable to load service", command.ServiceId, task.TenantId, token)
-			return result, err
+			return nil, nil, err
 		}
 		service = &temp
 	}
@@ -84,7 +89,7 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 		temp, err := this.repository.GetProtocol(token, command.ProtocolId)
 		if err != nil {
 			log.Println("ERROR: unable to load protocol", command.ProtocolId, task.TenantId, token)
-			return result, err
+			return nil, nil, err
 		}
 		protocol = &temp
 	}
@@ -96,8 +101,19 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 		inputCharacteristicId = command.CharacteristicId
 	} else {
 		outputCharacteristicId = command.CharacteristicId
+		aspect := model.AspectNode{}
+		if command.Aspect != nil {
+			aspect = *command.Aspect
+		}
 		if service.Interaction == model.EVENT {
-			return result, errors.New("command to measuring-function function with event interaction is not possible")
+			return nil, &messages.EventRequest{
+				Device:           *device,
+				Service:          *service,
+				Protocol:         *protocol,
+				CharacteristicId: command.CharacteristicId,
+				FunctionId:       command.Function.Id,
+				AspectNode:       aspect,
+			}, nil
 		}
 	}
 
@@ -105,7 +121,7 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 	if command.Version < 3 {
 		marshalledInput, err = this.marshaller.MarshalFromServiceAndProtocol(inputCharacteristicId, *service, *protocol, command.Input, command.Configurables)
 		if err != nil {
-			return result, err
+			return nil, nil, err
 		}
 	} else {
 		data := []marshaller.MarshallingV2RequestData{}
@@ -139,7 +155,7 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 		}
 		marshalledInput, err = this.marshaller.MarshalV2(*service, *protocol, data)
 		if err != nil {
-			return result, err
+			return nil, nil, err
 		}
 	}
 
@@ -149,7 +165,7 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 		Location:  "github.com/SENERGY-Platform/external-task-worker createMessageForProtocolHandler() end",
 	})
 
-	result = messages.ProtocolMsg{
+	taskRequest = &messages.ProtocolMsg{
 		TaskInfo: messages.TaskInfo{
 			WorkerId:            this.camunda.GetWorkerId(),
 			TaskId:              task.Id,
@@ -176,15 +192,15 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 	}
 
 	if command.Version >= 3 {
-		result.Metadata.Version = command.Version
+		taskRequest.Metadata.Version = command.Version
 		if outputCharacteristicId != "" {
-			result.Metadata.OutputPath = command.OutputPath
-			result.Metadata.OutputFunctionId = command.Function.Id
-			result.Metadata.OutputAspectNode = command.Aspect
+			taskRequest.Metadata.OutputPath = command.OutputPath
+			taskRequest.Metadata.OutputFunctionId = command.Function.Id
+			taskRequest.Metadata.OutputAspectNode = command.Aspect
 		}
 	}
 
-	return result, err
+	return taskRequest, nil, err
 }
 
 func isControllingFunction(function model.Function) bool {

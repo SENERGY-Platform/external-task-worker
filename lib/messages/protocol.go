@@ -16,7 +16,10 @@
 
 package messages
 
-import "github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
+import (
+	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
+	"time"
+)
 
 type TaskInfo struct {
 	WorkerId            string `json:"worker_id"`
@@ -69,4 +72,38 @@ type KafkaMessage struct {
 	Topic   string
 	Key     string
 	Payload string
+}
+
+type EventRequest struct {
+	Device           model.Device
+	Service          model.Service
+	Protocol         model.Protocol
+	CharacteristicId string
+	FunctionId       string
+	AspectNode       model.AspectNode
+}
+
+type RequestInfo struct {
+	Request      *KafkaMessage
+	Event        *EventRequest
+	Metadata     GroupTaskMetadataElement
+	SubTaskState SubTaskState
+}
+
+type RequestInfoList []RequestInfo
+
+type SubTaskState struct {
+	LastTry  time.Time
+	TryCount int64
+}
+
+type TimescaleRequest struct {
+	Device     model.Device
+	Service    model.Service
+	ColumnName string
+}
+
+type TimescaleResponse struct {
+	Time  *string     `json:"time"`
+	Value interface{} `json:"value"`
 }

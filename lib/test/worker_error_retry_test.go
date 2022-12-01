@@ -101,7 +101,7 @@ func TestWorkerErrorRetries(t *testing.T) {
 
 	config.ShardsDb = pgConn
 
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, camunda.Factory, mock.Marshaller)
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, camunda.Factory, mock.Marshaller, mock.Timescale)
 
 	time.Sleep(1 * time.Second)
 

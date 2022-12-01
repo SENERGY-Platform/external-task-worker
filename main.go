@@ -23,6 +23,7 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/com/comswitch"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
+	"github.com/SENERGY-Platform/external-task-worker/lib/timescale"
 	"log"
 	"os"
 	"os/signal"
@@ -56,6 +57,6 @@ func main() {
 		cancel()
 	}()
 
-	lib.Worker(ctx, config, comswitch.Factory, devicerepository.Factory, camunda.Factory, marshaller.Factory)
+	lib.Worker(ctx, config, comswitch.Factory, devicerepository.Factory, camunda.Factory, marshaller.Factory, timescale.Factory)
 	log.Println("worker stopped")
 }

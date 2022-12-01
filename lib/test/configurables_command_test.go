@@ -47,7 +47,7 @@ func ExampleConfigurablesCommand1() {
 	defer cancel()
 	mockCamunda := &mock.CamundaMock{}
 	mockCamunda.Init()
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
 
 	time.Sleep(1 * time.Second)
 
@@ -182,7 +182,7 @@ func ExampleConfigurablesCommand2() {
 	defer cancel()
 	mockCamunda := &mock.CamundaMock{}
 	mockCamunda.Init()
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
 
 	time.Sleep(1 * time.Second)
 
@@ -317,7 +317,7 @@ func ExampleConfigurablesCommand3() {
 	defer cancel()
 	mockCamunda := &mock.CamundaMock{}
 	mockCamunda.Init()
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
 
 	time.Sleep(1 * time.Second)
 
@@ -463,7 +463,7 @@ func ExampleConfigurablesCommand4() {
 	defer cancel()
 	mockCamunda := &mock.CamundaMock{}
 	mockCamunda.Init()
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
 
 	time.Sleep(1 * time.Second)
 
@@ -600,7 +600,7 @@ func ExampleConfigurablesCommand5() {
 	defer cancel()
 	mockCamunda := &mock.CamundaMock{}
 	mockCamunda.Init()
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
 
 	time.Sleep(1 * time.Second)
 
@@ -754,7 +754,7 @@ func ExampleConfigurablesCommandWithoutFunctionRdfType() {
 	defer cancel()
 	mockCamunda := &mock.CamundaMock{}
 	mockCamunda.Init()
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller)
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
 
 	time.Sleep(1 * time.Second)
 

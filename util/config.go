@@ -60,6 +60,9 @@ type Config struct {
 	HealthCheckPort                 string
 	GroupScheduler                  string
 
+	HandleMissingLastValueTimeAsError bool //set to true for mgw implementations of last-value / TimescaleWrapperUrl
+	TimescaleWrapperUrl               string
+
 	HttpCommandConsumerPort string
 	HttpCommandConsumerSync bool
 	MetadataResponseTo      string

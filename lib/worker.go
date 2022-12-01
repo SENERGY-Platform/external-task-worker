@@ -27,6 +27,7 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
+	"github.com/SENERGY-Platform/external-task-worker/lib/timescale"
 	"log"
 	"reflect"
 	"runtime/debug"
@@ -52,21 +53,26 @@ type CmdWorker struct {
 	producerCallMux           sync.Mutex
 	lastProducerCallSuccess   bool
 	deviceGroupsHandler       DeviceGroupsHandler
+	timescale                 Timescale
+}
+
+type Timescale interface {
+	Query(token string, request []messages.TimescaleRequest, timeout time.Duration) (result []messages.TimescaleResponse, err error)
 }
 
 type DeviceGroupsHandler interface {
-	ProcessCommand(request messages.Command, task messages.CamundaExternalTask, caller string) (completed bool, missingRequests []messages.KafkaMessage, finishedResults []interface{}, err error)
+	ProcessCommand(request messages.Command, task messages.CamundaExternalTask, caller string) (completed bool, missingRequests messages.RequestInfoList, finishedResults []interface{}, err error)
 	ProcessResponse(taskId string, subResult interface{}) (parent messages.GroupTaskMetadataElement, results []interface{}, finished bool, err error)
 }
 
-func Worker(ctx context.Context, config util.Config, comFactory com.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory interfaces.FactoryInterface, marshallerFactory marshaller.FactoryInterface) {
+func Worker(ctx context.Context, config util.Config, comFactory com.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory interfaces.FactoryInterface, marshallerFactory marshaller.FactoryInterface, timescaleFactory timescale.FactoryInterface) {
 	log.Println("start camunda worker")
-	w := New(ctx, config, comFactory, repoFactory, camundaFactory, marshallerFactory)
+	w := New(ctx, config, comFactory, repoFactory, camundaFactory, marshallerFactory, timescaleFactory)
 	StartHealthCheckEndpoint(ctx, config, w)
 	w.Loop(ctx)
 }
 
-func New(ctx context.Context, config util.Config, comFactory com.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory interfaces.FactoryInterface, marshallerFactory marshaller.FactoryInterface) (w *CmdWorker) {
+func New(ctx context.Context, config util.Config, comFactory com.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory interfaces.FactoryInterface, marshallerFactory marshaller.FactoryInterface, timescaleFactory timescale.FactoryInterface) (w *CmdWorker) {
 	var err error
 
 	w = &CmdWorker{
@@ -74,6 +80,11 @@ func New(ctx context.Context, config util.Config, comFactory com.FactoryInterfac
 		marshaller:                marshallerFactory.New(ctx, config.MarshallerUrl),
 		lastProducerCallSuccess:   true,
 		lastSuccessfulCamundaCall: time.Now(),
+	}
+
+	w.timescale, err = timescaleFactory(ctx, config)
+	if err != nil {
+		log.Fatal("ERROR: comFactory.NewProducer", err)
 	}
 
 	if config.CompletionStrategy != util.OPTIMISTIC {
@@ -188,7 +199,7 @@ func (this *CmdWorker) ExecuteCommand(command messages.Command, task messages.Ca
 	}
 
 	if this.config.CompletionStrategy == util.OPTIMISTIC || completed {
-		time.Sleep(time.Duration(this.config.OptimisticTaskCompletionTimeout) * time.Millisecond) //prevent completes that are to fast
+		time.Sleep(time.Duration(this.config.OptimisticTaskCompletionTimeout) * time.Millisecond) //prevent completes that are too fast
 		err = this.camunda.CompleteTask(messages.TaskInfo{
 			WorkerId:            this.camunda.GetWorkerId(),
 			TaskId:              task.Id,
@@ -202,18 +213,41 @@ func (this *CmdWorker) ExecuteCommand(command messages.Command, task messages.Ca
 		}
 		if this.config.CompletionStrategy != util.OPTIMISTIC {
 			//if optimistic: we have still to send the commands
-			//else: this is not the first try and now we are finished
+			//else: this is not the first try, and now we are finished
 			return
 		}
 	}
 
 	for _, message := range nextProtocolMessages {
-		err = this.producer.ProduceWithKey(message.Topic, message.Key, message.Payload)
-		if err != nil {
-			log.Println("ERROR: unable to produce kafka msg", err)
-			this.logProducerError()
+		if message.Request != nil {
+			err = this.producer.ProduceWithKey(message.Request.Topic, message.Request.Key, message.Request.Payload)
+			if err != nil {
+				log.Println("ERROR: unable to produce kafka msg", err)
+				this.logProducerError()
+			} else {
+				this.logProducerSuccess()
+			}
 		} else {
-			this.logProducerSuccess()
+			if message.Event != nil {
+				token, err := this.repository.GetToken(message.Metadata.Task.TenantId)
+				code, result := this.GetLastEventValue(string(token), message.Event.Device, message.Event.Service, message.Event.Protocol, message.Event.CharacteristicId, message.Event.FunctionId, message.Event.AspectNode, 10*time.Second)
+				if code == 200 {
+					err = this.handleTaskResponse(messages.TaskInfo{
+						WorkerId:            this.camunda.GetWorkerId(),
+						TaskId:              task.Id,
+						ProcessInstanceId:   task.ProcessInstanceId,
+						ProcessDefinitionId: task.ProcessDefinitionId,
+						CompletionStrategy:  this.config.CompletionStrategy,
+						Time:                strconv.FormatInt(util.TimeNow().Unix(), 10),
+						TenantId:            task.TenantId,
+					}, result)
+					if err != nil {
+						log.Println("ERROR: unable to handle GetLastEventValue() as task response", err)
+					}
+				} else {
+					log.Println("ERROR: GetLastEventValue()", code, result)
+				}
+			}
 		}
 	}
 }
@@ -298,13 +332,11 @@ func (this *CmdWorker) HandleTaskResponse(msg string) (err error) {
 	if err != nil {
 		return err
 	}
-	message.Trace = append(message.Trace, messages.Trace{
-		Timestamp: time.Now().UnixNano(),
-		TimeUnit:  "unix_nano",
-		Location:  "github.com/SENERGY-Platform/external-task-worker HandleTaskResponse() after this.marshaller.UnmarshalFromServiceAndProtocol()",
-	})
+	return this.handleTaskResponse(message.TaskInfo, output)
+}
 
-	parent, results, finished, err := this.deviceGroupsHandler.ProcessResponse(message.TaskInfo.TaskId, output)
+func (this *CmdWorker) handleTaskResponse(taskInfo messages.TaskInfo, output interface{}) (err error) {
+	parent, results, finished, err := this.deviceGroupsHandler.ProcessResponse(taskInfo.TaskId, output)
 	if err == devicegroups.ErrNotFount {
 		return nil //if parent task is not found -> can not be finished (may already be done)
 	}
@@ -312,36 +344,25 @@ func (this *CmdWorker) HandleTaskResponse(msg string) (err error) {
 		return err
 	}
 
-	message.Trace = append(message.Trace, messages.Trace{
-		Timestamp: time.Now().UnixNano(),
-		TimeUnit:  "unix_nano",
-		Location:  "github.com/SENERGY-Platform/external-task-worker deviceGroupsHandler.ProcessResponse()",
-	})
-
 	if finished {
-		message.TaskInfo = messages.TaskInfo{
-			WorkerId:            message.TaskInfo.WorkerId,
+		taskInfo = messages.TaskInfo{
+			WorkerId:            taskInfo.WorkerId,
 			TaskId:              parent.Task.Id,
 			ProcessInstanceId:   parent.Task.ProcessInstanceId,
 			ProcessDefinitionId: parent.Task.ProcessDefinitionId,
-			CompletionStrategy:  message.TaskInfo.CompletionStrategy,
-			Time:                message.TaskInfo.Time,
-			TenantId:            message.TaskInfo.TenantId,
+			CompletionStrategy:  taskInfo.CompletionStrategy,
+			Time:                taskInfo.Time,
+			TenantId:            taskInfo.TenantId,
 		}
 
 		err = this.camunda.CompleteTask(
-			message.TaskInfo,
+			taskInfo,
 			this.config.CamundaTaskResultName,
 			handleVersioning(parent.Command.Version, results))
 
 		if this.config.Debug {
-			log.Println("Complete", parent.Task.Id, util.TimeNow().Second(), output, msg, err)
+			log.Println("Complete", parent.Task.Id, util.TimeNow().Second(), output, err)
 		}
-		message.Trace = append(message.Trace, messages.Trace{
-			Timestamp: time.Now().UnixNano(),
-			TimeUnit:  "unix_nano",
-			Location:  "github.com/SENERGY-Platform/external-task-worker HandleTaskResponse() after this.camunda.HandleTaskResponse()",
-		})
 	} else if this.isSequential() {
 		this.ExecuteTask(parent.Task, util.CALLER_RESPONSE)
 	}

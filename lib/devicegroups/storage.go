@@ -41,10 +41,7 @@ type SubResultWrapper struct {
 	Value  interface{}
 }
 
-type SubTaskState struct {
-	LastTry  time.Time
-	TryCount int64
-}
+type SubTaskState = messages.SubTaskState
 
 var MaxRetries = 10
 
