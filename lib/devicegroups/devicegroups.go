@@ -376,7 +376,7 @@ func (this *DeviceGroups) getFilteredServices(command messages.Command, services
 			aspect = *command.Aspect
 		}
 		matchesCriteria := anyContentMatchesCriteria(contents, model.DeviceGroupFilterCriteria{FunctionId: command.Function.Id, AspectId: aspect.Id}, aspect)
-		if matchesCriteria && !(isMeasuringFunctionId(command.Function.Id) && service.Interaction == model.EVENT) {
+		if matchesCriteria {
 			serviceIndex[service.Id] = service
 		}
 	}
