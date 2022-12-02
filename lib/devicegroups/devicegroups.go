@@ -35,10 +35,10 @@ import (
 // Callback is implemented by: lib.CmdWorker::CreateProtocolMessage()
 type Callback = func(command messages.Command, task messages.CamundaExternalTask) (request *messages.KafkaMessage, event *messages.EventRequest, err error)
 
-func New(scheduler string, camunda interfaces.CamundaInterface, devicerepo devicerepository.RepoInterface, protocolMessageCallback Callback, currentlyRunningTimeoutInMs int64, expirationInSeconds int32, memcachedUrls []string, memcachedTimeout string, memcachedMaxIdleConns int64) *DeviceGroups {
+func New(scheduler string, camunda interfaces.CamundaInterface, devicerepo devicerepository.RepoInterface, protocolMessageCallback Callback, currentlyRunningTimeoutInMs int64, expirationInSeconds int32, memcachedUrls []string, memcachedTimeout string, memcachedMaxIdleConns int64, filterEvents bool) *DeviceGroups {
 	if len(memcachedUrls) == 0 {
 		log.Println("start with local sub result storage")
-		return NewWithKeyValueStore(scheduler, camunda, devicerepo, protocolMessageCallback, currentlyRunningTimeoutInMs, expirationInSeconds, NewLocalDb())
+		return NewWithKeyValueStore(scheduler, camunda, devicerepo, protocolMessageCallback, currentlyRunningTimeoutInMs, expirationInSeconds, NewLocalDb(), filterEvents)
 	} else {
 		client := memcache.New(memcachedUrls...)
 		client.MaxIdleConns = int(memcachedMaxIdleConns)
@@ -48,11 +48,11 @@ func New(scheduler string, camunda interfaces.CamundaInterface, devicerepo devic
 		} else {
 			client.Timeout = timeout
 		}
-		return NewWithKeyValueStore(scheduler, camunda, devicerepo, protocolMessageCallback, currentlyRunningTimeoutInMs, expirationInSeconds, client)
+		return NewWithKeyValueStore(scheduler, camunda, devicerepo, protocolMessageCallback, currentlyRunningTimeoutInMs, expirationInSeconds, client, filterEvents)
 	}
 }
 
-func NewWithKeyValueStore(scheduler string, camunda interfaces.CamundaInterface, devicerepo devicerepository.RepoInterface, protocolMessageCallback Callback, currentlyRunningTimeoutInMs int64, expirationInSeconds int32, db DbInterface) *DeviceGroups {
+func NewWithKeyValueStore(scheduler string, camunda interfaces.CamundaInterface, devicerepo devicerepository.RepoInterface, protocolMessageCallback Callback, currentlyRunningTimeoutInMs int64, expirationInSeconds int32, db DbInterface, filterEvents bool) *DeviceGroups {
 	return &DeviceGroups{
 		protocolMessageCallback: protocolMessageCallback,
 		repo:                    devicerepo,
@@ -61,6 +61,7 @@ func NewWithKeyValueStore(scheduler string, camunda interfaces.CamundaInterface,
 		camunda:                 camunda,
 		scheduler:               scheduler,
 		currentlyRunningTimeout: time.Duration(currentlyRunningTimeoutInMs) * time.Millisecond,
+		filterEvents:            filterEvents,
 	}
 }
 
@@ -72,6 +73,7 @@ type DeviceGroups struct {
 	camunda                 interfaces.CamundaInterface
 	scheduler               string
 	currentlyRunningTimeout time.Duration
+	filterEvents            bool
 }
 
 type RequestInfo = messages.RequestInfo
@@ -376,7 +378,8 @@ func (this *DeviceGroups) getFilteredServices(command messages.Command, services
 			aspect = *command.Aspect
 		}
 		matchesCriteria := anyContentMatchesCriteria(contents, model.DeviceGroupFilterCriteria{FunctionId: command.Function.Id, AspectId: aspect.Id}, aspect)
-		if matchesCriteria {
+		isEvent := isMeasuringFunctionId(command.Function.Id) && service.Interaction == model.EVENT
+		if matchesCriteria && (!this.filterEvents || !isEvent) {
 			serviceIndex[service.Id] = service
 		}
 	}

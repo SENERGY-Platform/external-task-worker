@@ -106,7 +106,8 @@ func New(ctx context.Context, config util.Config, comFactory com.FactoryInterfac
 	if err != nil {
 		log.Fatal("ERROR: comFactory.NewProducer", err)
 	}
-	w.deviceGroupsHandler = devicegroups.New(config.GroupScheduler, w.camunda, w.repository, w.CreateProtocolMessage, config.CamundaFetchLockDuration, config.SubResultExpirationInSeconds, config.SubResultDatabaseUrls, config.MemcachedTimeout, config.MemcachedMaxIdleConns)
+	filterEvents := config.TimescaleWrapperUrl == "" || config.TimescaleWrapperUrl == "-"
+	w.deviceGroupsHandler = devicegroups.New(config.GroupScheduler, w.camunda, w.repository, w.CreateProtocolMessage, config.CamundaFetchLockDuration, config.SubResultExpirationInSeconds, config.SubResultDatabaseUrls, config.MemcachedTimeout, config.MemcachedMaxIdleConns, filterEvents)
 
 	return
 }
