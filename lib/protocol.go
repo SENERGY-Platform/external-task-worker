@@ -41,13 +41,18 @@ func (this *CmdWorker) CreateProtocolMessage(command messages.Command, task mess
 		err = errors.New("internal format error (" + err.Error() + ") (time: " + util.TimeNow().String() + ")")
 		return
 	}
-	topic := value.Metadata.Protocol.Handler
-	msg, err := json.Marshal(value)
-	return &messages.KafkaMessage{
-		Topic:   topic,
-		Key:     value.Metadata.Device.Id,
-		Payload: string(msg),
-	}, event, err
+	if value != nil {
+		topic := value.Metadata.Protocol.Handler
+		var msg []byte
+		msg, err = json.Marshal(value)
+		request = &messages.KafkaMessage{
+			Topic:   topic,
+			Key:     value.Metadata.Device.Id,
+			Payload: string(msg),
+		}
+	}
+
+	return request, event, err
 }
 
 func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command, task messages.CamundaExternalTask) (taskRequest *messages.ProtocolMsg, eventRequest *messages.EventRequest, err error) {

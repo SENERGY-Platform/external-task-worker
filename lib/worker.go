@@ -231,11 +231,15 @@ func (this *CmdWorker) ExecuteCommand(command messages.Command, task messages.Ca
 		} else {
 			if message.Event != nil {
 				token, err := this.repository.GetToken(message.Metadata.Task.TenantId)
+				if err != nil {
+					log.Println("ERROR: unable to get token", err)
+					continue
+				}
 				code, result := this.GetLastEventValue(string(token), message.Event.Device, message.Event.Service, message.Event.Protocol, message.Event.CharacteristicId, message.Event.FunctionId, message.Event.AspectNode, 10*time.Second)
 				if code == 200 {
 					err = this.handleTaskResponse(messages.TaskInfo{
 						WorkerId:            this.camunda.GetWorkerId(),
-						TaskId:              task.Id,
+						TaskId:              message.Metadata.Task.Id,
 						ProcessInstanceId:   task.ProcessInstanceId,
 						ProcessDefinitionId: task.ProcessDefinitionId,
 						CompletionStrategy:  this.config.CompletionStrategy,

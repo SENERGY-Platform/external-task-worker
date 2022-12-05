@@ -27,6 +27,7 @@ import (
 	"log"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -35,6 +36,9 @@ func (this *CmdWorker) GetLastEventValue(token string, device model.Device, serv
 	output, err, code := this.getLastEventMessage(token, device, service, protocol, timeout)
 	if err != nil {
 		return code, "unable to get event value: " + err.Error()
+	}
+	if code >= 300 {
+		return code, "unexpected code " + strconv.Itoa(code)
 	}
 	temp, err := this.marshaller.UnmarshalV2(marshaller.UnmarshallingV2Request{
 		Service:          service,
@@ -94,7 +98,7 @@ func (this *CmdWorker) createEventValueFromTimescaleValues(service model.Service
 			}
 		}
 	}
-	return result, err, http.StatusInternalServerError
+	return result, err, http.StatusOK
 }
 
 func marshalSegmentValue(serializationTo string, value interface{}, rootName string) (string, error) {
