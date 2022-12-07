@@ -229,7 +229,7 @@ func (this *CmdWorker) ExecuteCommand(command messages.Command, task messages.Ca
 				this.logProducerSuccess()
 			}
 		} else {
-			if message.Event != nil {
+			if message.Event != nil && this.config.TimescaleWrapperUrl != "" && this.config.TimescaleWrapperUrl != "-" {
 				token, err := this.repository.GetToken(message.Metadata.Task.TenantId)
 				if err != nil {
 					log.Println("ERROR: unable to get token", err)
