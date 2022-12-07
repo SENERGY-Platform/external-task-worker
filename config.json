@@ -1,6 +1,8 @@
 {
   "ShardsDb": "postgres://usr:pw@databasip:5432/shards?sslmode=disable",
   "DeviceRepoUrl": "http://iot:8080",
+  "HandleMissingLastValueTimeAsError": false,
+  "TimescaleWrapperUrl": "",
   "CompletionStrategy": "optimistic",
   "OptimisticTaskCompletionTimeout": 100,
   "CamundaWorkerTimeout": 1000,
