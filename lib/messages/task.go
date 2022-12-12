@@ -50,6 +50,8 @@ type Command struct {
 	OutputPath      string                      `json:"output_path,omitempty"`
 	ConfigurablesV2 []marshaller.ConfigurableV2 `json:"configurables_v2,omitempty"`
 
+	PreferEvent bool `json:"prefer_event"`
+
 	//runtime
 	Input  interface{} `json:"input,omitempty"`
 	Output interface{} `json:"output,omitempty"`

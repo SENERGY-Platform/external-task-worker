@@ -348,6 +348,7 @@ func (this *CmdWorker) HandleTaskResponse(msg string) (err error) {
 func (this *CmdWorker) handleTaskResponse(taskInfo messages.TaskInfo, output interface{}) (err error) {
 	parent, results, finished, err := this.deviceGroupsHandler.ProcessResponse(taskInfo.TaskId, output)
 	if err == devicegroups.ErrNotFount {
+		log.Println("WARNING: no parent task found --> unable to complete task (tasks may already be done):", taskInfo.TaskId, output)
 		return nil //if parent task is not found -> can not be finished (may already be done)
 	}
 	if err != nil {
@@ -369,7 +370,9 @@ func (this *CmdWorker) handleTaskResponse(taskInfo messages.TaskInfo, output int
 			taskInfo,
 			this.config.CamundaTaskResultName,
 			handleVersioning(parent.Command.Version, results))
-
+		if err != nil {
+			log.Println("ERROR: handleTaskResponse()", err.Error())
+		}
 		if this.config.Debug {
 			log.Println("Complete", parent.Task.Id, util.TimeNow().Second(), output, err)
 		}

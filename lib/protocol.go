@@ -110,7 +110,7 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 		if command.Aspect != nil {
 			aspect = *command.Aspect
 		}
-		if service.Interaction == model.EVENT {
+		if service.Interaction == model.EVENT || (service.Interaction == model.EVENT_AND_REQUEST && command.PreferEvent) {
 			return nil, &messages.EventRequest{
 				Device:           *device,
 				Service:          *service,
