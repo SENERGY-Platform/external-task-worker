@@ -219,6 +219,10 @@ func (this *CmdWorker) ExecuteCommand(command messages.Command, task messages.Ca
 		}
 	}
 
+	if this.config.Debug {
+		temp, _ := json.Marshal(nextProtocolMessages)
+		log.Println("DEBUG: nextProtocolMessages:\n", string(temp))
+	}
 	for _, message := range nextProtocolMessages {
 		if message.Request != nil {
 			err = this.producer.ProduceWithKey(message.Request.Topic, message.Request.Key, message.Request.Payload)
@@ -228,31 +232,32 @@ func (this *CmdWorker) ExecuteCommand(command messages.Command, task messages.Ca
 			} else {
 				this.logProducerSuccess()
 			}
-		} else {
-			if message.Event != nil && this.config.TimescaleWrapperUrl != "" && this.config.TimescaleWrapperUrl != "-" {
-				token, err := this.repository.GetToken(message.Metadata.Task.TenantId)
-				if err != nil {
-					log.Println("ERROR: unable to get token", err)
-					continue
-				}
-				code, result := this.GetLastEventValue(string(token), message.Event.Device, message.Event.Service, message.Event.Protocol, message.Event.CharacteristicId, message.Event.FunctionId, message.Event.AspectNode, 10*time.Second)
-				if code == 200 {
-					err = this.handleTaskResponse(messages.TaskInfo{
-						WorkerId:            this.camunda.GetWorkerId(),
-						TaskId:              message.Metadata.Task.Id,
-						ProcessInstanceId:   task.ProcessInstanceId,
-						ProcessDefinitionId: task.ProcessDefinitionId,
-						CompletionStrategy:  this.config.CompletionStrategy,
-						Time:                strconv.FormatInt(util.TimeNow().Unix(), 10),
-						TenantId:            task.TenantId,
-					}, result)
-					if err != nil {
-						log.Println("ERROR: unable to handle GetLastEventValue() as task response", err)
-					}
-				} else {
-					log.Println("ERROR: GetLastEventValue()", code, result)
-				}
+		} else if message.Event != nil && this.config.TimescaleWrapperUrl != "" && this.config.TimescaleWrapperUrl != "-" {
+			token, err := this.repository.GetToken(message.Metadata.Task.TenantId)
+			if err != nil {
+				log.Println("ERROR: unable to get token", err)
+				continue
 			}
+			code, result := this.GetLastEventValue(string(token), message.Event.Device, message.Event.Service, message.Event.Protocol, message.Event.CharacteristicId, message.Event.FunctionId, message.Event.AspectNode, 10*time.Second)
+			if code == 200 {
+				err = this.handleTaskResponse(messages.TaskInfo{
+					WorkerId:            this.camunda.GetWorkerId(),
+					TaskId:              message.Metadata.Task.Id,
+					ProcessInstanceId:   task.ProcessInstanceId,
+					ProcessDefinitionId: task.ProcessDefinitionId,
+					CompletionStrategy:  this.config.CompletionStrategy,
+					Time:                strconv.FormatInt(util.TimeNow().Unix(), 10),
+					TenantId:            task.TenantId,
+				}, result)
+				if err != nil {
+					log.Println("ERROR: unable to handle GetLastEventValue() as task response", err)
+				}
+			} else {
+				log.Println("ERROR: GetLastEventValue()", code, result)
+			}
+		} else {
+			temp, _ := json.Marshal(message)
+			log.Println("WARNING: unhandled command", string(temp))
 		}
 	}
 }

@@ -49,7 +49,7 @@ func NewTimescale(timescaleWrapperUrl string) *Timescale {
 
 func (this *Timescale) Query(token string, request []messages.TimescaleRequest, timeout time.Duration) (result []messages.TimescaleResponse, err error) {
 	body := &bytes.Buffer{}
-	query := this.castRequest(request)
+	query := CastRequest(request)
 	err = json.NewEncoder(body).Encode(query)
 	if err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func (this *Timescale) Query(token string, request []messages.TimescaleRequest, 
 	return castQueryResponse(request, query, queryResponse)
 }
 
-func (this *Timescale) castRequest(request []messages.TimescaleRequest) (result TimescaleQuery) {
+func CastRequest(request []messages.TimescaleRequest) (result TimescaleQuery) {
 	groupedRequests := map[string]map[string][]string{}
 	for _, req := range request {
 		if _, ok := groupedRequests[req.Device.Id]; !ok {

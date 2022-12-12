@@ -22,6 +22,7 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
+	"github.com/SENERGY-Platform/external-task-worker/lib/timescale"
 	marshallermodel "github.com/SENERGY-Platform/marshaller/lib/marshaller/model"
 	"github.com/SENERGY-Platform/marshaller/lib/marshaller/serialization"
 	"log"
@@ -35,9 +36,11 @@ import (
 func (this *CmdWorker) GetLastEventValue(token string, device model.Device, service model.Service, protocol model.Protocol, characteristicId string, functionId string, aspect model.AspectNode, timeout time.Duration) (code int, result interface{}) {
 	output, err, code := this.getLastEventMessage(token, device, service, protocol, timeout)
 	if err != nil {
-		return code, "unable to get event value: " + err.Error()
+		log.Println("ERROR: unable to get event value:", err)
+		return 500, "unable to get event value: " + err.Error()
 	}
 	if code >= 300 {
+		log.Println("ERROR: unexpected getLastEventMessage() return code:", code)
 		return code, "unexpected code " + strconv.Itoa(code)
 	}
 	temp, err := this.marshaller.UnmarshalV2(marshaller.UnmarshallingV2Request{
@@ -63,6 +66,7 @@ func (this *CmdWorker) GetLastEventValue(token string, device model.Device, serv
 			})
 			log.Println("ERROR: unmarshal request", string(marshalRequestStr))
 		}
+		log.Println("ERROR: unmarshal request:", err)
 		return http.StatusInternalServerError, "unable to unmarshal event value: " + err.Error()
 	}
 	return 200, temp
@@ -72,6 +76,9 @@ func (this *CmdWorker) getLastEventMessage(token string, device model.Device, se
 	request := createTimescaleRequest(device, service)
 	response := []messages.TimescaleResponse{}
 	response, err = this.timescale.Query(token, request, timeout)
+	if this.config.Debug {
+		log.Printf("DEBUG: getLastEventMessage()\n\trequest: %#v\n\tresponse: %#v\n\terr:%#v", timescale.CastRequest(request), response, err)
+	}
 	if err != nil {
 		return result, err, http.StatusInternalServerError
 	}
