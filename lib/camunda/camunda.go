@@ -102,6 +102,8 @@ func (this *Camunda) getShardTasks(shard string) (tasks []messages.CamundaExtern
 	return
 }
 
+var UnableToCompleteErrResp = errors.New("unable to complete task")
+
 func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string, output interface{}) (err error) {
 	shard, err := this.shards.GetShardForUser(taskInfo.TenantId)
 	if err != nil {
@@ -125,28 +127,39 @@ func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string,
 	}
 
 	log.Println("Start complete Request", taskInfo.TaskId)
-	client := http.Client{Timeout: 5 * time.Second}
-	b := new(bytes.Buffer)
-	err = json.NewEncoder(b).Encode(completeRequest)
-	if err != nil {
-		return
-	}
-	resp, err := client.Post(shard+"/engine-rest/external-task/"+taskInfo.TaskId+"/complete", "application/json", b)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	pl, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
+	send := func() error {
+		client := http.Client{Timeout: 5 * time.Second}
+		b := new(bytes.Buffer)
+		err = json.NewEncoder(b).Encode(completeRequest)
+		if err != nil {
+			return err
+		}
+		resp, err := client.Post(shard+"/engine-rest/external-task/"+taskInfo.TaskId+"/complete", "application/json", b)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		pl, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode >= 300 {
+			log.Println("WARNING: unable to complete task", taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, string(pl), taskInfo.TenantId)
+			return fmt.Errorf("%w: %v, %v", UnableToCompleteErrResp, resp.StatusCode, string(pl))
+		}
+		log.Println("complete camunda task: ", completeRequest, string(pl))
+		return nil
 	}
 
-	if resp.StatusCode >= 300 {
-		//this.Error(taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, string(pl), taskInfo.TenantId)
-		log.Println("WARNING: unable to complete task", taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, string(pl), taskInfo.TenantId)
-	} else {
-		log.Println("complete camunda task: ", completeRequest, string(pl))
+	err = send()
+	if err != nil {
+		log.Println("retry complete request")
+		err = send()
+		if err != nil && errors.Is(err, UnableToCompleteErrResp) {
+			this.Error(taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, err.Error(), taskInfo.TenantId)
+		}
 	}
+
 	return
 }
 
@@ -209,7 +222,7 @@ func (this *Camunda) SetRetry(taskid string, tenantId string, retries int64) {
 		return
 	}
 	defer resp.Body.Close()
-	pl, err := ioutil.ReadAll(resp.Body)
+	pl, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Println("ERROR: ReadAll():", err)
 		debug.PrintStack()
