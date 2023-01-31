@@ -1,11 +1,11 @@
 module github.com/SENERGY-Platform/external-task-worker
 
-go 1.18
+go 1.19
 
 require (
 	github.com/DataDog/zstd v1.4.0 // indirect
-	github.com/SENERGY-Platform/converter v0.0.0-20220810123448-27fbbf6ab679
-	github.com/SENERGY-Platform/marshaller v0.0.0-20220823070456-9df7dd3f42e5
+	github.com/SENERGY-Platform/converter v0.0.0-20230131075057-f47029811afa
+	github.com/SENERGY-Platform/marshaller v0.0.0-20230131075912-f8a59c43fc1d
 	github.com/Shopify/sarama v1.22.0
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/coocood/freecache v1.2.1
@@ -26,6 +26,7 @@ require (
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/RyanCarrier/dijkstra v1.1.0 // indirect
+	github.com/SENERGY-Platform/models/go v0.0.0-20230105115534-8edcf0271764 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/clbanning/mxj v1.8.4 // indirect
@@ -42,7 +43,6 @@ require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
-	github.com/julienschmidt/httprouter v1.3.0 // indirect
 	github.com/klauspost/compress v1.9.8 // indirect
 	github.com/lucasb-eyer/go-colorful v1.0.3 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect

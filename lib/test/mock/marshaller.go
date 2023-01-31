@@ -136,5 +136,5 @@ func (this *MarshallerMock) UnmarshalV2(request marshaller.UnmarshallingV2Reques
 		}
 		request.Path = paths[0]
 	}
-	return this.v2.Unmarshal(mockProtocol, mockService, request.CharacteristicId, request.Path, request.Message)
+	return this.v2.Unmarshal(mockProtocol, mockService, request.CharacteristicId, request.Path, request.Message, nil)
 }

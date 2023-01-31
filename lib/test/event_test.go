@@ -34,6 +34,7 @@ import (
 )
 
 func TestWorkerEventResponseV2(t *testing.T) {
+	mock.CleanKafkaMock()
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -191,6 +192,7 @@ func TestWorkerEventResponseV2(t *testing.T) {
 }
 
 func TestGroupEventResponses(t *testing.T) {
+	mock.CleanKafkaMock()
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -471,6 +473,7 @@ func TestGroupEventResponses(t *testing.T) {
 }
 
 func TestGroupEventResponsesWithMemcached(t *testing.T) {
+	mock.CleanKafkaMock()
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -761,6 +764,7 @@ func TestGroupEventResponsesWithMemcached(t *testing.T) {
 }
 
 func TestWorkerEventDeviceWithoutServiceCommand(t *testing.T) {
+	mock.CleanKafkaMock()
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -1604,6 +1608,7 @@ func TestWorkerEventDeviceWithoutServiceCommand(t *testing.T) {
 }
 
 func TestDeviceEventWithoutServiceResponses(t *testing.T) {
+	mock.CleanKafkaMock()
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}

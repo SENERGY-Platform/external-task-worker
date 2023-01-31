@@ -32,6 +32,7 @@ import (
 )
 
 func TestSequentialExecution(t *testing.T) {
+	mock.CleanKafkaMock()
 	t.Run("0 retries nil lost", testSequentialExecution(0, nil, []float64{0, 1, 2}, false))
 	t.Run("0 retries 0 lost", testSequentialExecution(0, []int{0}, []float64{1, 2}, false))
 	t.Run("0 retries 1 lost", testSequentialExecution(0, []int{1}, []float64{0, 2}, false))
@@ -103,7 +104,8 @@ func testSequentialExecution(retries int64, lostResponseFor []int, expectedResul
 		defer cancel()
 		mockCamunda := &mock.CamundaMock{}
 		mockCamunda.Init()
-		go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
+		kafkamock := &mock.KafkaMock{}
+		go lib.Worker(ctx, config, kafkamock, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
 
 		time.Sleep(100 * time.Millisecond)
 
@@ -113,7 +115,7 @@ func testSequentialExecution(retries int64, lostResponseFor []int, expectedResul
 		}
 
 		counter := 0
-		mock.Kafka.Subscribe("protocol1", func(message string) error {
+		kafkamock.Subscribe("protocol1", func(message string) error {
 			msg := messages.ProtocolMsg{}
 			err = json.Unmarshal([]byte(message), &msg)
 			if err != nil {
@@ -131,7 +133,7 @@ func testSequentialExecution(retries int64, lostResponseFor []int, expectedResul
 				if err != nil {
 					log.Fatal(err)
 				}
-				mock.Kafka.Produce(config.ResponseTopic, string(resp))
+				kafkamock.Produce(config.ResponseTopic, string(resp))
 			} else {
 				log.Println("IGNORE", counter-1, msg.Response.Output)
 			}

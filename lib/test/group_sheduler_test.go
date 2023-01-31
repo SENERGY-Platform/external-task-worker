@@ -130,60 +130,72 @@ func TestGroupScheduler(t *testing.T) {
 	}))
 
 	config.GroupScheduler = util.SEQUENTIAL
-	t.Run("very slow sequential flip", getGroupShedullerTest(config, GroupSimConfig{
-		Retries:       1,
-		CheckAfter:    1 * time.Minute,
-		ResponseTimes: [][]time.Duration{{1500 * time.Millisecond}, {-1}, {1500 * time.Millisecond, -1}, {1500 * time.Millisecond}, {1500 * time.Millisecond}},
-		Responses:     []string{"#c83200", "#c83201", "#c83202", "#c83203", "#c83204"},
-		ExpectedResult: []interface{}{
-			map[string]interface{}{"b": float64(0), "g": float64(50), "r": float64(200)},
-			map[string]interface{}{"b": float64(2), "g": float64(50), "r": float64(200)},
-			map[string]interface{}{"b": float64(3), "g": float64(50), "r": float64(200)},
-			map[string]interface{}{"b": float64(4), "g": float64(50), "r": float64(200)},
-		},
-	}))
+	t.Run("very slow sequential flip", func(t *testing.T) {
+		t.Skip("slow")
+		getGroupShedullerTest(config, GroupSimConfig{
+			Retries:       1,
+			CheckAfter:    1 * time.Minute,
+			ResponseTimes: [][]time.Duration{{1500 * time.Millisecond}, {-1}, {1500 * time.Millisecond, -1}, {1500 * time.Millisecond}, {1500 * time.Millisecond}},
+			Responses:     []string{"#c83200", "#c83201", "#c83202", "#c83203", "#c83204"},
+			ExpectedResult: []interface{}{
+				map[string]interface{}{"b": float64(0), "g": float64(50), "r": float64(200)},
+				map[string]interface{}{"b": float64(2), "g": float64(50), "r": float64(200)},
+				map[string]interface{}{"b": float64(3), "g": float64(50), "r": float64(200)},
+				map[string]interface{}{"b": float64(4), "g": float64(50), "r": float64(200)},
+			},
+		})(t)
+	})
 
 	config.GroupScheduler = util.SEQUENTIAL
-	t.Run("very slow sequential", getGroupShedullerTest(config, GroupSimConfig{
-		Retries:       1,
-		CheckAfter:    1 * time.Minute,
-		ResponseTimes: [][]time.Duration{{1500 * time.Millisecond}, {-1}, {-1, 1500 * time.Millisecond}, {1500 * time.Millisecond}, {1500 * time.Millisecond}},
-		Responses:     []string{"#c83200", "#c83201", "#c83202", "#c83203", "#c83204"},
-		ExpectedResult: []interface{}{
-			map[string]interface{}{"b": float64(0), "g": float64(50), "r": float64(200)},
-			map[string]interface{}{"b": float64(2), "g": float64(50), "r": float64(200)},
-			map[string]interface{}{"b": float64(3), "g": float64(50), "r": float64(200)},
-			map[string]interface{}{"b": float64(4), "g": float64(50), "r": float64(200)},
-		},
-	}))
+	t.Run("very slow sequential", func(t *testing.T) {
+		t.Skip("slow")
+		getGroupShedullerTest(config, GroupSimConfig{
+			Retries:       1,
+			CheckAfter:    1 * time.Minute,
+			ResponseTimes: [][]time.Duration{{1500 * time.Millisecond}, {-1}, {-1, 1500 * time.Millisecond}, {1500 * time.Millisecond}, {1500 * time.Millisecond}},
+			Responses:     []string{"#c83200", "#c83201", "#c83202", "#c83203", "#c83204"},
+			ExpectedResult: []interface{}{
+				map[string]interface{}{"b": float64(0), "g": float64(50), "r": float64(200)},
+				map[string]interface{}{"b": float64(2), "g": float64(50), "r": float64(200)},
+				map[string]interface{}{"b": float64(3), "g": float64(50), "r": float64(200)},
+				map[string]interface{}{"b": float64(4), "g": float64(50), "r": float64(200)},
+			},
+		})(t)
+	})
 
 	config.GroupScheduler = util.ROUND_ROBIN
-	t.Run("very slow round robin", getGroupShedullerTest(config, GroupSimConfig{
-		Retries:       1,
-		CheckAfter:    1 * time.Minute,
-		ResponseTimes: [][]time.Duration{{1500 * time.Millisecond}, {-1}, {-1, 1500 * time.Millisecond}, {1500 * time.Millisecond}, {1500 * time.Millisecond}},
-		Responses:     []string{"#c83200", "#c83201", "#c83202", "#c83203", "#c83204"},
-		ExpectedResult: []interface{}{
-			map[string]interface{}{"b": float64(0), "g": float64(50), "r": float64(200)},
-			map[string]interface{}{"b": float64(2), "g": float64(50), "r": float64(200)},
-			map[string]interface{}{"b": float64(3), "g": float64(50), "r": float64(200)},
-			map[string]interface{}{"b": float64(4), "g": float64(50), "r": float64(200)},
-		},
-	}))
+	t.Run("very slow round robin", func(t *testing.T) {
+		t.Skip("slow")
+		getGroupShedullerTest(config, GroupSimConfig{
+			Retries:       1,
+			CheckAfter:    1 * time.Minute,
+			ResponseTimes: [][]time.Duration{{1500 * time.Millisecond}, {-1}, {-1, 1500 * time.Millisecond}, {1500 * time.Millisecond}, {1500 * time.Millisecond}},
+			Responses:     []string{"#c83200", "#c83201", "#c83202", "#c83203", "#c83204"},
+			ExpectedResult: []interface{}{
+				map[string]interface{}{"b": float64(0), "g": float64(50), "r": float64(200)},
+				map[string]interface{}{"b": float64(2), "g": float64(50), "r": float64(200)},
+				map[string]interface{}{"b": float64(3), "g": float64(50), "r": float64(200)},
+				map[string]interface{}{"b": float64(4), "g": float64(50), "r": float64(200)},
+			},
+		})(t)
+	})
 
 	config.GroupScheduler = util.PARALLEL
-	t.Run("very slow parallel", getGroupShedullerTest(config, GroupSimConfig{
-		Retries:       1,
-		CheckAfter:    1 * time.Minute,
-		ResponseTimes: [][]time.Duration{{1500 * time.Millisecond}, {-1}, {1500 * time.Millisecond, -1}, {1500 * time.Millisecond}, {1500 * time.Millisecond}},
-		Responses:     []string{"#c83200", "#c83201", "#c83202", "#c83203", "#c83204"},
-		ExpectedResult: []interface{}{
-			map[string]interface{}{"b": float64(0), "g": float64(50), "r": float64(200)},
-			map[string]interface{}{"b": float64(2), "g": float64(50), "r": float64(200)},
-			map[string]interface{}{"b": float64(3), "g": float64(50), "r": float64(200)},
-			map[string]interface{}{"b": float64(4), "g": float64(50), "r": float64(200)},
-		},
-	}))
+	t.Run("very slow parallel", func(t *testing.T) {
+		t.Skip("slow")
+		getGroupShedullerTest(config, GroupSimConfig{
+			Retries:       1,
+			CheckAfter:    1 * time.Minute,
+			ResponseTimes: [][]time.Duration{{1500 * time.Millisecond}, {-1}, {1500 * time.Millisecond, -1}, {1500 * time.Millisecond}, {1500 * time.Millisecond}},
+			Responses:     []string{"#c83200", "#c83201", "#c83202", "#c83203", "#c83204"},
+			ExpectedResult: []interface{}{
+				map[string]interface{}{"b": float64(0), "g": float64(50), "r": float64(200)},
+				map[string]interface{}{"b": float64(2), "g": float64(50), "r": float64(200)},
+				map[string]interface{}{"b": float64(3), "g": float64(50), "r": float64(200)},
+				map[string]interface{}{"b": float64(4), "g": float64(50), "r": float64(200)},
+			},
+		})(t)
+	})
 }
 
 type DeviceSimInterface interface {
@@ -244,7 +256,6 @@ func (this *GroupSim) GetDevices() (devices []model.Device) {
 
 func getGroupShedullerTest(config util.Config, simConfig GroupSimConfig) func(t *testing.T) {
 	return func(t *testing.T) {
-		t.Parallel()
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 

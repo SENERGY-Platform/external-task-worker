@@ -16,63 +16,30 @@
 
 package model
 
-type Hub struct {
-	Id             string   `json:"id"`
-	Name           string   `json:"name"`
-	Hash           string   `json:"hash"`
-	DeviceLocalIds []string `json:"device_local_ids"`
-}
+import "github.com/SENERGY-Platform/models/go/models"
 
-type Content struct {
-	Id                string          `json:"id"`
-	ContentVariable   ContentVariable `json:"content_variable"`
-	Serialization     Serialization   `json:"serialization"`
-	ProtocolSegmentId string          `json:"protocol_segment_id"`
-}
+type Hub = models.Hub
 
-type Serialization string
+type Content = models.Content
+
+type Serialization = models.Serialization
 
 const (
-	XML       Serialization = "xml"
-	JSON      Serialization = "json"
-	PlainText Serialization = "plain-text"
+	XML       = models.XML
+	JSON      = models.JSON
+	PlainText = models.PlainText
 )
 
-func (this Serialization) Valid() bool {
-	switch this {
-	case XML:
-		return true
-	case JSON:
-		return true
-	case PlainText:
-		return true
-	default:
-		return false
-	}
-}
-
-type Type string
+type Type = models.Type
 
 const (
-	String  Type = "https://schema.org/Text"
-	Integer Type = "https://schema.org/Integer"
-	Float   Type = "https://schema.org/Float"
-	Boolean Type = "https://schema.org/Boolean"
+	String  = models.String
+	Integer = models.Integer
+	Float   = models.Float
+	Boolean = models.Boolean
 
-	List      Type = "https://schema.org/ItemList"
-	Structure Type = "https://schema.org/StructuredValue"
+	List      = models.List
+	Structure = models.Structure
 )
 
-type ContentVariable struct {
-	Id                   string            `json:"id"`
-	Name                 string            `json:"name"`
-	IsVoid               bool              `json:"is_void"`
-	Type                 Type              `json:"type"`
-	SubContentVariables  []ContentVariable `json:"sub_content_variables"`
-	CharacteristicId     string            `json:"characteristic_id"`
-	Value                interface{}       `json:"value"`
-	SerializationOptions []string          `json:"serialization_options"`
-	UnitReference        string            `json:"unit_reference,omitempty"`
-	FunctionId           string            `json:"function_id,omitempty"`
-	AspectId             string            `json:"aspect_id,omitempty"`
-}
+type ContentVariable = models.ContentVariable

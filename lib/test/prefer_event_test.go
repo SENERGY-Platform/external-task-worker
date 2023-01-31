@@ -32,6 +32,7 @@ import (
 )
 
 func TestWorkerPreferEventResponseV2(t *testing.T) {
+	mock.CleanKafkaMock()
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -216,6 +217,7 @@ func TestWorkerPreferEventResponseV2(t *testing.T) {
 }
 
 func TestGroupPreferEventResponses(t *testing.T) {
+	mock.CleanKafkaMock()
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}

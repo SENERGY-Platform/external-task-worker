@@ -16,92 +16,30 @@
 
 package model
 
-type Device struct {
-	Id           string      `json:"id"`
-	LocalId      string      `json:"local_id"`
-	Name         string      `json:"name"`
-	Attributes   []Attribute `json:"attributes"`
-	DeviceTypeId string      `json:"device_type_id"`
-}
+import "github.com/SENERGY-Platform/models/go/models"
 
-type DeviceType struct {
-	Id            string         `json:"id"`
-	Name          string         `json:"name"`
-	Description   string         `json:"description"`
-	ServiceGroups []ServiceGroup `json:"service_groups"`
-	Services      []Service      `json:"services"`
-	DeviceClassId string         `json:"device_class_id"`
-	Attributes    []Attribute    `json:"attributes"`
-}
+type Device = models.Device
 
-type ServiceGroup struct {
-	Key         string `json:"key"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-}
+type DeviceType = models.DeviceType
 
-type Attribute struct {
-	Key    string `json:"key"`
-	Value  string `json:"value"`
-	Origin string `json:"origin"`
-}
+type ServiceGroup = models.ServiceGroup
 
-type Service struct {
-	Id              string      `json:"id"`
-	LocalId         string      `json:"local_id"`
-	Name            string      `json:"name"`
-	Description     string      `json:"description"`
-	Interaction     Interaction `json:"interaction"`
-	ProtocolId      string      `json:"protocol_id"`
-	Inputs          []Content   `json:"inputs"`
-	Outputs         []Content   `json:"outputs"`
-	Attributes      []Attribute `json:"attributes"`
-	ServiceGroupKey string      `json:"service_group_key"`
-}
+type Attribute = models.Attribute
 
-type Interaction string
+type Service = models.Service
+
+type Interaction = models.Interaction
 
 const (
-	EVENT             Interaction = "event"
-	REQUEST           Interaction = "request"
-	EVENT_AND_REQUEST Interaction = "event+request"
+	EVENT             = models.EVENT
+	REQUEST           = models.REQUEST
+	EVENT_AND_REQUEST = models.EVENT_AND_REQUEST
 )
 
-type Protocol struct {
-	Id               string            `json:"id"`
-	Name             string            `json:"name"`
-	Handler          string            `json:"handler"`
-	ProtocolSegments []ProtocolSegment `json:"protocol_segments"`
-}
+type Protocol = models.Protocol
 
-type ProtocolSegment struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-}
+type ProtocolSegment = models.ProtocolSegment
 
-type DeviceGroup struct {
-	Id            string                      `json:"id"`
-	Name          string                      `json:"name"`
-	Image         string                      `json:"image"`
-	Criteria      []DeviceGroupFilterCriteria `json:"criteria"`
-	DeviceIds     []string                    `json:"device_ids"`
-	CriteriaShort []string                    `json:"criteria_short,omitempty"`
-}
+type DeviceGroup = models.DeviceGroup
 
-func (this *DeviceGroup) SetShortCriteria() {
-	this.CriteriaShort = []string{}
-	for _, criteria := range this.Criteria {
-		this.CriteriaShort = append(this.CriteriaShort, criteria.Short())
-	}
-}
-
-type DeviceGroupFilterCriteria struct {
-	Interaction   Interaction `json:"interaction"`
-	FunctionId    string      `json:"function_id"`
-	AspectId      string      `json:"aspect_id"`
-	DeviceClassId string      `json:"device_class_id"`
-}
-
-func (this DeviceGroupFilterCriteria) Short() string {
-	return this.FunctionId + "_" + this.AspectId + "_" + this.DeviceClassId + "_" + string(this.Interaction)
-}
+type DeviceGroupFilterCriteria = models.DeviceGroupFilterCriteria

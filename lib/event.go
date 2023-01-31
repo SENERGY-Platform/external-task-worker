@@ -25,6 +25,7 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/timescale"
 	marshallermodel "github.com/SENERGY-Platform/marshaller/lib/marshaller/model"
 	"github.com/SENERGY-Platform/marshaller/lib/marshaller/serialization"
+	"github.com/SENERGY-Platform/models/go/models"
 	"log"
 	"net/http"
 	"sort"
@@ -99,7 +100,7 @@ func (this *CmdWorker) createEventValueFromTimescaleValues(service model.Service
 		segmentValue := timescaleValue[content.ContentVariable.Name]
 		segmentName := getSegmentName(protocol, content.ProtocolSegmentId)
 		if segmentName != "" && segmentValue != nil {
-			result[segmentName], err = marshalSegmentValue(string(content.Serialization), segmentValue, content.ContentVariable.Name)
+			result[segmentName], err = marshalSegmentValue(content.Serialization, segmentValue, content.ContentVariable.Name)
 			if err != nil {
 				return result, err, http.StatusInternalServerError
 			}
@@ -108,7 +109,7 @@ func (this *CmdWorker) createEventValueFromTimescaleValues(service model.Service
 	return result, err, http.StatusOK
 }
 
-func marshalSegmentValue(serializationTo string, value interface{}, rootName string) (string, error) {
+func marshalSegmentValue(serializationTo models.Serialization, value interface{}, rootName string) (string, error) {
 	m, ok := serialization.Get(serializationTo)
 	if !ok {
 		err := errors.New("unknown serialization")
