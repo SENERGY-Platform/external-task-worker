@@ -26,14 +26,13 @@ import (
 )
 
 type Iot struct {
-	cache         *Cache
-	repoUrl       string
-	permsearchUrl string
-	keycloak      Keycloak
+	cache    *Cache
+	repoUrl  string
+	keycloak Keycloak
 }
 
 func NewIot(config util.Config) *Iot {
-	return &Iot{repoUrl: config.DeviceRepoUrl, cache: NewCache(), permsearchUrl: config.PermissionsUrl, keycloak: Keycloak{config: config}}
+	return &Iot{repoUrl: config.DeviceRepoUrl, cache: NewCache(), keycloak: Keycloak{config: config}}
 }
 
 func (this *Iot) GetToken(user string) (result Impersonate, err error) {

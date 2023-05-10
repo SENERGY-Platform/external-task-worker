@@ -22,36 +22,33 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/com/kafka"
 	"github.com/SENERGY-Platform/external-task-worker/lib/test/docker"
 	"github.com/SENERGY-Platform/external-task-worker/util"
-	"github.com/ory/dockertest/v3"
 	"log"
 	"reflect"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 )
 
 func TestComswitch(t *testing.T) {
-	pool, err := dockertest.NewPool("")
-	if err != nil {
-		t.Error(err)
-		return
-	}
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	closeZk, _, zkIp, err := docker.Zookeeper(pool)
+	_, zkIp, err := docker.Zookeeper(ctx, wg)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	defer closeZk()
 	zookeeperUrl := zkIp + ":2181"
 
 	//kafka
-	kafkaUrl, closeKafka, err := docker.Kafka(pool, zookeeperUrl)
+	kafkaUrl, err := docker.Kafka(ctx, wg, zookeeperUrl)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	defer closeKafka()
 
 	time.Sleep(2 * time.Second)
 
@@ -68,9 +65,6 @@ func TestComswitch(t *testing.T) {
 	}
 
 	messages := []string{}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	apiPort, err := getFreePort()
 	if err != nil {
@@ -144,27 +138,24 @@ func TestComswitch(t *testing.T) {
 }
 
 func TestComswitchProduceWithKey(t *testing.T) {
-	pool, err := dockertest.NewPool("")
-	if err != nil {
-		t.Error(err)
-		return
-	}
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	closeZk, _, zkIp, err := docker.Zookeeper(pool)
+	_, zkIp, err := docker.Zookeeper(ctx, wg)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	defer closeZk()
 	zookeeperUrl := zkIp + ":2181"
 
 	//kafka
-	kafkaUrl, closeKafka, err := docker.Kafka(pool, zookeeperUrl)
+	kafkaUrl, err := docker.Kafka(ctx, wg, zookeeperUrl)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	defer closeKafka()
 
 	time.Sleep(2 * time.Second)
 
@@ -182,9 +173,6 @@ func TestComswitchProduceWithKey(t *testing.T) {
 
 	messages := []string{}
 	errMessages := []string{}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	apiPort, err := getFreePort()
 	if err != nil {

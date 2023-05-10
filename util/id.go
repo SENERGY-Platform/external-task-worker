@@ -17,10 +17,10 @@
 package util
 
 import (
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 )
 
-//to replace when testing
+// to replace when testing
 var GetId = func() string {
-	return uuid.NewV4().String()
+	return uuid.NewString()
 }

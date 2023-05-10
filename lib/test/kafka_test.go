@@ -20,34 +20,31 @@ import (
 	"context"
 	"github.com/SENERGY-Platform/external-task-worker/lib/com/kafka"
 	"github.com/SENERGY-Platform/external-task-worker/lib/test/docker"
-	"github.com/ory/dockertest/v3"
 	"log"
+	"sync"
 	"testing"
 	"time"
 )
 
 func TestProducer_Produce(t *testing.T) {
-	pool, err := dockertest.NewPool("")
-	if err != nil {
-		t.Error(err)
-		return
-	}
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	closeZk, _, zkIp, err := docker.Zookeeper(pool)
+	_, zkIp, err := docker.Zookeeper(ctx, wg)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	defer closeZk()
 	zookeeperUrl := zkIp + ":2181"
 
 	//kafka
-	kafkaUrl, closeKafka, err := docker.Kafka(pool, zookeeperUrl)
+	kafkaUrl, err := docker.Kafka(ctx, wg, zookeeperUrl)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	defer closeKafka()
 
 	time.Sleep(2 * time.Second)
 
@@ -64,9 +61,6 @@ func TestProducer_Produce(t *testing.T) {
 	}
 
 	result := [][]byte{}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	err = kafka.NewConsumer(ctx, kafka.ConsumerConfig{
 		KafkaUrl: kafkaUrl,
@@ -119,27 +113,24 @@ func TestProducer_Produce(t *testing.T) {
 }
 
 func TestProducer_ProduceWithKey(t *testing.T) {
-	pool, err := dockertest.NewPool("")
-	if err != nil {
-		t.Error(err)
-		return
-	}
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	closeZk, _, zkIp, err := docker.Zookeeper(pool)
+	_, zkIp, err := docker.Zookeeper(ctx, wg)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	defer closeZk()
 	zookeeperUrl := zkIp + ":2181"
 
 	//kafka
-	kafkaUrl, closeKafka, err := docker.Kafka(pool, zookeeperUrl)
+	kafkaUrl, err := docker.Kafka(ctx, wg, zookeeperUrl)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	defer closeKafka()
 
 	time.Sleep(2 * time.Second)
 
@@ -156,9 +147,6 @@ func TestProducer_ProduceWithKey(t *testing.T) {
 	}
 
 	result := [][]byte{}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	err = kafka.NewConsumer(ctx, kafka.ConsumerConfig{
 		KafkaUrl: kafkaUrl,

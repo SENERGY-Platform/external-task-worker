@@ -47,13 +47,13 @@ func TestGetTask(t *testing.T) {
 		return
 	}
 
-	_, camundaPgIp, camundaPgPort, err := docker.PostgresWithNetwork(ctx, &wg, "camunda")
+	_, camundaPgIp, _, err := docker.PostgresWithNetwork(ctx, &wg, "camunda")
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	camundaUrl, err := docker.Camunda(ctx, &wg, camundaPgIp, camundaPgPort)
+	camundaUrl, err := docker.Camunda(ctx, &wg, camundaPgIp, "5432")
 	if err != nil {
 		t.Error(err)
 		return

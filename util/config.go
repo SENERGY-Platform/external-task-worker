@@ -53,7 +53,6 @@ type Config struct {
 	JwtPrivateKey                   string
 	JwtExpiration                   int64
 	JwtIssuer                       string
-	PermissionsUrl                  string
 	KafkaIncidentTopic              string
 	Debug                           bool
 	MarshallerUrl                   string
