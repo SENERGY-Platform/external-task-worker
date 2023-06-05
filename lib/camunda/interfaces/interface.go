@@ -20,10 +20,11 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
+	"time"
 )
 
 type FactoryInterface interface {
-	Get(configType util.Config, producer com.ProducerInterface) (CamundaInterface, error)
+	Get(configType util.Config, producer com.ProducerInterface, metrics Metrics) (CamundaInterface, error)
 }
 
 type CamundaInterface interface {
@@ -33,4 +34,13 @@ type CamundaInterface interface {
 	Error(externalTaskId string, processInstanceId string, processDefinitionId string, msg string, tenantId string)
 	GetWorkerId() string
 	UnlockTask(taskInfo messages.TaskInfo) (err error)
+}
+
+type Metrics interface {
+	LogCamundaCompleteTask(latency time.Duration)
+	LogCamundaCompleteTaskError()
+	LogIncident()
+	LogCamundaLoadedTasks(count int)
+	LogCamundaGetShardsError()
+	LogCamundaGetTasksError()
 }

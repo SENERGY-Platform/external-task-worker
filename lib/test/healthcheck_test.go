@@ -235,7 +235,7 @@ type StoppableTestCamunda struct {
 	tasks []messages.CamundaExternalTask
 }
 
-func (this *StoppableTestCamunda) Get(configType util.Config, producer com.ProducerInterface) (interfaces.CamundaInterface, error) {
+func (this *StoppableTestCamunda) Get(configType util.Config, producer com.ProducerInterface, metrics interfaces.Metrics) (interfaces.CamundaInterface, error) {
 	return this, nil
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/cache"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/shards"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
+	"github.com/SENERGY-Platform/external-task-worker/lib/prometheus"
 	"github.com/SENERGY-Platform/external-task-worker/lib/test/docker"
 	"github.com/SENERGY-Platform/external-task-worker/lib/test/mock"
 	"github.com/SENERGY-Platform/external-task-worker/util"
@@ -98,7 +99,7 @@ func testCompleteTask(s *shards.Shards, tasks []messages.CamundaExternalTask) fu
 		}
 		err := NewCamundaWithShards(util.Config{
 			KafkaIncidentTopic: "incidents",
-		}, mock.Kafka, s).CompleteTask(messages.TaskInfo{
+		}, mock.Kafka, prometheus.NewMetrics("test"), s).CompleteTask(messages.TaskInfo{
 			WorkerId:            "test-worker",
 			TaskId:              tasks[0].Id,
 			ProcessInstanceId:   tasks[0].ProcessInstanceId,
@@ -118,7 +119,7 @@ func testGetTasks(s *shards.Shards, tasks *[]messages.CamundaExternalTask) func(
 			CamundaFetchLockDuration: 60000,
 			CamundaTopic:             "pessimistic",
 			CamundaWorkerTasks:       10,
-		}, mock.Kafka, s).GetTasks()
+		}, mock.Kafka, prometheus.NewMetrics("test"), s).GetTasks()
 		if err != nil {
 			t.Fatal(err)
 		}

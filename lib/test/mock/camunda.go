@@ -50,7 +50,7 @@ func (this *CamundaMock) Init() {
 	this.lockTimes = map[string]time.Time{}
 }
 
-func (this *CamundaMock) Get(config util.Config, producer com.ProducerInterface) (interfaces.CamundaInterface, error) {
+func (this *CamundaMock) Get(config util.Config, producer com.ProducerInterface, metrics interfaces.Metrics) (interfaces.CamundaInterface, error) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	if this.ResetOnGetInterface {

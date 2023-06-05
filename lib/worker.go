@@ -27,6 +27,7 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
+	"github.com/SENERGY-Platform/external-task-worker/lib/prometheus"
 	"github.com/SENERGY-Platform/external-task-worker/lib/timescale"
 	"log"
 	"reflect"
@@ -54,6 +55,12 @@ type CmdWorker struct {
 	lastProducerCallSuccess   bool
 	deviceGroupsHandler       DeviceGroupsHandler
 	timescale                 Timescale
+	metrics                   Metrics
+}
+
+type Metrics interface {
+	interfaces.Metrics
+	HandleResponseTrace(trace []messages.Trace)
 }
 
 type Timescale interface {
@@ -75,11 +82,17 @@ func Worker(ctx context.Context, config util.Config, comFactory com.FactoryInter
 func New(ctx context.Context, config util.Config, comFactory com.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory interfaces.FactoryInterface, marshallerFactory marshaller.FactoryInterface, timescaleFactory timescale.FactoryInterface) (w *CmdWorker) {
 	var err error
 
+	metrics, err := prometheus.Start(ctx, config)
+	if err != nil {
+		log.Fatal("ERROR: prometheus.Start", err)
+	}
+
 	w = &CmdWorker{
 		config:                    config,
 		marshaller:                marshallerFactory.New(ctx, config.MarshallerUrl),
 		lastProducerCallSuccess:   true,
 		lastSuccessfulCamundaCall: time.Now(),
+		metrics:                   metrics,
 	}
 
 	w.timescale, err = timescaleFactory(ctx, config)
@@ -102,7 +115,7 @@ func New(ctx context.Context, config util.Config, comFactory com.FactoryInterfac
 		log.Fatal("ERROR: comFactory.NewProducer", err)
 	}
 	w.repository = repoFactory.Get(config)
-	w.camunda, err = camundaFactory.Get(config, w.producer)
+	w.camunda, err = camundaFactory.Get(config, w.producer, metrics)
 	if err != nil {
 		log.Fatal("ERROR: comFactory.NewProducer", err)
 	}
@@ -296,6 +309,7 @@ func (this *CmdWorker) HandleTaskResponse(msg string) (err error) {
 		return err
 	}
 	defer func() {
+		this.metrics.HandleResponseTrace(message.Trace)
 		if this.config.Debug {
 			log.Println("TRACE: ", message.Trace)
 			if len(message.Trace) >= 2 {

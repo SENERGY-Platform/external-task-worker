@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
+	"github.com/SENERGY-Platform/external-task-worker/lib/prometheus"
 	"github.com/SENERGY-Platform/external-task-worker/lib/test/mock"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"log"
@@ -55,7 +56,7 @@ func ExampleIncidents() {
 		return
 	}
 
-	camunda := camunda.NewCamundaWithShards(config, kafka, nil)
+	camunda := camunda.NewCamundaWithShards(config, kafka, prometheus.NewMetrics("test"), nil)
 	camunda.Error("task_id_1", "piid_1", "pdid_1", "error message", "user1")
 	camunda.Error("task_id_2", "piid_2", "pdid_2", "error message", "user1")
 

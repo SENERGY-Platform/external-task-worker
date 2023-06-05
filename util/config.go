@@ -34,6 +34,7 @@ const CAMUNDA_VARIABLES_PAYLOAD = "payload"
 const CAMUNDA_VARIABLES_OVERWRITE = "overwrite"
 
 type Config struct {
+	PrometheusPort                  string
 	ShardsDb                        string
 	DeviceRepoUrl                   string
 	CompletionStrategy              string

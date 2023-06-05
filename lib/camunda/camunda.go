@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/cache"
+	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/interfaces"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/shards"
 	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
@@ -39,6 +40,7 @@ type Camunda struct {
 	workerId string
 	producer com.ProducerInterface
 	shards   Shards
+	metrics  interfaces.Metrics
 }
 
 type Shards interface {
@@ -46,32 +48,35 @@ type Shards interface {
 	GetShardForUser(userId string) (shardUrl string, err error)
 }
 
-func NewCamundaWithShards(config util.Config, producer com.ProducerInterface, shards Shards) (result *Camunda) {
-	return &Camunda{config: config, workerId: util.GetId(), producer: producer, shards: shards}
+func NewCamundaWithShards(config util.Config, producer com.ProducerInterface, metrics interfaces.Metrics, shards Shards) (result *Camunda) {
+	return &Camunda{config: config, workerId: util.GetId(), producer: producer, shards: shards, metrics: metrics}
 }
 
-func NewCamunda(config util.Config, producer com.ProducerInterface) (result *Camunda, err error) {
+func NewCamunda(config util.Config, producer com.ProducerInterface, metrics interfaces.Metrics) (result *Camunda, err error) {
 	s, err := shards.New(config.ShardsDb, cache.New(&cache.CacheConfig{
 		L1Expiration: 60,
 	}))
 	if err != nil {
 		return result, err
 	}
-	return NewCamundaWithShards(config, producer, s), nil
+	return NewCamundaWithShards(config, producer, metrics, s), nil
 }
 
 func (this *Camunda) GetTasks() (tasks []messages.CamundaExternalTask, err error) {
 	shards, err := this.shards.GetShards()
 	if err != nil {
+		this.metrics.LogCamundaGetShardsError()
 		return tasks, err
 	}
 	for _, shard := range shards {
 		temp, err := this.getShardTasks(shard)
 		if err != nil {
+			this.metrics.LogCamundaGetTasksError()
 			return tasks, err
 		}
 		tasks = append(tasks, temp...)
 	}
+	this.metrics.LogCamundaLoadedTasks(len(tasks))
 	return tasks, nil
 }
 
@@ -134,19 +139,24 @@ func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string,
 		if err != nil {
 			return err
 		}
+		start := time.Now()
 		resp, err := client.Post(shard+"/engine-rest/external-task/"+taskInfo.TaskId+"/complete", "application/json", b)
 		if err != nil {
+			this.metrics.LogCamundaCompleteTaskError()
 			return err
 		}
 		defer resp.Body.Close()
 		pl, err := io.ReadAll(resp.Body)
 		if err != nil {
+			this.metrics.LogCamundaCompleteTaskError()
 			return err
 		}
 		if resp.StatusCode >= 300 {
+			this.metrics.LogCamundaCompleteTaskError()
 			log.Println("WARNING: unable to complete task", taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, string(pl), taskInfo.TenantId)
 			return fmt.Errorf("%w: %v, %v", UnableToCompleteErrResp, resp.StatusCode, string(pl))
 		}
+		this.metrics.LogCamundaCompleteTask(time.Since(start))
 		log.Println("complete camunda task: ", completeRequest, string(pl))
 		return nil
 	}
@@ -234,6 +244,7 @@ func (this *Camunda) SetRetry(taskid string, tenantId string, retries int64) {
 }
 
 func (this *Camunda) Error(externalTaskId string, processInstanceId string, processDefinitionId string, msg string, tenantId string) {
+	this.metrics.LogIncident()
 	b, err := json.Marshal(messages.KafkaIncidentsCommand{
 		Command:    "POST",
 		MsgVersion: 3,
