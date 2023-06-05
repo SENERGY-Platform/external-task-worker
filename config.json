@@ -44,7 +44,7 @@
   "ReplicationFactor": 1,
   "AsyncFlushMessages": 200,
 
-  "KafkaConsumerMaxWait": "100ms",
+  "KafkaConsumerMaxWait": "1s",
   "KafkaConsumerMinBytes": 1000,
   "KafkaConsumerMaxBytes": 1000000,
 
