@@ -26,21 +26,23 @@ import (
 )
 
 type Metrics struct {
-	IncidentsCount           prometheus.Counter
-	TasksReceivedCount       prometheus.Counter
-	TasksCompletedCount      prometheus.Counter
-	TaskCompleteLatencyMs    prometheus.Gauge
-	TasksCompleteErrors      prometheus.Counter
-	GetTasksErrors           prometheus.Counter
-	GetShardsError           prometheus.Counter
-	CommandRoundtripMs       prometheus.Gauge
-	CommandResponsesReceived prometheus.Counter
+	IncidentsCount              prometheus.Counter
+	TasksReceivedCount          prometheus.Counter
+	TasksCompletedCount         prometheus.Counter
+	TaskCompleteLatencyMs       prometheus.Gauge
+	TasksCompleteErrors         prometheus.Counter
+	GetTasksErrors              prometheus.Counter
+	GetShardsError              prometheus.Counter
+	CommandRoundtripMs          prometheus.Gauge
+	CommandRoundtripMsHistogram prometheus.Histogram
+	CommandResponsesReceived    prometheus.Counter
 
 	httphandler http.Handler
 }
 
 func NewMetrics(prefix string) *Metrics {
 	reg := prometheus.NewRegistry()
+
 	m := &Metrics{
 		httphandler: promhttp.HandlerFor(
 			reg,
@@ -81,6 +83,11 @@ func NewMetrics(prefix string) *Metrics {
 			Name: prefix + "_command_roundtrip_ms",
 			Help: "duration of a command roundtrip in ms",
 		}),
+		CommandRoundtripMsHistogram: prometheus.NewHistogram(prometheus.HistogramOpts{
+			Name:    prefix + "_command_roundtrip_ms_histogram",
+			Help:    "duration histogram of command roundtrips in ms",
+			Buckets: []float64{100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500, 2000, 2500, 3000},
+		}),
 		CommandResponsesReceived: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: prefix + "_command_responses",
 			Help: "count of command responses received since startup",
@@ -95,6 +102,7 @@ func NewMetrics(prefix string) *Metrics {
 	reg.MustRegister(m.GetTasksErrors)
 	reg.MustRegister(m.GetShardsError)
 	reg.MustRegister(m.CommandRoundtripMs)
+	reg.MustRegister(m.CommandRoundtripMsHistogram)
 	reg.MustRegister(m.CommandResponsesReceived)
 
 	return m
@@ -144,6 +152,8 @@ func (this *Metrics) HandleResponseTrace(trace []messages.Trace) {
 		}
 	}
 	if smallestTraceUnixTimestamp > 0 {
-		this.CommandRoundtripMs.Set(float64(time.Since(time.Unix(0, smallestTraceUnixTimestamp)).Milliseconds()))
+		value := float64(time.Since(time.Unix(0, smallestTraceUnixTimestamp)).Milliseconds())
+		this.CommandRoundtripMs.Set(value)
+		this.CommandRoundtripMsHistogram.Observe(value)
 	}
 }
