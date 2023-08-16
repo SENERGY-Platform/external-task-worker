@@ -19,9 +19,9 @@ package kafka
 import (
 	"context"
 	"errors"
+	"github.com/IBM/sarama"
 	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/SENERGY-Platform/external-task-worker/util"
-	"github.com/Shopify/sarama"
 	"log"
 	"strings"
 	"time"
