@@ -6,18 +6,18 @@ toolchain go1.21.0
 
 require (
 	github.com/SENERGY-Platform/converter v0.0.0-20230413113429-b490a96aabba
-	github.com/SENERGY-Platform/marshaller v0.0.0-20230413113821-f8a7bc020739
+	github.com/SENERGY-Platform/marshaller v0.0.0-20230824091458-02f9efbd5ba3
 	github.com/bradfitz/gomemcache v0.0.0-20230611145640-acc696258285
 	github.com/coocood/freecache v1.2.3
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.1
 	github.com/lib/pq v1.10.9
 	github.com/segmentio/kafka-go v0.4.42
 )
 
 require (
 	github.com/IBM/sarama v1.40.1
-	github.com/SENERGY-Platform/models/go v0.0.0-20230724134144-c26fd506045f
+	github.com/SENERGY-Platform/models/go v0.0.0-20230824080159-16585960df38
 	github.com/prometheus/client_golang v1.16.0
 	github.com/testcontainers/testcontainers-go v0.23.0
 )

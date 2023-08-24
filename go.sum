@@ -16,10 +16,10 @@ github.com/RyanCarrier/dijkstra v1.2.0 h1:tOEDXK7lcg4pI3JOc9eQTNsrWYehqzWbe/+0iW
 github.com/RyanCarrier/dijkstra v1.2.0/go.mod h1:9egjhC7eVsfREX6NrYS+1wHzk9C/9v2Cz26/bqpjjTc=
 github.com/SENERGY-Platform/converter v0.0.0-20230413113429-b490a96aabba h1:7//DKY77RZdJoRBjkUohTkjegy5Lv9JFKgjlC2r2me0=
 github.com/SENERGY-Platform/converter v0.0.0-20230413113429-b490a96aabba/go.mod h1:MftDXexxLegRn0BKpbfBlBLo6OU9xSYiVtIi21DujUk=
-github.com/SENERGY-Platform/marshaller v0.0.0-20230413113821-f8a7bc020739 h1:KK+IGyuN/ngyKJn72MAua9K7ZIL36DbkKHzJnOhXLfI=
-github.com/SENERGY-Platform/marshaller v0.0.0-20230413113821-f8a7bc020739/go.mod h1:RYCVv2YoDPd+mtdaUaA+qoo24Oh2AWdey8y0N2NfLlM=
-github.com/SENERGY-Platform/models/go v0.0.0-20230724134144-c26fd506045f h1:oBq0lbW2zWB5do7DTsLjO+E5Z2AKkYPeRe2CRgb43v0=
-github.com/SENERGY-Platform/models/go v0.0.0-20230724134144-c26fd506045f/go.mod h1:bCREPNRN4P8oxLgpC3/ZKK4jXSy4MSPXoiomhohE+aw=
+github.com/SENERGY-Platform/marshaller v0.0.0-20230824091458-02f9efbd5ba3 h1:H2lGkL8ST/o6zHRvxjxnFBzusj7yXPmnGnTa3S0oOwU=
+github.com/SENERGY-Platform/marshaller v0.0.0-20230824091458-02f9efbd5ba3/go.mod h1:osotohkWIQ0SANYaFtCUEKG5m70+fVGw0+yAgP4E5kA=
+github.com/SENERGY-Platform/models/go v0.0.0-20230824080159-16585960df38 h1:PDvFwIJBnFyKt1KeepkABNIS57+WhVj4vBw7X5JGZJw=
+github.com/SENERGY-Platform/models/go v0.0.0-20230824080159-16585960df38/go.mod h1:bCREPNRN4P8oxLgpC3/ZKK4jXSy4MSPXoiomhohE+aw=
 github.com/Shopify/toxiproxy/v2 v2.5.0 h1:i4LPT+qrSlKNtQf5QliVjdP08GyAH8+BUIc9gT0eahc=
 github.com/Shopify/toxiproxy/v2 v2.5.0/go.mod h1:yhM2epWtAmel9CB8r2+L+PCmhH6yH2pITaPAo7jxJl0=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
@@ -75,8 +75,8 @@ github.com/golang/snappy v0.0.4/go.mod h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEW
 github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
 github.com/google/go-cmp v0.5.9/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
-github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
-github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/google/uuid v1.3.1 h1:KjJaJ9iWZ3jOFZIf1Lqf4laDRCasjl0BCmnEGxkdLb4=
+github.com/google/uuid v1.3.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/gorilla/securecookie v1.1.1/go.mod h1:ra0sb63/xPlUeL+yeDciTfxMRAA+MP+HVt/4epWDjd4=
 github.com/gorilla/sessions v1.2.1/go.mod h1:dk2InVEVJ0sfLlnXv9EAgkf6ecYs/i80K/zI+bUmuGM=
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
