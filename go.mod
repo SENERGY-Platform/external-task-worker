@@ -5,8 +5,8 @@ go 1.21
 toolchain go1.21.0
 
 require (
-	github.com/SENERGY-Platform/converter v0.0.0-20230413113429-b490a96aabba
-	github.com/SENERGY-Platform/marshaller v0.0.0-20230824091458-02f9efbd5ba3
+	github.com/SENERGY-Platform/converter v0.0.0-20230829101037-a44339c413f0
+	github.com/SENERGY-Platform/marshaller v0.0.0-20230901075730-2e60fc7c926e
 	github.com/bradfitz/gomemcache v0.0.0-20230611145640-acc696258285
 	github.com/coocood/freecache v1.2.3
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -16,7 +16,7 @@ require (
 )
 
 require (
-	github.com/IBM/sarama v1.40.1
+	github.com/IBM/sarama v1.41.1
 	github.com/SENERGY-Platform/models/go v0.0.0-20230824080159-16585960df38
 	github.com/prometheus/client_golang v1.16.0
 	github.com/testcontainers/testcontainers-go v0.23.0
@@ -27,7 +27,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/Knetic/govaluate v3.0.0+incompatible // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
-	github.com/RyanCarrier/dijkstra v1.2.0 // indirect
+	github.com/RyanCarrier/dijkstra v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
