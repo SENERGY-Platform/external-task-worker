@@ -56,6 +56,11 @@
   "MetadataErrorTo": "errors",
   "ErrorTopic": "errors",
 
+  "CacheTimeout": "60s",
+  "CacheInvalidationAllKafkaTopics": ["device-types", "protocols"],
+  "DeviceKafkaTopic": "devices",
+  "DeviceGroupKafkaTopic": "device-groups",
+
   "KafkaTopicConfigs": {
     "camunda_incident": [
       {

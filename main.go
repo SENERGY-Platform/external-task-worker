@@ -57,6 +57,12 @@ func main() {
 		cancel()
 	}()
 
+	err = lib.StartCacheInvalidator(ctx, config)
+	if err != nil {
+		log.Println("WARNING: unable to start cache invalidator", err)
+	}
+
 	lib.Worker(ctx, config, comswitch.Factory, devicerepository.Factory, camunda.Factory, marshaller.Factory, timescale.Factory)
+
 	log.Println("worker stopped")
 }

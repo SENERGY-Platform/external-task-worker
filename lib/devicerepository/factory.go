@@ -22,6 +22,6 @@ type FactoryType struct{}
 
 var Factory FactoryType
 
-func (FactoryType) Get(config util.Config) RepoInterface {
+func (FactoryType) Get(config util.Config) (RepoInterface, error) {
 	return NewIot(config)
 }

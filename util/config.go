@@ -92,6 +92,11 @@ type Config struct {
 	MetadataErrorTo string
 	ErrorTopic      string
 
+	CacheTimeout                    string
+	CacheInvalidationAllKafkaTopics []string
+	DeviceKafkaTopic                string
+	DeviceGroupKafkaTopic           string
+
 	KafkaTopicConfigs map[string][]kafka.ConfigEntry
 }
 

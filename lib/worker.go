@@ -74,17 +74,18 @@ type DeviceGroupsHandler interface {
 
 func Worker(ctx context.Context, config util.Config, comFactory com.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory interfaces.FactoryInterface, marshallerFactory marshaller.FactoryInterface, timescaleFactory timescale.FactoryInterface) {
 	log.Println("start camunda worker")
-	w := New(ctx, config, comFactory, repoFactory, camundaFactory, marshallerFactory, timescaleFactory)
+	w, err := New(ctx, config, comFactory, repoFactory, camundaFactory, marshallerFactory, timescaleFactory)
+	if err != nil {
+		log.Fatal("FATAL-ERROR:", err)
+	}
 	StartHealthCheckEndpoint(ctx, config, w)
 	w.Loop(ctx)
 }
 
-func New(ctx context.Context, config util.Config, comFactory com.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory interfaces.FactoryInterface, marshallerFactory marshaller.FactoryInterface, timescaleFactory timescale.FactoryInterface) (w *CmdWorker) {
-	var err error
-
+func New(ctx context.Context, config util.Config, comFactory com.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory interfaces.FactoryInterface, marshallerFactory marshaller.FactoryInterface, timescaleFactory timescale.FactoryInterface) (w *CmdWorker, err error) {
 	metrics, err := prometheus.Start(ctx, config)
 	if err != nil {
-		log.Fatal("ERROR: prometheus.Start", err)
+		return w, fmt.Errorf("prometheus.Start %w", err)
 	}
 
 	w = &CmdWorker{
@@ -97,7 +98,7 @@ func New(ctx context.Context, config util.Config, comFactory com.FactoryInterfac
 
 	w.timescale, err = timescaleFactory(ctx, config)
 	if err != nil {
-		log.Fatal("ERROR: comFactory.NewProducer", err)
+		return w, fmt.Errorf("comFactory.NewProducer %w", err)
 	}
 
 	if config.CompletionStrategy != util.OPTIMISTIC {
@@ -107,22 +108,25 @@ func New(ctx context.Context, config util.Config, comFactory com.FactoryInterfac
 			err = comFactory.NewConsumer(ctx, config, w.HandleTaskResponse, w.ErrorMessageHandler)
 		}
 		if err != nil {
-			log.Fatal("ERROR: comFactory.NewConsumer", err)
+			return w, fmt.Errorf("comFactory.NewConsumer %w", err)
 		}
 	}
 	w.producer, err = comFactory.NewProducer(ctx, config)
 	if err != nil {
-		log.Fatal("ERROR: comFactory.NewProducer", err)
+		return w, fmt.Errorf("comFactory.NewProducer %w", err)
 	}
-	w.repository = repoFactory.Get(config)
+	w.repository, err = repoFactory.Get(config)
+	if err != nil {
+		return w, fmt.Errorf("repoFactory.Get %w", err)
+	}
 	w.camunda, err = camundaFactory.Get(config, w.producer, metrics)
 	if err != nil {
-		log.Fatal("ERROR: comFactory.NewProducer", err)
+		return w, fmt.Errorf("camundaFactory.Get %w", err)
 	}
 	filterEvents := config.TimescaleWrapperUrl == "" || config.TimescaleWrapperUrl == "-"
 	w.deviceGroupsHandler = devicegroups.New(config.GroupScheduler, w.camunda, w.repository, w.CreateProtocolMessage, config.CamundaFetchLockDuration, config.SubResultExpirationInSeconds, config.SubResultDatabaseUrls, config.MemcachedTimeout, config.MemcachedMaxIdleConns, filterEvents)
 
-	return
+	return w, nil
 }
 
 func (w *CmdWorker) Loop(ctx context.Context) {

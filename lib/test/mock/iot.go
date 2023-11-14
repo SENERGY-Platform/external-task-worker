@@ -50,7 +50,7 @@ func (this *RepoMock) GetDeviceGroup(token devicerepository.Impersonate, id stri
 	return dg, nil
 }
 
-func (this *RepoMock) Get(configType util.Config) devicerepository.RepoInterface {
+func (this *RepoMock) Get(configType util.Config) (devicerepository.RepoInterface, error) {
 	if this.ResetOnGetRepoInterface {
 		this.devices = map[string]model.Device{}
 		this.services = map[string]model.Service{}
@@ -58,7 +58,7 @@ func (this *RepoMock) Get(configType util.Config) devicerepository.RepoInterface
 		this.deviceTypes = map[string]model.DeviceType{}
 		this.deviceGroups = map[string]model.DeviceGroup{}
 	}
-	return this
+	return this, nil
 }
 
 func (this *RepoMock) GetDevice(token devicerepository.Impersonate, id string) (model.Device, error) {

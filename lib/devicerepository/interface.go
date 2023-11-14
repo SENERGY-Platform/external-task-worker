@@ -22,7 +22,7 @@ import (
 )
 
 type FactoryInterface interface {
-	Get(configType util.Config) RepoInterface
+	Get(configType util.Config) (RepoInterface, error)
 }
 
 type RepoInterface interface {

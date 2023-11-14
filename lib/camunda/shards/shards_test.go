@@ -2,7 +2,6 @@ package shards
 
 import (
 	"context"
-	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/cache"
 	"github.com/SENERGY-Platform/external-task-worker/lib/test/docker"
 	"reflect"
 	"sync"
@@ -22,7 +21,7 @@ func TestSelectShard(t *testing.T) {
 		return
 	}
 
-	s, err := New(pgConn, cache.None)
+	s, err := New(pgConn, nil)
 	if err != nil {
 		t.Error(err)
 		return
@@ -44,7 +43,7 @@ func TestSelectShardWithCache(t *testing.T) {
 		return
 	}
 
-	s, err := New(pgConn, cache.New(nil))
+	s, err := New(pgConn, nil)
 	if err != nil {
 		t.Error(err)
 		return

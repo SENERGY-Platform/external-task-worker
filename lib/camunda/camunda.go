@@ -21,12 +21,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/cache"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/interfaces"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/shards"
 	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
+	"github.com/SENERGY-Platform/service-commons/pkg/cache"
+	"github.com/SENERGY-Platform/service-commons/pkg/signal"
 	"io"
 	"io/ioutil"
 	"log"
@@ -53,9 +54,15 @@ func NewCamundaWithShards(config util.Config, producer com.ProducerInterface, me
 }
 
 func NewCamunda(config util.Config, producer com.ProducerInterface, metrics interfaces.Metrics) (result *Camunda, err error) {
-	s, err := shards.New(config.ShardsDb, cache.New(&cache.CacheConfig{
-		L1Expiration: 60,
-	}))
+	c, err := cache.New(cache.Config{
+		CacheInvalidationSignalHooks: map[cache.Signal]cache.ToKey{
+			signal.Known.CacheInvalidationAll: nil,
+		},
+	})
+	if err != nil {
+		return result, err
+	}
+	s, err := shards.New(config.ShardsDb, c)
 	if err != nil {
 		return result, err
 	}
@@ -99,7 +106,7 @@ func (this *Camunda) getShardTasks(shard string) (tasks []messages.CamundaExtern
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		temp, err := ioutil.ReadAll(resp.Body)
+		temp, err := io.ReadAll(resp.Body)
 		err = errors.New(fmt.Sprintln(endpoint, resp.Status, resp.StatusCode, string(temp), err))
 		return tasks, err
 	}

@@ -23,7 +23,6 @@ import (
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
-	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/cache"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/shards"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
@@ -82,7 +81,7 @@ func TestWorkerErrorRetries(t *testing.T) {
 		return
 	}
 
-	s, err := shards.New(pgConn, cache.None)
+	s, err := shards.New(pgConn, nil)
 	if err != nil {
 		t.Error(err)
 		return

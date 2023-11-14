@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/cache"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/shards"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/lib/prometheus"
@@ -42,7 +41,7 @@ func TestGetTask(t *testing.T) {
 		return
 	}
 
-	s, err := shards.New(pgConn, cache.None)
+	s, err := shards.New(pgConn, nil)
 	if err != nil {
 		t.Error(err)
 		return

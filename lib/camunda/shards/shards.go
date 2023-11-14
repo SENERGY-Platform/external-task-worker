@@ -4,12 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/cache"
+	"github.com/SENERGY-Platform/service-commons/pkg/cache"
 	_ "github.com/lib/pq"
 	"time"
 )
 
-func New(pgConnStr string, cache cache.Cache) (*Shards, error) {
+func New(pgConnStr string, cache *cache.Cache) (*Shards, error) {
 	db, err := initDbConnection(pgConnStr)
 	if err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func initDbConnection(conStr string) (db *sql.DB, err error) {
 
 type Shards struct {
 	db    *sql.DB
-	cache cache.Cache
+	cache *cache.Cache
 }
 
 var ErrorNotFound = errors.New("no shard assigned to user")
@@ -43,10 +43,9 @@ var ErrorNotFound = errors.New("no shard assigned to user")
 const CachePrefix = "user-shard."
 
 func (this *Shards) GetShardForUser(userId string) (shardUrl string, err error) {
-	err = this.cache.Use(CachePrefix+userId, func() (interface{}, error) {
+	return cache.Use(this.cache, CachePrefix+userId, func() (string, error) {
 		return getShardForUser(this.db, userId)
-	}, &shardUrl)
-	return
+	}, time.Minute)
 }
 
 func getShardForUser(tx Tx, userId string) (shardUrl string, err error) {
@@ -83,7 +82,10 @@ func (this *Shards) SetShardForUser(userId string, shardAddress string) (err err
 	if err != nil {
 		return
 	}
-	return this.cache.Invalidate(CachePrefix + userId)
+	if this.cache != nil {
+		return this.cache.Remove(CachePrefix + userId)
+	}
+	return nil
 }
 
 func (this *Shards) EnsureShardForUser(userId string) (shardUrl string, err error) {
@@ -93,9 +95,9 @@ func (this *Shards) EnsureShardForUser(userId string) (shardUrl string, err erro
 		return shardUrl, err
 	}
 
-	err = this.cache.Use(CachePrefix+userId, func() (interface{}, error) {
+	shardUrl, err = cache.Use(this.cache, CachePrefix+userId, func() (string, error) {
 		return getShardForUser(tx, userId)
-	}, &shardUrl)
+	}, time.Minute)
 
 	//more work is only necessary if no shard is assigned to the user
 	if err != ErrorNotFound {
@@ -121,7 +123,7 @@ func (this *Shards) EnsureShard(shardUrl string) (err error) {
 	return
 }
 
-//selects shard with the fewest users
+// selects shard with the fewest users
 func selectShard(tx Tx) (shardUrl string, err error) {
 	min := MaxInt
 	counts, err := getShardUserCount(tx)
@@ -170,10 +172,9 @@ func addShardForUser(tx Tx, userId string, shardAddress string) (err error) {
 }
 
 func (this *Shards) GetShards() (result []string, err error) {
-	err = this.cache.Use("shards", func() (interface{}, error) {
+	return cache.Use(this.cache, "shards", func() ([]string, error) {
 		return getShards(this.db)
-	}, &result)
-	return
+	}, time.Minute)
 }
 
 func getShards(tx Tx) (result []string, err error) {
