@@ -6,7 +6,7 @@ toolchain go1.21.0
 
 require (
 	github.com/SENERGY-Platform/converter v0.0.0-20231027124924-d43b98b1b5cc
-	github.com/SENERGY-Platform/marshaller v0.0.0-20231114081003-1dab78bdb7d5
+	github.com/SENERGY-Platform/marshaller v0.0.0-20231115075542-ac22a787cd4b
 	github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874
 	github.com/coocood/freecache v1.2.4
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -18,7 +18,7 @@ require (
 require (
 	github.com/IBM/sarama v1.42.1
 	github.com/SENERGY-Platform/models/go v0.0.0-20230824080159-16585960df38
-	github.com/SENERGY-Platform/service-commons v0.0.0-20231114080900-3839f2f822b5
+	github.com/SENERGY-Platform/service-commons v0.0.0-20231115074650-7021aeae60e4
 	github.com/prometheus/client_golang v1.17.0
 	github.com/testcontainers/testcontainers-go v0.26.0
 )
