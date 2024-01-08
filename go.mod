@@ -6,7 +6,7 @@ toolchain go1.21.0
 
 require (
 	github.com/SENERGY-Platform/converter v0.0.4
-	github.com/SENERGY-Platform/marshaller v0.0.2
+	github.com/SENERGY-Platform/marshaller v0.0.3
 	github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874
 	github.com/coocood/freecache v1.2.4
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -41,7 +41,7 @@ require (
 	github.com/distribution/reference v0.5.0 // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
 	github.com/docker/docker v24.0.7+incompatible // indirect
-	github.com/docker/go-connections v0.4.0 // indirect
+	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/eapache/go-resiliency v1.5.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20230731223053-c322873962e3 // indirect
