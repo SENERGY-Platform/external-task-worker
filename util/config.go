@@ -98,6 +98,8 @@ type Config struct {
 	DeviceGroupKafkaTopic           string
 
 	KafkaTopicConfigs map[string][]kafka.ConfigEntry
+
+	IgnoreUserMetrics []string
 }
 
 func LoadConfig(location string) (config Config, err error) {

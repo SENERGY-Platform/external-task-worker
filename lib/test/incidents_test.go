@@ -56,7 +56,7 @@ func ExampleIncidents() {
 		return
 	}
 
-	camunda := camunda.NewCamundaWithShards(config, kafka, prometheus.NewMetrics("test"), nil)
+	camunda := camunda.NewCamundaWithShards(config, kafka, prometheus.NewMetrics("test", nil), nil)
 	camunda.Error("task_id_1", "piid_1", "pdid_1", "error message", "user1")
 	camunda.Error("task_id_2", "piid_2", "pdid_2", "error message", "user1")
 

@@ -98,7 +98,7 @@ func testCompleteTask(s *shards.Shards, tasks []messages.CamundaExternalTask) fu
 		}
 		err := NewCamundaWithShards(util.Config{
 			KafkaIncidentTopic: "incidents",
-		}, mock.Kafka, prometheus.NewMetrics("test"), s).CompleteTask(messages.TaskInfo{
+		}, mock.Kafka, prometheus.NewMetrics("test", nil), s).CompleteTask(messages.TaskInfo{
 			WorkerId:            "test-worker",
 			TaskId:              tasks[0].Id,
 			ProcessInstanceId:   tasks[0].ProcessInstanceId,
@@ -118,7 +118,7 @@ func testGetTasks(s *shards.Shards, tasks *[]messages.CamundaExternalTask) func(
 			CamundaFetchLockDuration: 60000,
 			CamundaTopic:             "pessimistic",
 			CamundaWorkerTasks:       10,
-		}, mock.Kafka, prometheus.NewMetrics("test"), s).GetTasks()
+		}, mock.Kafka, prometheus.NewMetrics("test", nil), s).GetTasks()
 		if err != nil {
 			t.Fatal(err)
 		}

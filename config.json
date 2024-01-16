@@ -61,6 +61,8 @@
   "DeviceKafkaTopic": "devices",
   "DeviceGroupKafkaTopic": "device-groups",
 
+  "IgnoreUserMetrics":[],
+
   "KafkaTopicConfigs": {
     "camunda_incident": [
       {

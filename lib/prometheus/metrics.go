@@ -23,6 +23,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"slices"
 	"time"
 )
 
@@ -46,6 +47,7 @@ type Metrics struct {
 	TaskCompletedCountVec               *prometheus.CounterVec
 
 	httphandler http.Handler
+	ignoreUsers []string
 }
 
 var instanceId string
@@ -61,10 +63,11 @@ func getInstanceId() string {
 	return instanceId
 }
 
-func NewMetrics(prefix string) *Metrics {
+func NewMetrics(prefix string, ignoreUsers []string) *Metrics {
 	reg := prometheus.NewRegistry()
 
 	m := &Metrics{
+		ignoreUsers: ignoreUsers,
 		httphandler: promhttp.HandlerFor(
 			reg,
 			promhttp.HandlerOpts{
@@ -164,32 +167,54 @@ func NewMetrics(prefix string) *Metrics {
 	return m
 }
 
+func (this *Metrics) ignore(userId string) bool {
+	return slices.Contains(this.ignoreUsers, userId)
+}
+
 func (this *Metrics) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	log.Printf("%v [%v] %v \n", request.RemoteAddr, request.Method, request.URL)
 	this.httphandler.ServeHTTP(writer, request)
 }
 
 func (this *Metrics) LogTaskMarshallingLatency(endpoint string, userId string, serviceId string, functionId string, latency time.Duration) {
+	if this.ignore(userId) {
+		return
+	}
 	this.TaskMarshallingLatency.WithLabelValues(getInstanceId(), userId, endpoint, serviceId, functionId).Observe(float64(latency.Milliseconds()))
 }
 
 func (this *Metrics) LogTaskLastEventValueRequest(task messages.GroupTaskMetadataElement) {
+	if this.ignore(task.Task.TenantId) {
+		return
+	}
 	this.TaskLastEventValueRequestCountVec.WithLabelValues(getInstanceId(), task.Task.TenantId, task.Task.ProcessDefinitionId, task.Task.ProcessInstanceId).Inc()
 }
 
 func (this *Metrics) LogTaskCommandSend(task messages.GroupTaskMetadataElement) {
+	if this.ignore(task.Task.TenantId) {
+		return
+	}
 	this.TaskCommandSendCountVec.WithLabelValues(getInstanceId(), task.Task.TenantId, task.Task.ProcessDefinitionId, task.Task.ProcessInstanceId).Inc()
 }
 
 func (this *Metrics) LogTaskReceived(task messages.CamundaExternalTask) {
+	if this.ignore(task.TenantId) {
+		return
+	}
 	this.TaskReceivedCountVec.WithLabelValues(getInstanceId(), task.TenantId, task.ProcessDefinitionId, task.ProcessInstanceId).Inc()
 }
 
 func (this *Metrics) LogTaskCommandResponseReceived(task messages.TaskInfo) {
+	if this.ignore(task.TenantId) {
+		return
+	}
 	this.TaskCommandResponseReceivedCountVec.WithLabelValues(getInstanceId(), task.TenantId, task.ProcessDefinitionId, task.ProcessInstanceId).Inc()
 }
 
 func (this *Metrics) LogTaskCompleted(task messages.TaskInfo) {
+	if this.ignore(task.TenantId) {
+		return
+	}
 	this.TaskCompletedCountVec.WithLabelValues(getInstanceId(), task.TenantId, task.ProcessDefinitionId, task.ProcessInstanceId).Inc()
 }
 

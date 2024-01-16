@@ -33,7 +33,7 @@ func Start(ctx context.Context, config util.Config) (metrics *Metrics, err error
 		}
 	}()
 
-	metrics = NewMetrics("external_task_worker_" + config.CamundaTopic)
+	metrics = NewMetrics("external_task_worker_"+config.CamundaTopic, config.IgnoreUserMetrics)
 
 	if config.PrometheusPort == "" || config.PrometheusPort == "-" {
 		return metrics, nil
