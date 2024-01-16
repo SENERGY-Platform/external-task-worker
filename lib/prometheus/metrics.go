@@ -170,7 +170,7 @@ func (this *Metrics) ServeHTTP(writer http.ResponseWriter, request *http.Request
 }
 
 func (this *Metrics) LogTaskMarshallingLatency(endpoint string, userId string, serviceId string, functionId string, latency time.Duration) {
-	this.TaskMarshallingLatency.WithLabelValues(getInstanceId(), userId, endpoint, serviceId, functionId).Observe(float64(latency))
+	this.TaskMarshallingLatency.WithLabelValues(getInstanceId(), userId, endpoint, serviceId, functionId).Observe(float64(latency.Milliseconds()))
 }
 
 func (this *Metrics) LogTaskLastEventValueRequest(task messages.GroupTaskMetadataElement) {
