@@ -152,6 +152,15 @@ func NewMetrics(prefix string) *Metrics {
 	reg.MustRegister(m.CommandRoundtripMsHistogram)
 	reg.MustRegister(m.CommandResponsesReceived)
 
+	reg.MustRegister(
+		m.TaskMarshallingLatency,
+		m.TaskLastEventValueRequestCountVec,
+		m.TaskCommandSendCountVec,
+		m.TaskReceivedCountVec,
+		m.TaskCommandResponseReceivedCountVec,
+		m.TaskCompletedCountVec,
+	)
+
 	return m
 }
 
