@@ -120,28 +120,28 @@ func NewMetrics(prefix string, ignoreUsers []string) *Metrics {
 		TaskMarshallingLatency: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Name:    "external_task_worker_task_marshalling_latency",
 			Help:    "histogram vec for latency of marshaller calls",
-			Buckets: []float64{10, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500, 2000, 2500, 3000},
+			Buckets: []float64{5, 10, 25, 50, 100, 250, 500, 1000, 2000},
 		}, []string{"instance_id", "user_id", "endpoint", "service_id", "function_id"}),
 		TaskLastEventValueRequestCountVec: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "external_task_worker_task_last_event_value_request_count_vec",
 			Help: "counter vec for last-event-value requests",
-		}, []string{"instance_id", "user_id", "process_definition_id", "process_instance_id"}),
+		}, []string{"instance_id", "user_id", "process_definition_id"}),
 		TaskCommandSendCountVec: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "external_task_worker_task_command_send_count_vec",
 			Help: "counter vec for task commands send",
-		}, []string{"instance_id", "user_id", "process_definition_id", "process_instance_id"}),
+		}, []string{"instance_id", "user_id", "process_definition_id"}),
 		TaskReceivedCountVec: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "external_task_worker_task_received_count_vec",
 			Help: "counter vec for received tasks",
-		}, []string{"instance_id", "user_id", "process_definition_id", "process_instance_id"}),
+		}, []string{"instance_id", "user_id", "process_definition_id"}),
 		TaskCommandResponseReceivedCountVec: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "external_task_worker_task_command_response_received_count_vec",
 			Help: "counter vec for received command responses",
-		}, []string{"instance_id", "user_id", "process_definition_id", "process_instance_id"}),
+		}, []string{"instance_id", "user_id", "process_definition_id"}),
 		TaskCompletedCountVec: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "external_task_worker_task_completed_count_vec",
 			Help: "counter vec for completed tasks",
-		}, []string{"instance_id", "user_id", "process_definition_id", "process_instance_id"}),
+		}, []string{"instance_id", "user_id", "process_definition_id"}),
 	}
 
 	reg.MustRegister(m.IncidentsCount)
@@ -187,35 +187,35 @@ func (this *Metrics) LogTaskLastEventValueRequest(task messages.GroupTaskMetadat
 	if this.ignore(task.Task.TenantId) {
 		return
 	}
-	this.TaskLastEventValueRequestCountVec.WithLabelValues(getInstanceId(), task.Task.TenantId, task.Task.ProcessDefinitionId, task.Task.ProcessInstanceId).Inc()
+	this.TaskLastEventValueRequestCountVec.WithLabelValues(getInstanceId(), task.Task.TenantId, task.Task.ProcessDefinitionId).Inc()
 }
 
 func (this *Metrics) LogTaskCommandSend(task messages.GroupTaskMetadataElement) {
 	if this.ignore(task.Task.TenantId) {
 		return
 	}
-	this.TaskCommandSendCountVec.WithLabelValues(getInstanceId(), task.Task.TenantId, task.Task.ProcessDefinitionId, task.Task.ProcessInstanceId).Inc()
+	this.TaskCommandSendCountVec.WithLabelValues(getInstanceId(), task.Task.TenantId, task.Task.ProcessDefinitionId).Inc()
 }
 
 func (this *Metrics) LogTaskReceived(task messages.CamundaExternalTask) {
 	if this.ignore(task.TenantId) {
 		return
 	}
-	this.TaskReceivedCountVec.WithLabelValues(getInstanceId(), task.TenantId, task.ProcessDefinitionId, task.ProcessInstanceId).Inc()
+	this.TaskReceivedCountVec.WithLabelValues(getInstanceId(), task.TenantId, task.ProcessDefinitionId).Inc()
 }
 
 func (this *Metrics) LogTaskCommandResponseReceived(task messages.TaskInfo) {
 	if this.ignore(task.TenantId) {
 		return
 	}
-	this.TaskCommandResponseReceivedCountVec.WithLabelValues(getInstanceId(), task.TenantId, task.ProcessDefinitionId, task.ProcessInstanceId).Inc()
+	this.TaskCommandResponseReceivedCountVec.WithLabelValues(getInstanceId(), task.TenantId, task.ProcessDefinitionId).Inc()
 }
 
 func (this *Metrics) LogTaskCompleted(task messages.TaskInfo) {
 	if this.ignore(task.TenantId) {
 		return
 	}
-	this.TaskCompletedCountVec.WithLabelValues(getInstanceId(), task.TenantId, task.ProcessDefinitionId, task.ProcessInstanceId).Inc()
+	this.TaskCompletedCountVec.WithLabelValues(getInstanceId(), task.TenantId, task.ProcessDefinitionId).Inc()
 }
 
 func (this *Metrics) LogCamundaCompleteTask(latency time.Duration) {
