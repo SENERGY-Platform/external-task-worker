@@ -43,4 +43,11 @@ type Metrics interface {
 	LogCamundaLoadedTasks(count int)
 	LogCamundaGetShardsError()
 	LogCamundaGetTasksError()
+
+	LogTaskMarshallingLatency(requestKind string, userId string, serviceId string, functionId string, latency time.Duration)
+	LogTaskReceived(task messages.CamundaExternalTask)
+	LogTaskLastEventValueRequest(task messages.GroupTaskMetadataElement)
+	LogTaskCommandSend(task messages.GroupTaskMetadataElement)
+	LogTaskCommandResponseReceived(task messages.TaskInfo)
+	LogTaskCompleted(task messages.TaskInfo)
 }

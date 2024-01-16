@@ -34,7 +34,7 @@ import (
 	"time"
 )
 
-func (this *CmdWorker) GetLastEventValue(token string, device model.Device, service model.Service, protocol model.Protocol, characteristicId string, functionId string, aspect model.AspectNode, timeout time.Duration) (code int, result interface{}) {
+func (this *CmdWorker) GetLastEventValue(token string, userId string, device model.Device, service model.Service, protocol model.Protocol, characteristicId string, functionId string, aspect model.AspectNode, timeout time.Duration) (code int, result interface{}) {
 	output, err, code := this.getLastEventMessage(token, device, service, protocol, timeout)
 	if err != nil {
 		log.Println("ERROR: unable to get event value:", err)
@@ -44,6 +44,7 @@ func (this *CmdWorker) GetLastEventValue(token string, device model.Device, serv
 		log.Println("ERROR: unexpected getLastEventMessage() return code:", code)
 		return code, "unexpected code " + strconv.Itoa(code)
 	}
+	marshalStartTime := time.Now()
 	temp, err := this.marshaller.UnmarshalV2(marshaller.UnmarshallingV2Request{
 		Service:          service,
 		Protocol:         protocol,
@@ -54,6 +55,10 @@ func (this *CmdWorker) GetLastEventValue(token string, device model.Device, serv
 		AspectNodeId:     aspect.Id,
 	})
 	if err != nil {
+		//log marshal latency
+		marshalDuration := time.Since(marshalStartTime)
+		this.metrics.LogTaskMarshallingLatency("UnmarshalV2", userId, service.Id, functionId, marshalDuration)
+
 		if this.config.Debug {
 			log.Println("ERROR:", err)
 			marshalRequestStr, _ := json.Marshal(marshaller.UnmarshallingV2Request{

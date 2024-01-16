@@ -22,6 +22,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -37,7 +38,27 @@ type Metrics struct {
 	CommandRoundtripMsHistogram prometheus.Histogram
 	CommandResponsesReceived    prometheus.Counter
 
+	TaskMarshallingLatency              *prometheus.HistogramVec
+	TaskLastEventValueRequestCountVec   *prometheus.CounterVec
+	TaskCommandSendCountVec             *prometheus.CounterVec
+	TaskReceivedCountVec                *prometheus.CounterVec
+	TaskCommandResponseReceivedCountVec *prometheus.CounterVec
+	TaskCompletedCountVec               *prometheus.CounterVec
+
 	httphandler http.Handler
+}
+
+var instanceId string
+
+func getInstanceId() string {
+	if instanceId == "" {
+		var err error
+		instanceId, err = os.Hostname()
+		if err != nil {
+			instanceId = ""
+		}
+	}
+	return instanceId
 }
 
 func NewMetrics(prefix string) *Metrics {
@@ -92,6 +113,32 @@ func NewMetrics(prefix string) *Metrics {
 			Name: prefix + "_command_responses",
 			Help: "count of command responses received since startup",
 		}),
+
+		TaskMarshallingLatency: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+			Name:    "external_task_worker_task_marshalling_latency",
+			Help:    "histogram vec for latency of marshaller calls",
+			Buckets: []float64{10, 50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500, 2000, 2500, 3000},
+		}, []string{"instance_id", "user_id", "endpoint", "service_id", "function_id"}),
+		TaskLastEventValueRequestCountVec: prometheus.NewCounterVec(prometheus.CounterOpts{
+			Name: "external_task_worker_task_last_event_value_request_count_vec",
+			Help: "counter vec for last-event-value requests",
+		}, []string{"instance_id", "user_id", "process_definition_id", "process_instance_id"}),
+		TaskCommandSendCountVec: prometheus.NewCounterVec(prometheus.CounterOpts{
+			Name: "external_task_worker_task_command_send_count_vec",
+			Help: "counter vec for task commands send",
+		}, []string{"instance_id", "user_id", "process_definition_id", "process_instance_id"}),
+		TaskReceivedCountVec: prometheus.NewCounterVec(prometheus.CounterOpts{
+			Name: "external_task_worker_task_received_count_vec",
+			Help: "counter vec for received tasks",
+		}, []string{"instance_id", "user_id", "process_definition_id", "process_instance_id"}),
+		TaskCommandResponseReceivedCountVec: prometheus.NewCounterVec(prometheus.CounterOpts{
+			Name: "external_task_worker_task_command_response_received_count_vec",
+			Help: "counter vec for received command responses",
+		}, []string{"instance_id", "user_id", "process_definition_id", "process_instance_id"}),
+		TaskCompletedCountVec: prometheus.NewCounterVec(prometheus.CounterOpts{
+			Name: "external_task_worker_task_completed_count_vec",
+			Help: "counter vec for completed tasks",
+		}, []string{"instance_id", "user_id", "process_definition_id", "process_instance_id"}),
 	}
 
 	reg.MustRegister(m.IncidentsCount)
@@ -111,6 +158,30 @@ func NewMetrics(prefix string) *Metrics {
 func (this *Metrics) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	log.Printf("%v [%v] %v \n", request.RemoteAddr, request.Method, request.URL)
 	this.httphandler.ServeHTTP(writer, request)
+}
+
+func (this *Metrics) LogTaskMarshallingLatency(endpoint string, userId string, serviceId string, functionId string, latency time.Duration) {
+	this.TaskMarshallingLatency.WithLabelValues(getInstanceId(), userId, endpoint, serviceId, functionId).Observe(float64(latency))
+}
+
+func (this *Metrics) LogTaskLastEventValueRequest(task messages.GroupTaskMetadataElement) {
+	this.TaskLastEventValueRequestCountVec.WithLabelValues(getInstanceId(), task.Task.TenantId, task.Task.ProcessDefinitionId, task.Task.ProcessInstanceId).Inc()
+}
+
+func (this *Metrics) LogTaskCommandSend(task messages.GroupTaskMetadataElement) {
+	this.TaskCommandSendCountVec.WithLabelValues(getInstanceId(), task.Task.TenantId, task.Task.ProcessDefinitionId, task.Task.ProcessInstanceId).Inc()
+}
+
+func (this *Metrics) LogTaskReceived(task messages.CamundaExternalTask) {
+	this.TaskReceivedCountVec.WithLabelValues(getInstanceId(), task.TenantId, task.ProcessDefinitionId, task.ProcessInstanceId).Inc()
+}
+
+func (this *Metrics) LogTaskCommandResponseReceived(task messages.TaskInfo) {
+	this.TaskCommandResponseReceivedCountVec.WithLabelValues(getInstanceId(), task.TenantId, task.ProcessDefinitionId, task.ProcessInstanceId).Inc()
+}
+
+func (this *Metrics) LogTaskCompleted(task messages.TaskInfo) {
+	this.TaskCompletedCountVec.WithLabelValues(getInstanceId(), task.TenantId, task.ProcessDefinitionId, task.ProcessInstanceId).Inc()
 }
 
 func (this *Metrics) LogCamundaCompleteTask(latency time.Duration) {

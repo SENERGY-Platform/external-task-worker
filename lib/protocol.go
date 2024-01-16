@@ -25,6 +25,7 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -158,10 +159,22 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 				AspectNode:       aspect,
 			})
 		}
+		marshalStartTime := time.Now()
 		marshalledInput, err = this.marshaller.MarshalV2(*service, *protocol, data)
 		if err != nil {
 			return nil, nil, err
 		}
+
+		//log marshal latency
+		marshalDuration := time.Since(marshalStartTime)
+		functionIds := []string{}
+		for _, d := range data {
+			if d.FunctionId != "" {
+				functionIds = append(functionIds, d.FunctionId)
+			}
+		}
+		sort.Strings(functionIds)
+		this.metrics.LogTaskMarshallingLatency("MarshalV2", task.TenantId, service.Id, strings.Join(functionIds, ","), marshalDuration)
 	}
 
 	trace = append(trace, messages.Trace{

@@ -157,6 +157,10 @@ func (this *CmdWorker) ExecuteNextTasks() (wait bool) {
 		return true
 	}
 
+	for _, task := range tasks {
+		this.metrics.LogTaskReceived(task)
+	}
+
 	tasksWithDuplicateIndex := []messages.TaskWithDuplicateIndex{}
 	activityIndex := map[string][]string{}
 	for _, task := range tasks {
@@ -218,13 +222,15 @@ func (this *CmdWorker) ExecuteCommand(command messages.Command, task messages.Ca
 
 	if this.config.CompletionStrategy == util.OPTIMISTIC || completed {
 		time.Sleep(time.Duration(this.config.OptimisticTaskCompletionTimeout) * time.Millisecond) //prevent completes that are too fast
-		err = this.camunda.CompleteTask(messages.TaskInfo{
+		taskInfo := messages.TaskInfo{
 			WorkerId:            this.camunda.GetWorkerId(),
 			TaskId:              task.Id,
 			ProcessInstanceId:   task.ProcessInstanceId,
 			ProcessDefinitionId: task.ProcessDefinitionId,
 			TenantId:            task.TenantId,
-		}, this.config.CamundaTaskResultName, handleVersioning(command.Version, results))
+		}
+		this.metrics.LogTaskCompleted(taskInfo)
+		err = this.camunda.CompleteTask(taskInfo, this.config.CamundaTaskResultName, handleVersioning(command.Version, results))
 		if err != nil {
 			log.Println("error on completeCamundaTask(): ", err)
 			return
@@ -242,6 +248,7 @@ func (this *CmdWorker) ExecuteCommand(command messages.Command, task messages.Ca
 	}
 	for _, message := range nextProtocolMessages {
 		if message.Request != nil {
+			this.metrics.LogTaskCommandSend(message.Metadata)
 			err = this.producer.ProduceWithKey(message.Request.Topic, message.Request.Key, message.Request.Payload)
 			if err != nil {
 				log.Println("ERROR: unable to produce kafka msg", err)
@@ -250,12 +257,13 @@ func (this *CmdWorker) ExecuteCommand(command messages.Command, task messages.Ca
 				this.logProducerSuccess()
 			}
 		} else if message.Event != nil && this.config.TimescaleWrapperUrl != "" && this.config.TimescaleWrapperUrl != "-" {
+			this.metrics.LogTaskLastEventValueRequest(message.Metadata)
 			token, err := this.repository.GetToken(message.Metadata.Task.TenantId)
 			if err != nil {
 				log.Println("ERROR: unable to get token", err)
 				continue
 			}
-			code, result := this.GetLastEventValue(string(token), message.Event.Device, message.Event.Service, message.Event.Protocol, message.Event.CharacteristicId, message.Event.FunctionId, message.Event.AspectNode, 10*time.Second)
+			code, result := this.GetLastEventValue(string(token), message.Metadata.Task.TenantId, message.Event.Device, message.Event.Service, message.Event.Protocol, message.Event.CharacteristicId, message.Event.FunctionId, message.Event.AspectNode, 10*time.Second)
 			if code == 200 {
 				err = this.handleTaskResponse(messages.TaskInfo{
 					WorkerId:            this.camunda.GetWorkerId(),
@@ -346,6 +354,7 @@ func (this *CmdWorker) HandleTaskResponse(msg string) (err error) {
 			if message.Metadata.OutputAspectNode != nil {
 				aspect = *message.Metadata.OutputAspectNode
 			}
+			marshalStartTime := time.Now()
 			output, err = this.marshaller.UnmarshalV2(marshaller.UnmarshallingV2Request{
 				Service:          message.Metadata.Service,
 				Protocol:         message.Metadata.Protocol,
@@ -355,6 +364,11 @@ func (this *CmdWorker) HandleTaskResponse(msg string) (err error) {
 				FunctionId:       message.Metadata.OutputFunctionId,
 				AspectNode:       aspect,
 			})
+			if err == nil {
+				//log marshal latency
+				marshalDuration := time.Since(marshalStartTime)
+				this.metrics.LogTaskMarshallingLatency("UnmarshalV2", message.TaskInfo.TenantId, message.Metadata.Service.Id, message.Metadata.OutputFunctionId, marshalDuration)
+			}
 		}
 	}
 	if err != nil {
@@ -364,6 +378,8 @@ func (this *CmdWorker) HandleTaskResponse(msg string) (err error) {
 }
 
 func (this *CmdWorker) handleTaskResponse(taskInfo messages.TaskInfo, output interface{}) (err error) {
+	this.metrics.LogTaskCommandResponseReceived(taskInfo)
+
 	parent, results, finished, err := this.deviceGroupsHandler.ProcessResponse(taskInfo.TaskId, output)
 	if err == devicegroups.ErrNotFount {
 		log.Println("WARNING: no parent task found --> unable to complete task (tasks may already be done):", taskInfo.TaskId, output)
@@ -383,6 +399,8 @@ func (this *CmdWorker) handleTaskResponse(taskInfo messages.TaskInfo, output int
 			Time:                taskInfo.Time,
 			TenantId:            taskInfo.TenantId,
 		}
+
+		this.metrics.LogTaskCompleted(taskInfo)
 
 		err = this.camunda.CompleteTask(
 			taskInfo,
