@@ -247,6 +247,10 @@ func (this *Metrics) LogCamundaGetTasksError() {
 	this.GetTasksErrors.Inc()
 }
 
+func (this *Metrics) LogCamundaCompleteTask() {
+	this.TasksCompletedCount.Inc()
+}
+
 func (this *Metrics) HandleResponseTrace(trace []messages.Trace) {
 	this.CommandResponsesReceived.Inc()
 	if len(trace) == 0 {

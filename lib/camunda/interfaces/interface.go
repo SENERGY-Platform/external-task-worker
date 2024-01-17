@@ -37,6 +37,7 @@ type CamundaInterface interface {
 }
 
 type Metrics interface {
+	LogCamundaCompleteTask()
 	LogCamundaCompleteTaskError()
 	LogIncident()
 	LogCamundaLoadedTasks(count int)

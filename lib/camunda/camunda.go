@@ -162,6 +162,7 @@ func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string,
 			log.Println("WARNING: unable to complete task", taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, string(pl), taskInfo.TenantId)
 			return fmt.Errorf("%w: %v, %v", UnableToCompleteErrResp, resp.StatusCode, string(pl))
 		}
+		this.metrics.LogCamundaCompleteTask()
 		log.Println("complete camunda task: ", completeRequest, string(pl))
 		return nil
 	}
