@@ -121,7 +121,7 @@ func NewMetrics(prefix string, ignoreUsers []string) *Metrics {
 		TaskMarshallingLatency: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Name:    "external_task_worker_task_marshalling_latency",
 			Help:    "histogram vec for latency of marshaller calls",
-			Buckets: []float64{5, 10, 25, 50, 100, 250, 500, 1000, 2000},
+			Buckets: []float64{1, 2, 3, 4, 5, 10, 25, 50, 100, 250, 500, 1000, 2000},
 		}, []string{"instance_id", "user_id", "endpoint", "service_id", "function_id"}),
 		TaskLastEventValueRequestCountVec: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "external_task_worker_task_last_event_value_request_count_vec",
