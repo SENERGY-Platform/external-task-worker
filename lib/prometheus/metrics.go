@@ -31,13 +31,14 @@ type Metrics struct {
 	IncidentsCount              prometheus.Counter
 	TasksReceivedCount          prometheus.Counter
 	TasksCompletedCount         prometheus.Counter
-	TaskCompleteLatencyMs       prometheus.Gauge
 	TasksCompleteErrors         prometheus.Counter
 	GetTasksErrors              prometheus.Counter
 	GetShardsError              prometheus.Counter
-	CommandRoundtripMs          prometheus.Gauge
 	CommandRoundtripMsHistogram prometheus.Histogram
 	CommandResponsesReceived    prometheus.Counter
+
+	TaskMarshallingLatencySummary        prometheus.Summary
+	TaskCommandRoundtripLatencyMsSummary prometheus.Summary
 
 	TaskMarshallingLatency              *prometheus.HistogramVec
 	TaskLastEventValueRequestCountVec   *prometheus.CounterVec
@@ -87,10 +88,6 @@ func NewMetrics(prefix string, ignoreUsers []string) *Metrics {
 			Name: prefix + "_tasks_completed",
 			Help: "count of tasks completed since startup",
 		}),
-		TaskCompleteLatencyMs: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name: prefix + "_task_complete_latency_ms",
-			Help: "latency of device check in ms",
-		}),
 		TasksCompleteErrors: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: prefix + "_tasks_complete_errors",
 			Help: "count of errors while completing tasks since startup",
@@ -103,10 +100,6 @@ func NewMetrics(prefix string, ignoreUsers []string) *Metrics {
 			Name: prefix + "_get_shards_errors",
 			Help: "count of errors while loading shards since startup",
 		}),
-		CommandRoundtripMs: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name: prefix + "_command_roundtrip_ms",
-			Help: "duration of a command roundtrip in ms",
-		}),
 		CommandRoundtripMsHistogram: prometheus.NewHistogram(prometheus.HistogramOpts{
 			Name:    prefix + "_command_roundtrip_ms_histogram",
 			Help:    "duration histogram of command roundtrips in ms",
@@ -117,6 +110,14 @@ func NewMetrics(prefix string, ignoreUsers []string) *Metrics {
 			Help: "count of command responses received since startup",
 		}),
 
+		TaskCommandRoundtripLatencyMsSummary: prometheus.NewSummary(prometheus.SummaryOpts{
+			Name: "external_task_worker_command_roundtrip_latency_ms_summary",
+			Help: "summary of roundtrip latency in ms",
+		}),
+		TaskMarshallingLatencySummary: prometheus.NewSummary(prometheus.SummaryOpts{
+			Name: "external_task_worker_marshalling_latency_ms_summary",
+			Help: "summary of marshalling request latency in ms",
+		}),
 		TaskMarshallingLatency: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Name:    "external_task_worker_task_marshalling_latency",
 			Help:    "histogram vec for latency of marshaller calls",
@@ -147,13 +148,16 @@ func NewMetrics(prefix string, ignoreUsers []string) *Metrics {
 	reg.MustRegister(m.IncidentsCount)
 	reg.MustRegister(m.TasksReceivedCount)
 	reg.MustRegister(m.TasksCompletedCount)
-	reg.MustRegister(m.TaskCompleteLatencyMs)
 	reg.MustRegister(m.TasksCompleteErrors)
 	reg.MustRegister(m.GetTasksErrors)
 	reg.MustRegister(m.GetShardsError)
-	reg.MustRegister(m.CommandRoundtripMs)
 	reg.MustRegister(m.CommandRoundtripMsHistogram)
 	reg.MustRegister(m.CommandResponsesReceived)
+
+	reg.MustRegister(
+		m.TaskCommandRoundtripLatencyMsSummary,
+		m.TaskMarshallingLatencySummary,
+	)
 
 	reg.MustRegister(
 		m.TaskMarshallingLatency,
@@ -177,14 +181,13 @@ func (this *Metrics) ServeHTTP(writer http.ResponseWriter, request *http.Request
 }
 
 func (this *Metrics) LogTaskMarshallingLatency(endpoint string, userId string, serviceId string, functionId string, latency time.Duration) {
-	if this.ignore(userId) {
-		return
-	}
+	this.TaskCommandRoundtripLatencyMsSummary.Observe(float64(latency.Milliseconds()))
 	this.TaskMarshallingLatency.WithLabelValues(getInstanceId(), userId, endpoint, serviceId, functionId).Observe(float64(latency.Milliseconds()))
 }
 
 func (this *Metrics) LogTaskLastEventValueRequest(task messages.GroupTaskMetadataElement) {
 	if this.ignore(task.Task.TenantId) {
+		//ignore canary measurements because they have a new ProcessDefinitionId with every measurement
 		return
 	}
 	this.TaskLastEventValueRequestCountVec.WithLabelValues(getInstanceId(), task.Task.TenantId, task.Task.ProcessDefinitionId).Inc()
@@ -192,6 +195,7 @@ func (this *Metrics) LogTaskLastEventValueRequest(task messages.GroupTaskMetadat
 
 func (this *Metrics) LogTaskCommandSend(task messages.GroupTaskMetadataElement) {
 	if this.ignore(task.Task.TenantId) {
+		//ignore canary measurements because they have a new ProcessDefinitionId with every measurement
 		return
 	}
 	this.TaskCommandSendCountVec.WithLabelValues(getInstanceId(), task.Task.TenantId, task.Task.ProcessDefinitionId).Inc()
@@ -199,6 +203,7 @@ func (this *Metrics) LogTaskCommandSend(task messages.GroupTaskMetadataElement) 
 
 func (this *Metrics) LogTaskReceived(task messages.CamundaExternalTask) {
 	if this.ignore(task.TenantId) {
+		//ignore canary measurements because they have a new ProcessDefinitionId with every measurement
 		return
 	}
 	this.TaskReceivedCountVec.WithLabelValues(getInstanceId(), task.TenantId, task.ProcessDefinitionId).Inc()
@@ -206,6 +211,7 @@ func (this *Metrics) LogTaskReceived(task messages.CamundaExternalTask) {
 
 func (this *Metrics) LogTaskCommandResponseReceived(task messages.TaskInfo) {
 	if this.ignore(task.TenantId) {
+		//ignore canary measurements because they have a new ProcessDefinitionId with every measurement
 		return
 	}
 	this.TaskCommandResponseReceivedCountVec.WithLabelValues(getInstanceId(), task.TenantId, task.ProcessDefinitionId).Inc()
@@ -213,14 +219,10 @@ func (this *Metrics) LogTaskCommandResponseReceived(task messages.TaskInfo) {
 
 func (this *Metrics) LogTaskCompleted(task messages.TaskInfo) {
 	if this.ignore(task.TenantId) {
+		//ignore canary measurements because they have a new ProcessDefinitionId with every measurement
 		return
 	}
 	this.TaskCompletedCountVec.WithLabelValues(getInstanceId(), task.TenantId, task.ProcessDefinitionId).Inc()
-}
-
-func (this *Metrics) LogCamundaCompleteTask(latency time.Duration) {
-	this.TasksCompletedCount.Inc()
-	this.TaskCompleteLatencyMs.Set(float64(latency.Milliseconds()))
 }
 
 func (this *Metrics) LogCamundaCompleteTaskError() {
@@ -258,7 +260,7 @@ func (this *Metrics) HandleResponseTrace(trace []messages.Trace) {
 	}
 	if smallestTraceUnixTimestamp > 0 {
 		value := float64(time.Since(time.Unix(0, smallestTraceUnixTimestamp)).Milliseconds())
-		this.CommandRoundtripMs.Set(value)
+		this.TaskCommandRoundtripLatencyMsSummary.Observe(value)
 		this.CommandRoundtripMsHistogram.Observe(value)
 	}
 }

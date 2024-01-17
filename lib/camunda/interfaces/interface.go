@@ -37,7 +37,6 @@ type CamundaInterface interface {
 }
 
 type Metrics interface {
-	LogCamundaCompleteTask(latency time.Duration)
 	LogCamundaCompleteTaskError()
 	LogIncident()
 	LogCamundaLoadedTasks(count int)

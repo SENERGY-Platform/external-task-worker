@@ -146,7 +146,6 @@ func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string,
 		if err != nil {
 			return err
 		}
-		start := time.Now()
 		resp, err := client.Post(shard+"/engine-rest/external-task/"+taskInfo.TaskId+"/complete", "application/json", b)
 		if err != nil {
 			this.metrics.LogCamundaCompleteTaskError()
@@ -163,7 +162,6 @@ func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string,
 			log.Println("WARNING: unable to complete task", taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, string(pl), taskInfo.TenantId)
 			return fmt.Errorf("%w: %v, %v", UnableToCompleteErrResp, resp.StatusCode, string(pl))
 		}
-		this.metrics.LogCamundaCompleteTask(time.Since(start))
 		log.Println("complete camunda task: ", completeRequest, string(pl))
 		return nil
 	}
