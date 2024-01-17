@@ -181,7 +181,7 @@ func (this *Metrics) ServeHTTP(writer http.ResponseWriter, request *http.Request
 }
 
 func (this *Metrics) LogTaskMarshallingLatency(endpoint string, userId string, serviceId string, functionId string, latency time.Duration) {
-	this.TaskCommandRoundtripLatencyMsSummary.Observe(float64(latency.Milliseconds()))
+	this.TaskMarshallingLatencySummary.Observe(float64(latency.Milliseconds()))
 	this.TaskMarshallingLatency.WithLabelValues(getInstanceId(), userId, endpoint, serviceId, functionId).Observe(float64(latency.Milliseconds()))
 }
 
