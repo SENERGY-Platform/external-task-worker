@@ -16,12 +16,12 @@ github.com/RyanCarrier/dijkstra v1.3.0 h1:lqrLMwKy8PtyDpWqZpcbzr9KkqnLJrDdQ9u3iN
 github.com/RyanCarrier/dijkstra v1.3.0/go.mod h1:9egjhC7eVsfREX6NrYS+1wHzk9C/9v2Cz26/bqpjjTc=
 github.com/SENERGY-Platform/converter v0.0.5 h1:zVV7ll3Waxca1dorpZeI+cg1pN6RENv9HiJMPxiTkEw=
 github.com/SENERGY-Platform/converter v0.0.5/go.mod h1:4H0MapJ9wF73iF7PT2go1qgO6ANp6V+zgk7WvWjwT/Q=
-github.com/SENERGY-Platform/marshaller v0.0.12 h1:Exad0Az9KJcq+7UmUtZLSftVgK8EQgoXpDUKLR2h1H8=
-github.com/SENERGY-Platform/marshaller v0.0.12/go.mod h1:EtqP311TQ2m4hNaunXeML2Kw8+KOcAbqHPdx+h8rTRg=
+github.com/SENERGY-Platform/marshaller v0.0.13 h1:2/BBqdLgNPZ1Rg8iL2y4ujLmPFQsgJxfo9PpZ2M5Nfw=
+github.com/SENERGY-Platform/marshaller v0.0.13/go.mod h1:Uf8S9Bldos5zhaRiGdmXp7vb5caNPNsbDG9n1nNTmrM=
 github.com/SENERGY-Platform/models/go v0.0.0-20230824080159-16585960df38 h1:PDvFwIJBnFyKt1KeepkABNIS57+WhVj4vBw7X5JGZJw=
 github.com/SENERGY-Platform/models/go v0.0.0-20230824080159-16585960df38/go.mod h1:bCREPNRN4P8oxLgpC3/ZKK4jXSy4MSPXoiomhohE+aw=
-github.com/SENERGY-Platform/service-commons v0.0.0-20240313123621-ce10fbe36496 h1:H7aHKQX8kWzJkEOKIo/0L+n+ab904CxNgskoERdX0fU=
-github.com/SENERGY-Platform/service-commons v0.0.0-20240313123621-ce10fbe36496/go.mod h1:1p2CQPNtler5leXqNgaOfr7DlgZUydrQlQYA97ycm4k=
+github.com/SENERGY-Platform/service-commons v0.0.0-20240314112519-5bde66831b0d h1:nyiUEVqQc4njAz98rdRFOBivN7Ar9tiI7A/ej0POEx0=
+github.com/SENERGY-Platform/service-commons v0.0.0-20240314112519-5bde66831b0d/go.mod h1:1p2CQPNtler5leXqNgaOfr7DlgZUydrQlQYA97ycm4k=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874 h1:N7oVaKyGp8bttX0bfZGmcGkjz7DLQXhAn3DNd3T0ous=

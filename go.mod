@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	github.com/SENERGY-Platform/converter v0.0.5
-	github.com/SENERGY-Platform/marshaller v0.0.12
+	github.com/SENERGY-Platform/marshaller v0.0.13
 	github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874
 	github.com/coocood/freecache v1.2.4
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -16,7 +16,7 @@ require (
 require (
 	github.com/IBM/sarama v1.43.0
 	github.com/SENERGY-Platform/models/go v0.0.0-20230824080159-16585960df38
-	github.com/SENERGY-Platform/service-commons v0.0.0-20240313123621-ce10fbe36496
+	github.com/SENERGY-Platform/service-commons v0.0.0-20240314112519-5bde66831b0d
 	github.com/prometheus/client_golang v1.19.0
 	github.com/testcontainers/testcontainers-go v0.29.1
 )
