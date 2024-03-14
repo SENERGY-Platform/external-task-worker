@@ -45,6 +45,11 @@ const CachePrefix = "user-shard."
 func (this *Shards) GetShardForUser(userId string) (shardUrl string, err error) {
 	return cache.Use(this.cache, CachePrefix+userId, func() (string, error) {
 		return getShardForUser(this.db, userId)
+	}, func(s string) error {
+		if s == "" {
+			return errors.New("invalid shard loaded from cache")
+		}
+		return nil
 	}, time.Minute)
 }
 
@@ -97,6 +102,11 @@ func (this *Shards) EnsureShardForUser(userId string) (shardUrl string, err erro
 
 	shardUrl, err = cache.Use(this.cache, CachePrefix+userId, func() (string, error) {
 		return getShardForUser(tx, userId)
+	}, func(s string) error {
+		if s == "" {
+			return errors.New("invalid shard loaded from cache")
+		}
+		return nil
 	}, time.Minute)
 
 	//more work is only necessary if no shard is assigned to the user
@@ -174,6 +184,8 @@ func addShardForUser(tx Tx, userId string, shardAddress string) (err error) {
 func (this *Shards) GetShards() (result []string, err error) {
 	return cache.Use(this.cache, "shards", func() ([]string, error) {
 		return getShards(this.db)
+	}, func(strings []string) error {
+		return nil
 	}, time.Minute)
 }
 

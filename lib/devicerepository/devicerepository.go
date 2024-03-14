@@ -66,12 +66,22 @@ func (this *Iot) GetToken(user string) (result Impersonate, err error) {
 	return cache.UseWithExpInGet(this.cache, "user_token."+user, func() (Impersonate, time.Duration, error) {
 		token, expirationInSec, err := this.keycloak.GetUserToken(user)
 		return token, time.Duration(expirationInSec-10) * time.Second, err
+	}, func(impersonate Impersonate) error {
+		if impersonate == "" {
+			return errors.New("invalid token loaded from cache")
+		}
+		return nil
 	}, this.cacheTimeout)
 }
 
 func (this *Iot) GetDevice(token Impersonate, id string) (result model.Device, err error) {
 	return cache.Use(this.cache, "device."+id, func() (model.Device, error) {
 		return this.getDevice(token, id)
+	}, func(device model.Device) error {
+		if device.Id == "" {
+			return errors.New("invalid device loaded from cache")
+		}
+		return nil
 	}, this.cacheTimeout)
 }
 
@@ -83,6 +93,11 @@ func (this *Iot) getDevice(token Impersonate, id string) (result model.Device, e
 func (this *Iot) GetProtocol(token Impersonate, id string) (result model.Protocol, err error) {
 	return cache.Use(this.cache, "protocol."+id, func() (model.Protocol, error) {
 		return this.getProtocol(token, id)
+	}, func(protocol model.Protocol) error {
+		if protocol.Id == "" {
+			return errors.New("invalid protocol loaded from cache")
+		}
+		return nil
 	}, this.cacheTimeout)
 }
 
@@ -112,15 +127,12 @@ func (this *Iot) GetService(token Impersonate, device model.Device, id string) (
 }
 
 func (this *Iot) getServiceFromCache(id string) (service model.Service, err error) {
-	item, err := this.cache.Get("service." + id)
-	if err != nil {
-		return service, err
-	}
-	var ok bool
-	service, ok = item.(model.Service)
-	if !ok {
-		err = errors.New("unable to interpret cache value as model.Service")
-	}
+	service, err = cache.Get[model.Service](this.cache, "service."+id, func(service model.Service) error {
+		if service.Id == "" {
+			return errors.New("invalid service loaded from cache")
+		}
+		return nil
+	})
 	return service, err
 }
 
@@ -131,6 +143,11 @@ func (this *Iot) saveServiceToCache(service model.Service) {
 func (this *Iot) GetDeviceType(token Impersonate, id string) (result model.DeviceType, err error) {
 	return cache.Use(this.cache, "device-type."+id, func() (model.DeviceType, error) {
 		return this.getDeviceType(token, id)
+	}, func(deviceType model.DeviceType) error {
+		if deviceType.Id == "" {
+			return errors.New("invalid device-type loaded from cache")
+		}
+		return nil
 	}, this.cacheTimeout)
 }
 
@@ -142,6 +159,11 @@ func (this *Iot) getDeviceType(token Impersonate, id string) (result model.Devic
 func (this *Iot) GetDeviceGroup(token Impersonate, id string) (result model.DeviceGroup, err error) {
 	return cache.Use(this.cache, "device-group."+id, func() (model.DeviceGroup, error) {
 		return this.getDeviceGroup(token, id)
+	}, func(group model.DeviceGroup) error {
+		if group.Id == "" {
+			return errors.New("invalid device-group loaded from cache")
+		}
+		return nil
 	}, this.cacheTimeout)
 }
 
