@@ -39,7 +39,7 @@ func (this *CmdWorker) CreateProtocolMessage(command messages.Command, task mess
 			log.Println("DEBUG:", task.TenantId)
 		}
 		log.Println("ERROR: on CreateProtocolMessage createMessageForProtocolHandler(): ", err)
-		err = errors.New("internal format error (" + err.Error() + ") (time: " + util.TimeNow().String() + ")")
+		err = errors.New("internal format error: " + err.Error())
 		return
 	}
 	if value != nil {
