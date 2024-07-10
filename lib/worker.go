@@ -200,6 +200,11 @@ func (this *CmdWorker) ExecuteTask(task messages.CamundaExternalTask, caller str
 	if task.Error != "" {
 		log.Println("WARNING: existing failure in camunda task", task.Error)
 	}
+	incident := GetIncident(task)
+	if incident != nil {
+		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, "user triggered incident: "+*incident, task.TenantId)
+		return
+	}
 	request, err := GetCommandRequest(task)
 	if err != nil {
 		log.Println("error on GetCommandRequest(): ", err)

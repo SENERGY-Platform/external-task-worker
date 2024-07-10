@@ -18,6 +18,7 @@ package mock
 
 import (
 	"errors"
+	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/interfaces"
 	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
@@ -38,6 +39,7 @@ type CamundaMock struct {
 	config              util.Config
 	mux                 sync.Mutex
 	lockTimes           map[string]time.Time
+	Camunda             *camunda.Camunda
 }
 
 func (this *CamundaMock) Init() {
@@ -124,6 +126,9 @@ func (this *CamundaMock) Error(externalTaskId string, processInstanceId string, 
 	log.Println("CAMUNDA-FAIL:", externalTaskId, processInstanceId, processDefinitionId, msg)
 	this.failedTasks[externalTaskId] = this.fetchedTasks[externalTaskId]
 	delete(this.fetchedTasks, externalTaskId)
+	if this.Camunda != nil {
+		this.Camunda.Error(externalTaskId, processInstanceId, processDefinitionId, msg, tenantId)
+	}
 }
 
 func (this *CamundaMock) GetWorkerId() string {

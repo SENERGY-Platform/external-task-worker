@@ -27,6 +27,14 @@ import (
 	"strings"
 )
 
+func GetIncident(task messages.CamundaExternalTask) (incident *string) {
+	payload, ok := task.Variables[util.CAMUNDA_VARIABLES_INCIDENT].Value.(string)
+	if ok {
+		return &payload
+	}
+	return nil
+}
+
 func GetCommandRequest(task messages.CamundaExternalTask) (command messages.Command, err error) {
 	payload, ok := task.Variables[util.CAMUNDA_VARIABLES_PAYLOAD].Value.(string)
 	if !ok {

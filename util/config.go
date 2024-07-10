@@ -30,6 +30,7 @@ import (
 
 const OPTIMISTIC = "optimistic"
 const PESSIMISTIC = "pessimistic"
+const CAMUNDA_VARIABLES_INCIDENT = "incident"
 const CAMUNDA_VARIABLES_PAYLOAD = "payload"
 const CAMUNDA_VARIABLES_OVERWRITE = "overwrite"
 

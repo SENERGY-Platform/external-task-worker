@@ -19,14 +19,74 @@ package test
 import (
 	"context"
 	"fmt"
+	"github.com/SENERGY-Platform/external-task-worker/lib"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
+	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/lib/prometheus"
 	"github.com/SENERGY-Platform/external-task-worker/lib/test/mock"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"log"
+	"reflect"
 	"strconv"
+	"testing"
 	"time"
 )
+
+func TestUserIncident(t *testing.T) {
+	util.TimeNow = func() time.Time {
+		return time.Time{}
+	}
+	idCount := 0
+	temp := util.GetId
+	util.GetId = func() string {
+		idCount = idCount + 1
+		return strconv.Itoa(idCount)
+	}
+	defer func() {
+		util.GetId = temp
+	}()
+	config, err := util.LoadConfig("../../config.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	config.CompletionStrategy = util.OPTIMISTIC
+	config.CamundaWorkerTimeout = 100
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	mockCamunda := &mock.CamundaMock{Camunda: camunda.NewCamundaWithShards(config, mock.Kafka, prometheus.NewMetrics("test", nil), nil)}
+	mockCamunda.Init()
+	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
+
+	time.Sleep(1 * time.Second)
+
+	mockCamunda.AddTask(messages.CamundaExternalTask{
+		Id: "1",
+		Variables: map[string]messages.CamundaVariable{
+			util.CAMUNDA_VARIABLES_INCIDENT: {
+				Value: "test error",
+			},
+		},
+		ActivityId:          "aid1",
+		Retries:             0,
+		ExecutionId:         "execid1",
+		ProcessInstanceId:   "piid1",
+		ProcessDefinitionId: "pdid1",
+		TenantId:            "user",
+	})
+
+	time.Sleep(1 * time.Second)
+
+	incidents := mock.Kafka.GetProduced(config.KafkaIncidentTopic)
+
+	expected := []string{`{"command":"POST","msg_version":3,"incident":{"id":"2","external_task_id":"1","process_instance_id":"piid1","process_definition_id":"pdid1","worker_id":"1","error_message":"user triggered incident: test error","time":"0001-01-01T00:00:00Z","tenant_id":"user","deployment_name":""}}`}
+
+	if !reflect.DeepEqual(incidents, expected) {
+		t.Errorf("expected != actual\n%#v\n%#v\n", expected, incidents)
+	}
+
+}
 
 func ExampleIncidents() {
 	util.TimeNow = func() time.Time {
