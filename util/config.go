@@ -36,7 +36,7 @@ const CAMUNDA_VARIABLES_OVERWRITE = "overwrite"
 
 type Config struct {
 	PrometheusPort                  string
-	ShardsDb                        string
+	ShardsDb                        string `config:"secret"`
 	DeviceRepoUrl                   string
 	CompletionStrategy              string
 	OptimisticTaskCompletionTimeout int64
@@ -50,9 +50,9 @@ type Config struct {
 	ResponseTopic                   string
 	AuthExpirationTimeBuffer        float64
 	AuthEndpoint                    string
-	AuthClientId                    string
-	AuthClientSecret                string
-	JwtPrivateKey                   string
+	AuthClientId                    string `config:"secret"`
+	AuthClientSecret                string `config:"secret"`
+	JwtPrivateKey                   string `config:"secret"`
 	JwtExpiration                   int64
 	JwtIssuer                       string
 	KafkaIncidentTopic              string
@@ -143,10 +143,13 @@ func handleEnvironmentVars(config *Config) {
 	configType := configValue.Type()
 	for index := 0; index < configType.NumField(); index++ {
 		fieldName := configType.Field(index).Name
+		fieldConfig := configType.Field(index).Tag.Get("config")
 		envName := fieldNameToEnvName(fieldName)
 		envValue := os.Getenv(envName)
 		if envValue != "" {
-			fmt.Println("use environment variable: ", envName, " = ", envValue)
+			if !strings.Contains(fieldConfig, "secret") {
+				fmt.Println("use environment variable: ", envName, " = ", envValue)
+			}
 			if configValue.FieldByName(fieldName).Kind() == reflect.Int64 {
 				i, _ := strconv.ParseInt(envValue, 10, 64)
 				configValue.FieldByName(fieldName).SetInt(i)
