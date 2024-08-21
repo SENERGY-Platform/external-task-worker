@@ -34,11 +34,3 @@ jobs:
           tags: |
             smartenergyplatform/external-task-worker:dev
             ghcr.io/senergy-platform/external-task-worker:dev
-      - name: Deploy-optimistic
-        uses: wei/curl@v1
-        with:
-          args: -X POST -u ${{ secrets.RANCHER_TOKEN }} ${{ secrets.RANCHER_URL }}${{ secrets.RANCHER_SERVICE_O }}?action=redeploy
-      - name: Deploy-pessimistic
-        uses: wei/curl@v1
-        with:
-          args: -X POST -u ${{ secrets.RANCHER_TOKEN }} ${{ secrets.RANCHER_URL }}${{ secrets.RANCHER_SERVICE_P }}?action=redeploy
