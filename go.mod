@@ -3,10 +3,9 @@ module github.com/SENERGY-Platform/external-task-worker
 go 1.22
 
 require (
-	github.com/SENERGY-Platform/converter v0.0.8
-	github.com/SENERGY-Platform/marshaller v0.0.15
+	github.com/SENERGY-Platform/converter v0.0.9
+	github.com/SENERGY-Platform/marshaller v0.0.16
 	github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874
-	github.com/coocood/freecache v1.2.4
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.6.0
 	github.com/lib/pq v1.10.9
@@ -16,7 +15,8 @@ require (
 require (
 	github.com/IBM/sarama v1.43.2
 	github.com/SENERGY-Platform/models/go v0.0.0-20240627082833-157bd627a94f
-	github.com/SENERGY-Platform/service-commons v0.0.0-20240708085423-94423a495d7f
+	github.com/SENERGY-Platform/service-commons v0.0.0-20240813072046-91b3195dd8fc
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.19.1
 	github.com/testcontainers/testcontainers-go v0.31.0
 )
@@ -71,7 +71,6 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
-	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect

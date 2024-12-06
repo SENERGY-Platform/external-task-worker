@@ -19,30 +19,30 @@ package devicegroups
 import (
 	"errors"
 	"github.com/bradfitz/gomemcache/memcache"
-	"github.com/coocood/freecache"
+	"github.com/patrickmn/go-cache"
+	"time"
 )
 
-var LocalDbSize = 100 * 1024 * 1024 //100MB
-
 type LocalDb struct {
-	db *freecache.Cache
+	db *cache.Cache
 }
 
 func NewLocalDb() *LocalDb {
-	return &LocalDb{db: freecache.NewCache(LocalDbSize)}
+	return &LocalDb{db: cache.New(time.Hour, time.Minute)}
 }
 
 func (this *LocalDb) Get(key string) (result *memcache.Item, err error) {
-	value, err := this.db.Get([]byte(key))
-	if err == freecache.ErrNotFound {
-		err = ErrNotFount
+	value, found := this.db.Get(key)
+	if !found {
+		return nil, ErrNotFount
 	}
-	if err != nil {
-		return nil, err
+	valueAsBytest, ok := value.([]byte)
+	if !ok {
+		return nil, errors.New("value is not bytes")
 	}
 	return &memcache.Item{
 		Key:   key,
-		Value: value,
+		Value: valueAsBytest,
 	}, nil
 }
 
@@ -50,10 +50,11 @@ func (this *LocalDb) Set(item *memcache.Item) error {
 	if item == nil {
 		return errors.New("missing item")
 	}
-	return this.db.Set([]byte(item.Key), item.Value, int(item.Expiration))
+	this.db.Set(item.Key, item.Value, time.Second*time.Duration(item.Expiration))
+	return nil
 }
 
 func (this *LocalDb) Delete(key string) error {
-	this.db.Del([]byte(key))
+	this.db.Delete(key)
 	return nil
 }
