@@ -6,7 +6,7 @@ toolchain go1.23.4
 
 require (
 	github.com/SENERGY-Platform/converter v0.0.10
-	github.com/SENERGY-Platform/marshaller v0.0.19
+	github.com/SENERGY-Platform/marshaller v0.0.20
 	github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.6.0
@@ -31,7 +31,7 @@ require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/RyanCarrier/dijkstra v1.4.0 // indirect
 	github.com/SENERGY-Platform/developer-notifications v0.0.4 // indirect
-	github.com/SENERGY-Platform/device-repository v0.1.51 // indirect
+	github.com/SENERGY-Platform/device-repository v0.1.52 // indirect
 	github.com/SENERGY-Platform/permissions-v2 v0.0.27 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
