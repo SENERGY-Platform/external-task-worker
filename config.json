@@ -7,6 +7,7 @@
   "CompletionStrategy": "optimistic",
   "OptimisticTaskCompletionTimeout": 100,
   "CamundaWorkerTimeout": 1000,
+  "CamundaLongPollTimeout": 10000,
   "CamundaWorkerTasks": 500,
   "CamundaFetchLockDuration": 60000,
   "CamundaTopic": "execute_in_dose",

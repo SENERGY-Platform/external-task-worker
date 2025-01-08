@@ -79,7 +79,10 @@ func Worker(ctx context.Context, config util.Config, comFactory com.FactoryInter
 		log.Fatal("FATAL-ERROR:", err)
 	}
 	StartHealthCheckEndpoint(ctx, config, w)
-	w.Loop(ctx)
+	err = w.Loop(ctx)
+	if err != nil {
+		log.Fatal("FATAL-ERROR:", err)
+	}
 }
 
 func New(ctx context.Context, config util.Config, comFactory com.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory interfaces.FactoryInterface, marshallerFactory marshaller.FactoryInterface, timescaleFactory timescale.FactoryInterface) (w *CmdWorker, err error) {
@@ -129,32 +132,33 @@ func New(ctx context.Context, config util.Config, comFactory com.FactoryInterfac
 	return w, nil
 }
 
-func (w *CmdWorker) Loop(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			wait := w.ExecuteNextTasks()
-			if wait {
-				duration := time.Duration(w.config.CamundaWorkerTimeout) * time.Millisecond
-				time.Sleep(duration)
-			}
-		}
+func (w *CmdWorker) Loop(ctx context.Context) error {
+	tasks, errChan, err := w.camunda.ProvideTasks(ctx)
+	if err != nil {
+		return err
 	}
+	go func() {
+		for err := range errChan {
+			log.Println("error from ProvideTasks():", err)
+		}
+	}()
+	workerCount := 10
+	for range workerCount {
+		go func() {
+			for batch := range tasks {
+				w.ExecuteTaskBatch(batch)
+			}
+		}()
+	}
+	return nil
 }
 
 const DuplicateActivitySleep = 100 * time.Millisecond
 
-func (this *CmdWorker) ExecuteNextTasks() (wait bool) {
-	tasks, err := this.camunda.GetTasks()
-	if err != nil {
-		log.Println("error on ExecuteNextTasks getTask", err)
-		return true
-	}
+func (this *CmdWorker) ExecuteTaskBatch(tasks []messages.CamundaExternalTask) {
 	this.logSuccessfulCamundaCall()
 	if len(tasks) == 0 {
-		return true
+		return
 	}
 
 	for _, task := range tasks {
@@ -184,7 +188,7 @@ func (this *CmdWorker) ExecuteNextTasks() (wait bool) {
 		}(task.Task, task.DuplicateIndex)
 	}
 	wg.Wait()
-	return false
+	return
 }
 
 func (this *CmdWorker) ExecuteTask(task messages.CamundaExternalTask, caller string) {

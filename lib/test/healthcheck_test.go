@@ -31,6 +31,7 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 )
@@ -237,6 +238,36 @@ type StoppableTestCamunda struct {
 
 func (this *StoppableTestCamunda) Get(configType util.Config, producer com.ProducerInterface, metrics interfaces.Metrics) (interfaces.CamundaInterface, error) {
 	return this, nil
+}
+
+func (this *StoppableTestCamunda) ProvideTasks(ctx context.Context) (<-chan []messages.CamundaExternalTask, <-chan error, error) {
+	tasks := make(chan []messages.CamundaExternalTask, 100)
+	errChan := make(chan error, 100)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				time.Sleep(time.Millisecond * 100)
+				temp, err := this.GetTasks()
+				if err != nil {
+					errChan <- err
+					continue
+				}
+				tasks <- temp
+			}
+		}
+	}()
+	go func() {
+		wg.Wait()
+		close(tasks)
+		close(errChan)
+	}()
+	return tasks, errChan, nil
 }
 
 func (this *StoppableTestCamunda) GetTasks() (tasks []messages.CamundaExternalTask, err error) {

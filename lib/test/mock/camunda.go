@@ -17,6 +17,7 @@
 package mock
 
 import (
+	"context"
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/interfaces"
@@ -68,7 +69,37 @@ func (this *CamundaMock) AddTask(task messages.CamundaExternalTask) {
 	this.waitingTasks = append(this.waitingTasks, task)
 }
 
-func (this *CamundaMock) GetTasks() (tasks []messages.CamundaExternalTask, err error) {
+func (this *CamundaMock) ProvideTasks(ctx context.Context) (<-chan []messages.CamundaExternalTask, <-chan error, error) {
+	tasks := make(chan []messages.CamundaExternalTask, 100)
+	errChan := make(chan error, 100)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				time.Sleep(time.Millisecond * 100)
+				temp, err := this.getTasks()
+				if err != nil {
+					errChan <- err
+					continue
+				}
+				tasks <- temp
+			}
+		}
+	}()
+	go func() {
+		wg.Wait()
+		close(tasks)
+		close(errChan)
+	}()
+	return tasks, errChan, nil
+}
+
+func (this *CamundaMock) getTasks() (tasks []messages.CamundaExternalTask, err error) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 

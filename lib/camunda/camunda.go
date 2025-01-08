@@ -18,6 +18,7 @@ package camunda
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -33,6 +34,7 @@ import (
 	"log"
 	"net/http"
 	"runtime/debug"
+	"sync"
 	"time"
 )
 
@@ -69,38 +71,67 @@ func NewCamunda(config util.Config, producer com.ProducerInterface, metrics inte
 	return NewCamundaWithShards(config, producer, metrics, s), nil
 }
 
-func (this *Camunda) GetTasks() (tasks []messages.CamundaExternalTask, err error) {
-	shards, err := this.shards.GetShards()
+func (this *Camunda) ProvideTasks(ctx context.Context) (<-chan []messages.CamundaExternalTask, <-chan error, error) {
+	shardList, err := this.shards.GetShards()
 	if err != nil {
 		this.metrics.LogCamundaGetShardsError()
-		return tasks, err
+		return nil, nil, err
 	}
-	for _, shard := range shards {
-		temp, err := this.getShardTasks(shard)
-		if err != nil {
-			this.metrics.LogCamundaGetTasksError()
-			return tasks, err
-		}
-		tasks = append(tasks, temp...)
+	tasks := make(chan []messages.CamundaExternalTask, 100)
+	errChan := make(chan error, 100)
+	wg := sync.WaitGroup{}
+	for _, shard := range shardList {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+					temp, err := this.getShardTasks(ctx, shard)
+					if err != nil {
+						this.metrics.LogCamundaGetTasksError()
+						errChan <- err
+						continue
+					}
+					this.metrics.LogCamundaLoadedTasks(len(temp))
+					tasks <- temp
+				}
+			}
+		}()
 	}
-	this.metrics.LogCamundaLoadedTasks(len(tasks))
-	return tasks, nil
+	go func() {
+		wg.Wait()
+		close(tasks)
+		close(errChan)
+	}()
+	return tasks, errChan, nil
 }
 
-func (this *Camunda) getShardTasks(shard string) (tasks []messages.CamundaExternalTask, err error) {
+func (this *Camunda) getShardTasks(ctx context.Context, shard string) (tasks []messages.CamundaExternalTask, err error) {
 	fetchRequest := messages.CamundaFetchRequest{
-		WorkerId: this.workerId,
-		MaxTasks: this.config.CamundaWorkerTasks,
-		Topics:   []messages.CamundaTopic{{LockDuration: this.config.CamundaFetchLockDuration, Name: this.config.CamundaTopic}},
+		WorkerId:             this.workerId,
+		MaxTasks:             this.config.CamundaWorkerTasks,
+		Topics:               []messages.CamundaTopic{{LockDuration: this.config.CamundaFetchLockDuration, Name: this.config.CamundaTopic}},
+		AsyncResponseTimeout: this.config.CamundaLongPollTimeout,
 	}
-	client := http.Client{Timeout: 5 * time.Second}
+	if fetchRequest.AsyncResponseTimeout == 0 {
+		fetchRequest.AsyncResponseTimeout = 10000 //10s
+	}
+	client := http.Client{Timeout: 15 * time.Second}
 	b := new(bytes.Buffer)
 	err = json.NewEncoder(b).Encode(fetchRequest)
 	if err != nil {
-		return
+		return tasks, err
 	}
 	endpoint := shard + "/engine-rest/external-task/fetchAndLock"
-	resp, err := client.Post(endpoint, "application/json", b)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, b)
+	if err != nil {
+		return tasks, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
 	if err != nil {
 		return tasks, err
 	}
@@ -111,7 +142,7 @@ func (this *Camunda) getShardTasks(shard string) (tasks []messages.CamundaExtern
 		return tasks, err
 	}
 	err = json.NewDecoder(resp.Body).Decode(&tasks)
-	return
+	return tasks, err
 }
 
 var UnableToCompleteErrResp = errors.New("unable to complete task")

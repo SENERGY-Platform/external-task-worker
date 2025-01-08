@@ -17,6 +17,7 @@
 package interfaces
 
 import (
+	"context"
 	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
@@ -28,7 +29,7 @@ type FactoryInterface interface {
 }
 
 type CamundaInterface interface {
-	GetTasks() (tasks []messages.CamundaExternalTask, err error)
+	ProvideTasks(ctx context.Context) (<-chan []messages.CamundaExternalTask, <-chan error, error)
 	CompleteTask(taskInfo messages.TaskInfo, outputName string, output interface{}) (err error)
 	SetRetry(taskid string, tenantId string, number int64)
 	Error(externalTaskId string, processInstanceId string, processDefinitionId string, msg string, tenantId string)
