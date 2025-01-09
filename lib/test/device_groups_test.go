@@ -47,7 +47,6 @@ func TestWorkerGroupCommand(t *testing.T) {
 
 	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
-	config.CamundaWorkerTimeout = 100
 	config.HttpCommandConsumerPort, err = GetFreePort()
 	if err != nil {
 		t.Error(err)
@@ -868,7 +867,6 @@ func TestWorkerResponseWithoutSemantic(t *testing.T) {
 
 	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
-	config.CamundaWorkerTimeout = 100
 	config.HttpCommandConsumerPort, err = GetFreePort()
 	if err != nil {
 		t.Error(err)
@@ -1042,7 +1040,6 @@ func TestGroupResponses(t *testing.T) {
 
 	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
-	config.CamundaWorkerTimeout = 100
 	config.Debug = true
 	config.HttpCommandConsumerPort, err = GetFreePort()
 	if err != nil {
@@ -1356,7 +1353,6 @@ func TestGroupResponsesWithMemcached(t *testing.T) {
 
 	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
-	config.CamundaWorkerTimeout = 100
 	config.Debug = true
 
 	mockCamunda := &mock.CamundaMock{}
@@ -1650,7 +1646,6 @@ func TestWorkerDeviceWithoutServiceCommand(t *testing.T) {
 
 	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
-	config.CamundaWorkerTimeout = 100
 	config.HttpCommandConsumerPort, err = GetFreePort()
 	if err != nil {
 		t.Error(err)
@@ -2532,7 +2527,6 @@ func TestDeviceWithoutServiceResponses(t *testing.T) {
 
 	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
-	config.CamundaWorkerTimeout = 100
 	config.Debug = true
 
 	mockCamunda := &mock.CamundaMock{}

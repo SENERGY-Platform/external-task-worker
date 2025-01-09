@@ -41,7 +41,6 @@ func ExampleConfigurablesCommand1() {
 	}
 
 	config.CompletionStrategy = util.OPTIMISTIC
-	config.CamundaWorkerTimeout = 100
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -176,7 +175,6 @@ func ExampleConfigurablesCommand2() {
 	}
 
 	config.CompletionStrategy = util.OPTIMISTIC
-	config.CamundaWorkerTimeout = 100
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -311,7 +309,6 @@ func ExampleConfigurablesCommand3() {
 	}
 
 	config.CompletionStrategy = util.OPTIMISTIC
-	config.CamundaWorkerTimeout = 100
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -457,7 +454,6 @@ func ExampleConfigurablesCommand4() {
 	}
 
 	config.CompletionStrategy = util.OPTIMISTIC
-	config.CamundaWorkerTimeout = 100
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -594,7 +590,6 @@ func ExampleConfigurablesCommand5() {
 	}
 
 	config.CompletionStrategy = util.OPTIMISTIC
-	config.CamundaWorkerTimeout = 100
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -748,7 +743,6 @@ func ExampleConfigurablesCommandWithoutFunctionRdfType() {
 	}
 
 	config.CompletionStrategy = util.OPTIMISTIC
-	config.CamundaWorkerTimeout = 100
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

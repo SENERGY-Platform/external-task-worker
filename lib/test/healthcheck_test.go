@@ -44,7 +44,7 @@ func TestHealthCheckBy(t *testing.T) {
 
 	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
-	config.CamundaWorkerTimeout = 100
+	config.CamundaLongPollTimeout = 100
 
 	freePort, err := getFreePort()
 	if err != nil {
@@ -125,38 +125,38 @@ func TestHealthCheckBy(t *testing.T) {
 		},
 	})
 
-	t.Log((time.Duration(config.CamundaWorkerTimeout) * time.Millisecond * 2).String())
+	t.Log((time.Duration(config.CamundaLongPollTimeout) * time.Millisecond * 2).String())
 
 	t.Run("check immediately", testHealtCheck(config, true))
-	time.Sleep(time.Duration(config.CamundaWorkerTimeout) * time.Millisecond)
+	time.Sleep(time.Duration(config.CamundaLongPollTimeout) * time.Millisecond)
 	t.Run("check after timeout", testHealtCheck(config, true))
-	time.Sleep(10 * time.Duration(config.CamundaWorkerTimeout) * time.Millisecond)
+	time.Sleep(10 * time.Duration(config.CamundaLongPollTimeout) * time.Millisecond)
 	t.Run("check after 10 x timeout", testHealtCheck(config, true))
 
 	kafka.On = false
-	time.Sleep(3 * time.Duration(config.CamundaWorkerTimeout) * time.Millisecond)
+	time.Sleep(4 * time.Duration(config.CamundaLongPollTimeout) * time.Millisecond)
 	t.Run("check with kafka off", testHealtCheck(config, false))
 
 	kafka.On = true
-	time.Sleep(3 * time.Duration(config.CamundaWorkerTimeout) * time.Millisecond)
+	time.Sleep(4 * time.Duration(config.CamundaLongPollTimeout) * time.Millisecond)
 	t.Run("check with kafka reactivated", testHealtCheck(config, true))
 
 	camunda.On = false
-	time.Sleep(3 * time.Duration(config.CamundaWorkerTimeout) * time.Millisecond)
+	time.Sleep(4 * time.Duration(config.CamundaLongPollTimeout) * time.Millisecond)
 	t.Run("check with camunda off", testHealtCheck(config, false))
 
 	camunda.On = true
-	time.Sleep(3 * time.Duration(config.CamundaWorkerTimeout) * time.Millisecond)
+	time.Sleep(4 * time.Duration(config.CamundaLongPollTimeout) * time.Millisecond)
 	t.Run("check with camunda reactivated", testHealtCheck(config, true))
 
 	camunda.On = false
 	kafka.On = false
-	time.Sleep(3 * time.Duration(config.CamundaWorkerTimeout) * time.Millisecond)
+	time.Sleep(4 * time.Duration(config.CamundaLongPollTimeout) * time.Millisecond)
 	t.Run("check with kafka and camunda off", testHealtCheck(config, false))
 
 	camunda.On = true
 	kafka.On = true
-	time.Sleep(3 * time.Duration(config.CamundaWorkerTimeout) * time.Millisecond)
+	time.Sleep(4 * time.Duration(config.CamundaLongPollTimeout) * time.Millisecond)
 	t.Run("check with kafka and camunda reactivated", testHealtCheck(config, true))
 }
 

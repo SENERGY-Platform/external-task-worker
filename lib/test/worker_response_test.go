@@ -42,7 +42,6 @@ func ExampleWorkerResponse() {
 
 	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
-	config.CamundaWorkerTimeout = 100
 	config.HttpCommandConsumerPort = ""
 	mock.CleanKafkaMock()
 
@@ -207,7 +206,6 @@ func ExampleWorkerNullResponse() {
 
 	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
-	config.CamundaWorkerTimeout = 100
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -350,7 +348,6 @@ func ExampleWorkerNullResponse2() {
 
 	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
-	config.CamundaWorkerTimeout = 100
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

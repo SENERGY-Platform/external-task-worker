@@ -40,7 +40,6 @@ func TestGroupScheduler(t *testing.T) {
 	}
 
 	config.CompletionStrategy = util.PESSIMISTIC
-	config.CamundaWorkerTimeout = 300      //in ms
 	config.CamundaFetchLockDuration = 1000 //in ms
 	config.HealthCheckPort = ""
 	mock.CleanKafkaMock()

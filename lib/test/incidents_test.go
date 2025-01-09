@@ -51,7 +51,6 @@ func TestUserIncident(t *testing.T) {
 	}
 
 	config.CompletionStrategy = util.OPTIMISTIC
-	config.CamundaWorkerTimeout = 100
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

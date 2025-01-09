@@ -96,7 +96,6 @@ func testSequentialExecution(retries int64, lostResponseFor []int, expectedResul
 
 		config.CompletionStrategy = util.PESSIMISTIC
 		config.CamundaFetchLockDuration = 300
-		config.CamundaWorkerTimeout = 100
 		config.Debug = true
 		config.GroupScheduler = util.SEQUENTIAL
 

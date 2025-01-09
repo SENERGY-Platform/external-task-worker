@@ -43,7 +43,6 @@ func TestCommand(t *testing.T) {
 	}
 
 	config.CompletionStrategy = util.OPTIMISTIC
-	config.CamundaWorkerTimeout = 100
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -343,7 +342,6 @@ func TestCommandWithConfigurables(t *testing.T) {
 	}
 
 	config.CompletionStrategy = util.OPTIMISTIC
-	config.CamundaWorkerTimeout = 100
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -672,7 +670,6 @@ func TestGroupCommand(t *testing.T) {
 	}
 
 	config.CompletionStrategy = util.OPTIMISTIC
-	config.CamundaWorkerTimeout = 100
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -1144,7 +1141,6 @@ func TestResponse(t *testing.T) {
 
 	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
-	config.CamundaWorkerTimeout = 100
 	config.HttpCommandConsumerPort = ""
 	mock.CleanKafkaMock()
 
@@ -1332,7 +1328,6 @@ func TestResponseWithConfigurables(t *testing.T) {
 
 	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
-	config.CamundaWorkerTimeout = 100
 	config.HttpCommandConsumerPort = ""
 	mock.CleanKafkaMock()
 
@@ -1558,7 +1553,6 @@ func TestGroupResponse(t *testing.T) {
 	}
 
 	config.CompletionStrategy = util.PESSIMISTIC
-	config.CamundaWorkerTimeout = 100
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

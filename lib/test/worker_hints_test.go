@@ -41,7 +41,6 @@ func ExampleWorkerResponseWithHints() {
 	}
 
 	config.CompletionStrategy = util.PESSIMISTIC
-	config.CamundaWorkerTimeout = 100
 	config.HttpCommandConsumerPort = ""
 	mock.CleanKafkaMock()
 

@@ -46,7 +46,7 @@ func StartHealthCheckEndpoint(ctx context.Context, config util.Config, worker *C
 func getHealthCheckEndpoint(config util.Config, worker *CmdWorker) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		state := worker.GetState()
-		timeout := time.Duration(config.CamundaWorkerTimeout) * time.Millisecond * 2
+		timeout := time.Duration(config.CamundaLongPollTimeout) * time.Millisecond * 3
 		if state.ProducerOk && state.LastSuccessfulCamundaCall <= timeout {
 			json.NewEncoder(writer).Encode(state)
 		} else {

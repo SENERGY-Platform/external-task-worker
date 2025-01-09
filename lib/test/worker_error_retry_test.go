@@ -50,7 +50,6 @@ func TestWorkerErrorRetries(t *testing.T) {
 
 	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
-	config.CamundaWorkerTimeout = 1000
 	config.CamundaFetchLockDuration = 60000
 	config.HttpCommandConsumerPort = ""
 	config.Debug = true

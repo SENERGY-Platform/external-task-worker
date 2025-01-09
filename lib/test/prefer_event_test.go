@@ -44,7 +44,6 @@ func TestWorkerPreferEventResponseV2(t *testing.T) {
 	config.TimescaleWrapperUrl = "placeholder"
 	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
-	config.CamundaWorkerTimeout = 100
 	config.HttpCommandConsumerPort, err = GetFreePort()
 	if err != nil {
 		t.Error(err)
@@ -230,7 +229,6 @@ func TestGroupPreferEventResponses(t *testing.T) {
 	config.TimescaleWrapperUrl = "placeholder"
 	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
-	config.CamundaWorkerTimeout = 100
 	config.Debug = true
 	config.HttpCommandConsumerPort, err = GetFreePort()
 	if err != nil {

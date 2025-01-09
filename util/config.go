@@ -40,7 +40,6 @@ type Config struct {
 	DeviceRepoUrl                   string
 	CompletionStrategy              string
 	OptimisticTaskCompletionTimeout int64
-	CamundaWorkerTimeout            int64
 	CamundaLongPollTimeout          int64
 	CamundaWorkerTasks              int64
 	CamundaFetchLockDuration        int64
