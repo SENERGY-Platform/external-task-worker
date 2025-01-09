@@ -75,6 +75,7 @@ func TestFetch(t *testing.T) {
 		var pid string
 		testCreateProcess(camundaUrl, &pid)(t)
 		testStartDeployment(shard, pid)(t)
+		log.Println(time.Now(), "process started")
 	}()
 	go func() {
 		for err := range errChan {

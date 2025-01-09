@@ -143,13 +143,17 @@ func (w *CmdWorker) Loop(ctx context.Context) error {
 		}
 	}()
 	workerCount := 10
+	wg := &sync.WaitGroup{}
 	for range workerCount {
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			for batch := range tasks {
 				w.ExecuteTaskBatch(batch)
 			}
 		}()
 	}
+	wg.Wait()
 	return nil
 }
 
