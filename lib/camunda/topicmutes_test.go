@@ -72,6 +72,7 @@ func TestTopicMutex(t *testing.T) {
 	go golock(wg, "c", alt1s)
 	go golock(wg, "a", task0s)
 	go golock(wg, "b", task2s)
+	time.Sleep(100 * time.Millisecond) //ensure task2s gets its lock before task1s
 	go golock(wg, "b", task1s)
 	go golock(wg, "a", task0s)
 	go golock(wg, "a", task0s)
