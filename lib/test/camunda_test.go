@@ -58,11 +58,15 @@ func TestFetch(t *testing.T) {
 		return
 	}
 
-	c := camunda.NewCamundaWithShards(util.Config{
+	c, err := camunda.NewCamundaWithShards(util.Config{
 		CamundaFetchLockDuration: 60000,
 		CamundaTopic:             "pessimistic",
 		CamundaWorkerTasks:       10,
 	}, mock.Kafka, prometheus.NewMetrics("test", nil), s)
+	if err != nil {
+		t.Error(err)
+		return
+	}
 
 	providerCtx, _ := context.WithTimeout(ctx, 1*time.Minute)
 	taskChan, errChan, err := c.ProvideTasks(providerCtx)
@@ -174,9 +178,13 @@ func testCompleteTask(s *shards.Shards, tasks []messages.CamundaExternalTask) fu
 		if len(tasks) < 1 {
 			t.Fatal(tasks)
 		}
-		err := camunda.NewCamundaWithShards(util.Config{
+		c, err := camunda.NewCamundaWithShards(util.Config{
 			KafkaIncidentTopic: "incidents",
-		}, mock.Kafka, prometheus.NewMetrics("test", nil), s).CompleteTask(messages.TaskInfo{
+		}, mock.Kafka, prometheus.NewMetrics("test", nil), s)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = c.CompleteTask(messages.TaskInfo{
 			WorkerId:            "test-worker",
 			TaskId:              tasks[0].Id,
 			ProcessInstanceId:   tasks[0].ProcessInstanceId,
@@ -194,11 +202,15 @@ func testGetTasks(s *shards.Shards, tasks *[]messages.CamundaExternalTask) func(
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
-		taskChan, errChan, err := camunda.NewCamundaWithShards(util.Config{
+		c, err := camunda.NewCamundaWithShards(util.Config{
 			CamundaFetchLockDuration: 60000,
 			CamundaTopic:             "pessimistic",
 			CamundaWorkerTasks:       10,
-		}, mock.Kafka, prometheus.NewMetrics("test", nil), s).ProvideTasks(ctx)
+		}, mock.Kafka, prometheus.NewMetrics("test", nil), s)
+		if err != nil {
+			t.Fatal(err)
+		}
+		taskChan, errChan, err := c.ProvideTasks(ctx)
 		if err != nil {
 			t.Fatal(err)
 		}

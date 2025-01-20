@@ -54,7 +54,12 @@ func TestUserIncident(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	mockCamunda := &mock.CamundaMock{Camunda: camunda.NewCamundaWithShards(config, mock.Kafka, prometheus.NewMetrics("test", nil), nil)}
+
+	c, err := camunda.NewCamundaWithShards(config, mock.Kafka, prometheus.NewMetrics("test", nil), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	mockCamunda := &mock.CamundaMock{Camunda: c}
 	mockCamunda.Init()
 	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
 
@@ -115,7 +120,11 @@ func ExampleIncidents() {
 		return
 	}
 
-	camunda := camunda.NewCamundaWithShards(config, kafka, prometheus.NewMetrics("test", nil), nil)
+	camunda, err := camunda.NewCamundaWithShards(config, kafka, prometheus.NewMetrics("test", nil), nil)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	camunda.Error("task_id_1", "piid_1", "pdid_1", "error message", "user1")
 	camunda.Error("task_id_2", "piid_2", "pdid_2", "error message", "user1")
 

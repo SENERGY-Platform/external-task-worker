@@ -39,11 +39,13 @@ import (
 )
 
 type Camunda struct {
-	config   util.Config
-	workerId string
-	producer com.ProducerInterface
-	shards   Shards
-	metrics  interfaces.Metrics
+	config            util.Config
+	workerId          string
+	producer          com.ProducerInterface
+	shards            Shards
+	metrics           interfaces.Metrics
+	topicmux          TopicMutex
+	taskCompleteCache *cache.Cache
 }
 
 type Shards interface {
@@ -51,8 +53,12 @@ type Shards interface {
 	GetShardForUser(userId string) (shardUrl string, err error)
 }
 
-func NewCamundaWithShards(config util.Config, producer com.ProducerInterface, metrics interfaces.Metrics, shards Shards) (result *Camunda) {
-	return &Camunda{config: config, workerId: util.GetId(), producer: producer, shards: shards, metrics: metrics}
+func NewCamundaWithShards(config util.Config, producer com.ProducerInterface, metrics interfaces.Metrics, shards Shards) (result *Camunda, err error) {
+	c, err := cache.New(cache.Config{})
+	if err != nil {
+		return nil, err
+	}
+	return &Camunda{config: config, workerId: util.GetId(), producer: producer, shards: shards, metrics: metrics, taskCompleteCache: c}, nil
 }
 
 func NewCamunda(config util.Config, producer com.ProducerInterface, metrics interfaces.Metrics) (result *Camunda, err error) {
@@ -68,7 +74,7 @@ func NewCamunda(config util.Config, producer com.ProducerInterface, metrics inte
 	if err != nil {
 		return result, err
 	}
-	return NewCamundaWithShards(config, producer, metrics, s), nil
+	return NewCamundaWithShards(config, producer, metrics, s)
 }
 
 func (this *Camunda) ProvideTasks(ctx context.Context) (<-chan []messages.CamundaExternalTask, <-chan error, error) {
@@ -148,6 +154,19 @@ func (this *Camunda) getShardTasks(ctx context.Context, shard string) (tasks []m
 var UnableToCompleteErrResp = errors.New("unable to complete task")
 
 func (this *Camunda) CompleteTask(taskInfo messages.TaskInfo, outputName string, output interface{}) (err error) {
+	topic := taskInfo.TenantId + "+" + taskInfo.TaskId
+	this.topicmux.Lock(topic)
+	defer this.topicmux.Unlock(topic)
+	//every process task complete may only happen once
+	//use the cache.Use method to do the complete, only if the complete is not found in cache
+	//cached by half the camunda lock duration to enable retries
+	_, err = cache.Use[string](this.taskCompleteCache, topic, func() (string, error) {
+		return "", this.completeTask(taskInfo, outputName, output)
+	}, cache.NoValidation, time.Duration(this.config.CamundaFetchLockDuration/2)*time.Millisecond)
+	return err
+}
+
+func (this *Camunda) completeTask(taskInfo messages.TaskInfo, outputName string, output interface{}) (err error) {
 	shard, err := this.shards.GetShardForUser(taskInfo.TenantId)
 	if err != nil {
 		return err
