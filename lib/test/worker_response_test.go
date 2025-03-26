@@ -31,7 +31,7 @@ import (
 	"time"
 )
 
-func ExampleWorkerResponse() {
+func Example_lib_Worker_Response() {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -195,7 +195,7 @@ func ExampleWorkerResponse() {
 	//{"b":0,"g":50,"r":200}
 }
 
-func ExampleWorkerNullResponse() {
+func Example_lib_Worker_NullResponse() {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -337,7 +337,7 @@ func ExampleWorkerNullResponse() {
 	//null
 }
 
-func ExampleWorkerNullResponse2() {
+func Example_lib_Worker_NullResponse2() {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}

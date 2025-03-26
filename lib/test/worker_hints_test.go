@@ -31,7 +31,7 @@ import (
 	"time"
 )
 
-func ExampleWorkerResponseWithHints() {
+func Example_lib_Worker_ResponseWithHints() {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}

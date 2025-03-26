@@ -25,7 +25,10 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/prometheus"
 	"github.com/SENERGY-Platform/external-task-worker/lib/test/mock"
 	"github.com/SENERGY-Platform/external-task-worker/util"
+	"io"
 	"log"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"strconv"
 	"testing"
@@ -92,7 +95,7 @@ func TestUserIncident(t *testing.T) {
 
 }
 
-func ExampleIncidents() {
+func Example_camunda_Error() {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -137,4 +140,59 @@ func ExampleIncidents() {
 	//output:
 	//{"command":"POST","msg_version":3,"incident":{"id":"2","external_task_id":"task_id_1","process_instance_id":"piid_1","process_definition_id":"pdid_1","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":""}}
 	//{"command":"POST","msg_version":3,"incident":{"id":"3","external_task_id":"task_id_2","process_instance_id":"piid_2","process_definition_id":"pdid_2","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":""}}
+}
+
+func Example_camunda_ErrorOverHttp() {
+	util.TimeNow = func() time.Time {
+		return time.Time{}
+	}
+	idCount := 0
+	temp := util.GetId
+	util.GetId = func() string {
+		idCount = idCount + 1
+		return strconv.Itoa(idCount)
+	}
+	defer func() {
+		util.GetId = temp
+	}()
+
+	config, err := util.LoadConfig("../../config.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	kafka, err := mock.Kafka.NewProducer(ctx, config)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	incidentsApiMockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		msg, _ := io.ReadAll(r.Body)
+		fmt.Printf("http incident: %v %v %v\n", r.Method, r.URL.Path, string(msg))
+	}))
+	defer incidentsApiMockServer.Close()
+	config.IncidentApiUrl = incidentsApiMockServer.URL
+	config.UseHttpIncidentProducer = true
+
+	camunda, err := camunda.NewCamundaWithShards(config, kafka, prometheus.NewMetrics("test", nil), nil)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	camunda.Error("task_id_1", "piid_1", "pdid_1", "error message", "user1")
+	camunda.Error("task_id_2", "piid_2", "pdid_2", "error message", "user1")
+
+	incidents := mock.Kafka.GetProduced(config.KafkaIncidentTopic)
+
+	for _, message := range incidents {
+		fmt.Println("kafka incident:", message)
+	}
+
+	//output:
+	//http incident: POST /incidents {"id":"2","external_task_id":"task_id_1","process_instance_id":"piid_1","process_definition_id":"pdid_1","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":""}
+	//http incident: POST /incidents {"id":"3","external_task_id":"task_id_2","process_instance_id":"piid_2","process_definition_id":"pdid_2","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":""}
 }

@@ -55,6 +55,8 @@ type Config struct {
 	JwtPrivateKey                   string `config:"secret"`
 	JwtExpiration                   int64
 	JwtIssuer                       string
+	UseHttpIncidentProducer         bool
+	IncidentApiUrl                  string
 	KafkaIncidentTopic              string
 	Debug                           bool
 	MarshallerUrl                   string

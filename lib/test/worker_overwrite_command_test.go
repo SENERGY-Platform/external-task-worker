@@ -30,7 +30,7 @@ import (
 	"time"
 )
 
-func ExampleWorkerOverwriteCommand() {
+func Example_lib_Worker_OverwriteCommand() {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}

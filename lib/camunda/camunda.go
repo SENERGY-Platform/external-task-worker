@@ -27,6 +27,7 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
+	"github.com/SENERGY-Platform/process-incident-api/lib/client"
 	"github.com/SENERGY-Platform/service-commons/pkg/cache"
 	"github.com/SENERGY-Platform/service-commons/pkg/signal"
 	"io"
@@ -301,26 +302,41 @@ func (this *Camunda) SetRetry(taskid string, tenantId string, retries int64) {
 
 func (this *Camunda) Error(externalTaskId string, processInstanceId string, processDefinitionId string, msg string, tenantId string) {
 	this.metrics.LogIncident()
-	b, err := json.Marshal(messages.KafkaIncidentsCommand{
-		Command:    "POST",
-		MsgVersion: 3,
-		Incident: &messages.Incident{
-			Id:                  util.GetId(),
-			ExternalTaskId:      externalTaskId,
-			ProcessInstanceId:   processInstanceId,
-			ProcessDefinitionId: processDefinitionId,
-			WorkerId:            this.GetWorkerId(),
-			ErrorMessage:        msg,
-			Time:                util.TimeNow(),
-			TenantId:            tenantId,
-		},
-	})
-	if err != nil {
-		log.Println("ERROR:", err)
-		debug.PrintStack()
-		return
+	incident := messages.Incident{
+		Id:                  util.GetId(),
+		ExternalTaskId:      externalTaskId,
+		ProcessInstanceId:   processInstanceId,
+		ProcessDefinitionId: processDefinitionId,
+		WorkerId:            this.GetWorkerId(),
+		ErrorMessage:        msg,
+		Time:                util.TimeNow(),
+		TenantId:            tenantId,
 	}
-	this.producer.ProduceWithKey(this.config.KafkaIncidentTopic, processDefinitionId, string(b))
+	if this.config.UseHttpIncidentProducer && this.config.IncidentApiUrl != "" && this.config.IncidentApiUrl != "-" {
+		err, _ := client.New(this.config.IncidentApiUrl).CreateIncident(client.InternalAdminToken, incident)
+		if err != nil {
+			log.Println("ERROR:", err)
+			debug.PrintStack()
+			return
+		}
+	} else {
+		b, err := json.Marshal(messages.KafkaIncidentsCommand{
+			Command:    "POST",
+			MsgVersion: 3,
+			Incident:   &incident,
+		})
+		if err != nil {
+			log.Println("ERROR:", err)
+			debug.PrintStack()
+			return
+		}
+		err = this.producer.ProduceWithKey(this.config.KafkaIncidentTopic, processDefinitionId, string(b))
+		if err != nil {
+			log.Println("ERROR:", err)
+			debug.PrintStack()
+			return
+		}
+	}
 }
 
 func (this *Camunda) GetWorkerId() string {

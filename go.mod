@@ -1,8 +1,8 @@
 module github.com/SENERGY-Platform/external-task-worker
 
-go 1.23
+go 1.24
 
-toolchain go1.23.4
+toolchain go1.24.1
 
 require (
 	github.com/SENERGY-Platform/converter v0.0.10
@@ -17,9 +17,10 @@ require (
 require (
 	github.com/IBM/sarama v1.43.3
 	github.com/SENERGY-Platform/models/go v0.0.0-20241007061544-de7132ae94e4
-	github.com/SENERGY-Platform/service-commons v0.0.0-20240813072046-91b3195dd8fc
+	github.com/SENERGY-Platform/process-incident-api v0.0.8
+	github.com/SENERGY-Platform/service-commons v0.0.0-20250123095636-6dfc659ee43e
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/prometheus/client_golang v1.19.1
+	github.com/prometheus/client_golang v1.21.1
 	github.com/testcontainers/testcontainers-go v0.33.0
 )
 
@@ -68,7 +69,7 @@ require (
 	github.com/jcmturner/gokrb5/v8 v8.4.4 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
-	github.com/klauspost/compress v1.17.9 // indirect
+	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20240819163618-b1d8f4d146e7 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
@@ -88,7 +89,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.55.0 // indirect
+	github.com/prometheus/common v0.62.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/shirou/gopsutil/v3 v3.24.5 // indirect
@@ -96,7 +97,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/swaggo/files v1.0.1 // indirect
 	github.com/swaggo/http-swagger v1.3.4 // indirect
-	github.com/swaggo/swag v1.16.3 // indirect
+	github.com/swaggo/swag v1.16.4 // indirect
 	github.com/tklauser/go-sysconf v0.3.14 // indirect
 	github.com/tklauser/numcpus v0.8.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
@@ -110,15 +111,15 @@ require (
 	go.opentelemetry.io/otel v1.33.0 // indirect
 	go.opentelemetry.io/otel/metric v1.33.0 // indirect
 	go.opentelemetry.io/otel/trace v1.33.0 // indirect
-	golang.org/x/crypto v0.29.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948 // indirect
-	golang.org/x/net v0.31.0 // indirect
-	golang.org/x/sync v0.9.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
-	golang.org/x/text v0.20.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/tools v0.24.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240604185151-ef581f913117 // indirect
-	google.golang.org/protobuf v1.35.2 // indirect
+	google.golang.org/protobuf v1.36.1 // indirect
 	gopkg.in/go-playground/colors.v1 v1.2.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

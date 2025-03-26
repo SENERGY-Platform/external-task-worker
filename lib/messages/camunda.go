@@ -16,7 +16,9 @@
 
 package messages
 
-import "time"
+import (
+	"github.com/SENERGY-Platform/process-incident-api/lib/client"
+)
 
 type CamundaVariable struct {
 	Type  string      `json:"type,omitempty"`
@@ -71,18 +73,7 @@ type KafkaIncidentsCommand struct {
 	ProcessInstanceId   string    `json:"process_instance_id,omitempty"`
 }
 
-type Incident struct {
-	Id                  string    `json:"id" bson:"id"`
-	MsgVersion          int64     `json:"msg_version,omitempty" bson:"msg_version,omitempty"` //from version 3 onward will be set in KafkaIncidentsCommand and be copied to this field
-	ExternalTaskId      string    `json:"external_task_id" bson:"external_task_id"`
-	ProcessInstanceId   string    `json:"process_instance_id" bson:"process_instance_id"`
-	ProcessDefinitionId string    `json:"process_definition_id" bson:"process_definition_id"`
-	WorkerId            string    `json:"worker_id" bson:"worker_id"`
-	ErrorMessage        string    `json:"error_message" bson:"error_message"`
-	Time                time.Time `json:"time" bson:"time"`
-	TenantId            string    `json:"tenant_id" bson:"tenant_id"`
-	DeploymentName      string    `json:"deployment_name" bson:"deployment_name"`
-}
+type Incident = client.IncidentMessage
 
 type TaskWithDuplicateIndex struct {
 	Task           CamundaExternalTask

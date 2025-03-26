@@ -31,7 +31,7 @@ import (
 	"time"
 )
 
-func ExampleWorkerOverwriteResponse() {
+func Example_lib_Worker_OverwriteResponse() {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}

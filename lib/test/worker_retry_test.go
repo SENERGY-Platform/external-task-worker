@@ -29,7 +29,7 @@ import (
 	"time"
 )
 
-func ExampleWorkerRetries() {
+func Example_lib_Worker_Retries() {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
