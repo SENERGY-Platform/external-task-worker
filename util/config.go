@@ -103,6 +103,8 @@ type Config struct {
 	KafkaTopicConfigs map[string][]kafka.ConfigEntry
 
 	IgnoreUserMetrics []string
+
+	ApiDocsProviderBaseUrl string
 }
 
 func LoadConfig(location string) (config Config, err error) {

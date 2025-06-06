@@ -21,7 +21,7 @@ import (
 	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"github.com/golang-jwt/jwt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -80,7 +80,7 @@ func (this Keycloak) GetUserToken(userid string) (token Impersonate, expirationI
 		return
 	}
 	if resp.StatusCode != http.StatusOK {
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 		log.Println("ERROR: GetUserToken()", resp.StatusCode, string(body))
 		err = errors.New("access denied")
 		resp.Body.Close()

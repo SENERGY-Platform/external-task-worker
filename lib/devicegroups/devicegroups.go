@@ -172,7 +172,7 @@ func (this *DeviceGroups) ProcessCommand(command messages.Command, task messages
 func (this *DeviceGroups) getNextRequests(command messages.Command, task messages.CamundaExternalTask) (missingRequests RequestInfoList, finishedResults []interface{}, err error) {
 	var missingSubTasks []messages.GroupTaskMetadataElement
 	_, finishedResults, missingSubTasks, err = this.getTaskResults(task.Id)
-	if err == ErrNotFount {
+	if errors.Is(err, ErrNotFount) {
 		err = nil
 		missingSubTasks, err = this.GetSubTasks(command, task)
 		if err != nil {

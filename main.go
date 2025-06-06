@@ -19,12 +19,15 @@ package main
 import (
 	"context"
 	"flag"
+	"github.com/SENERGY-Platform/api-docs-provider/lib/client"
+	"github.com/SENERGY-Platform/external-task-worker/docs"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
 	"github.com/SENERGY-Platform/external-task-worker/lib/com/comswitch"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
 	"github.com/SENERGY-Platform/external-task-worker/lib/timescale"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"time"
@@ -62,7 +65,19 @@ func main() {
 		log.Println("WARNING: unable to start cache invalidator", err)
 	}
 
+	if config.ApiDocsProviderBaseUrl != "" && config.ApiDocsProviderBaseUrl != "-" {
+		err = PublishAsyncApiDoc(config)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	lib.Worker(ctx, config, comswitch.Factory, devicerepository.Factory, camunda.Factory, marshaller.Factory, timescale.Factory)
 
 	log.Println("worker stopped")
+}
+
+func PublishAsyncApiDoc(conf util.Config) error {
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	return client.New(http.DefaultClient, conf.ApiDocsProviderBaseUrl).AsyncapiPutDoc(ctx, "github_com_SENERGY-Platform_external-task-worker", docs.AsyncApiDoc)
 }

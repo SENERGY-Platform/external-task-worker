@@ -1,0 +1,568 @@
+{
+    "asyncapi": "3.0.0",
+    "info": {
+        "title": "External-Task-Worker",
+        "version": ""
+    },
+    "servers": {
+        "kafka": {
+            "host": "kafka:9092",
+            "protocol": "kafka"
+        }
+    },
+    "channels": {
+        "Protocol-Topic": {
+            "address": "<Protocol-Topic>",
+            "description": "topic is Protocol.Handler related to the device that should receive a command",
+            "messages": {
+                "subscribe.message": {
+                    "$ref": "#/components/messages/MessagesProtocolMsg"
+                }
+            }
+        },
+        "camunda_incident": {
+            "address": "camunda_incident",
+            "description": "deprecated",
+            "messages": {
+                "subscribe.message": {
+                    "$ref": "#/components/messages/MessagesKafkaIncidentsCommand"
+                }
+            }
+        },
+        "errors": {
+            "address": "errors",
+            "messages": {
+                "publish.message": {
+                    "$ref": "#/components/messages/MessagesProtocolMsg"
+                }
+            }
+        },
+        "response": {
+            "address": "response",
+            "messages": {
+                "publish.message": {
+                    "$ref": "#/components/messages/MessagesProtocolMsg"
+                }
+            }
+        }
+    },
+    "operations": {
+        "Protocol-Topic.subscribe": {
+            "action": "send",
+            "channel": {
+                "$ref": "#/channels/Protocol-Topic"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/Protocol-Topic/messages/subscribe.message"
+                }
+            ]
+        },
+        "camunda_incident.subscribe": {
+            "action": "send",
+            "channel": {
+                "$ref": "#/channels/camunda_incident"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/camunda_incident/messages/subscribe.message"
+                }
+            ]
+        },
+        "errors.publish": {
+            "action": "receive",
+            "channel": {
+                "$ref": "#/channels/errors"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/errors/messages/publish.message"
+                }
+            ]
+        },
+        "response.publish": {
+            "action": "receive",
+            "channel": {
+                "$ref": "#/channels/response"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/response/messages/publish.message"
+                }
+            ]
+        }
+    },
+    "components": {
+        "schemas": {
+            "MessagesIncident": {
+                "properties": {
+                    "deployment_name": {
+                        "type": "string"
+                    },
+                    "error_message": {
+                        "type": "string"
+                    },
+                    "external_task_id": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "msg_version": {
+                        "type": "integer"
+                    },
+                    "process_definition_id": {
+                        "type": "string"
+                    },
+                    "process_instance_id": {
+                        "type": "string"
+                    },
+                    "tenant_id": {
+                        "type": "string"
+                    },
+                    "time": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "worker_id": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "MessagesKafkaIncidentsCommand": {
+                "deprecated": true,
+                "properties": {
+                    "command": {
+                        "type": "string"
+                    },
+                    "incident": {
+                        "$ref": "#/components/schemas/MessagesIncident"
+                    },
+                    "msg_version": {
+                        "type": "integer"
+                    },
+                    "process_definition_id": {
+                        "type": "string"
+                    },
+                    "process_instance_id": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "MessagesMetadata": {
+                "properties": {
+                    "content_variable_hints": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "device": {
+                        "$ref": "#/components/schemas/ModelsDevice"
+                    },
+                    "error_to": {
+                        "type": "string"
+                    },
+                    "input_characteristic": {
+                        "type": "string"
+                    },
+                    "output_aspect_node": {
+                        "$ref": "#/components/schemas/ModelsAspectNode"
+                    },
+                    "output_characteristic": {
+                        "type": "string"
+                    },
+                    "output_function_id": {
+                        "type": "string"
+                    },
+                    "output_path": {
+                        "type": "string"
+                    },
+                    "protocol": {
+                        "$ref": "#/components/schemas/ModelsProtocol"
+                    },
+                    "response_to": {
+                        "type": "string"
+                    },
+                    "service": {
+                        "$ref": "#/components/schemas/ModelsService"
+                    },
+                    "version": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "MessagesProtocolMsg": {
+                "properties": {
+                    "metadata": {
+                        "$ref": "#/components/schemas/MessagesMetadata"
+                    },
+                    "request": {
+                        "$ref": "#/components/schemas/MessagesProtocolRequest"
+                    },
+                    "response": {
+                        "$ref": "#/components/schemas/MessagesProtocolResponse"
+                    },
+                    "task_info": {
+                        "$ref": "#/components/schemas/MessagesTaskInfo"
+                    },
+                    "trace": {
+                        "items": {
+                            "$ref": "#/components/schemas/MessagesTrace"
+                        },
+                        "type": "array"
+                    }
+                },
+                "type": "object"
+            },
+            "MessagesProtocolRequest": {
+                "properties": {
+                    "input": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": [
+                            "object",
+                            "null"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "MessagesProtocolResponse": {
+                "properties": {
+                    "output": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": [
+                            "object",
+                            "null"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "MessagesTaskInfo": {
+                "properties": {
+                    "completion_strategy": {
+                        "type": "string"
+                    },
+                    "process_definition_id": {
+                        "type": "string"
+                    },
+                    "process_instance_id": {
+                        "type": "string"
+                    },
+                    "task_id": {
+                        "type": "string"
+                    },
+                    "tenant_id": {
+                        "type": "string"
+                    },
+                    "time": {
+                        "type": "string"
+                    },
+                    "worker_id": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "MessagesTrace": {
+                "properties": {
+                    "location": {
+                        "type": "string"
+                    },
+                    "time_unit": {
+                        "type": "string"
+                    },
+                    "timestamp": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "ModelsAspectNode": {
+                "properties": {
+                    "ancestor_ids": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": [
+                            "array",
+                            "null"
+                        ]
+                    },
+                    "child_ids": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": [
+                            "array",
+                            "null"
+                        ]
+                    },
+                    "descendent_ids": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": [
+                            "array",
+                            "null"
+                        ]
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "parent_id": {
+                        "type": "string"
+                    },
+                    "root_id": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "ModelsAttribute": {
+                "properties": {
+                    "key": {
+                        "type": "string"
+                    },
+                    "origin": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "ModelsContent": {
+                "properties": {
+                    "content_variable": {
+                        "$ref": "#/components/schemas/ModelsContentVariable"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "protocol_segment_id": {
+                        "type": "string"
+                    },
+                    "serialization": {
+                        "$ref": "#/components/schemas/ModelsSerialization"
+                    }
+                },
+                "type": "object"
+            },
+            "ModelsContentVariable": {
+                "properties": {
+                    "aspect_id": {
+                        "type": "string"
+                    },
+                    "characteristic_id": {
+                        "type": "string"
+                    },
+                    "function_id": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "is_void": {
+                        "type": "boolean"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "omit_empty": {
+                        "type": "boolean"
+                    },
+                    "serialization_options": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": [
+                            "array",
+                            "null"
+                        ]
+                    },
+                    "sub_content_variables": {
+                        "items": {
+                            "$ref": "#/components/schemas/ModelsContentVariable"
+                        },
+                        "type": [
+                            "array",
+                            "null"
+                        ]
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/ModelsType"
+                    },
+                    "unit_reference": {
+                        "type": "string"
+                    },
+                    "value": {}
+                },
+                "type": "object"
+            },
+            "ModelsDevice": {
+                "properties": {
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/ModelsAttribute"
+                        },
+                        "type": [
+                            "array",
+                            "null"
+                        ]
+                    },
+                    "device_type_id": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "local_id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "owner_id": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "ModelsInteraction": {
+                "type": "string"
+            },
+            "ModelsProtocol": {
+                "properties": {
+                    "constraints": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": [
+                            "array",
+                            "null"
+                        ]
+                    },
+                    "handler": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "protocol_segments": {
+                        "items": {
+                            "$ref": "#/components/schemas/ModelsProtocolSegment"
+                        },
+                        "type": [
+                            "array",
+                            "null"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "ModelsProtocolSegment": {
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "ModelsSerialization": {
+                "type": "string"
+            },
+            "ModelsService": {
+                "properties": {
+                    "attributes": {
+                        "items": {
+                            "$ref": "#/components/schemas/ModelsAttribute"
+                        },
+                        "type": [
+                            "array",
+                            "null"
+                        ]
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "inputs": {
+                        "items": {
+                            "$ref": "#/components/schemas/ModelsContent"
+                        },
+                        "type": [
+                            "array",
+                            "null"
+                        ]
+                    },
+                    "interaction": {
+                        "$ref": "#/components/schemas/ModelsInteraction"
+                    },
+                    "local_id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "outputs": {
+                        "items": {
+                            "$ref": "#/components/schemas/ModelsContent"
+                        },
+                        "type": [
+                            "array",
+                            "null"
+                        ]
+                    },
+                    "protocol_id": {
+                        "type": "string"
+                    },
+                    "service_group_key": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "ModelsType": {
+                "type": "string"
+            }
+        },
+        "messages": {
+            "MessagesKafkaIncidentsCommand": {
+                "payload": {
+                    "$ref": "#/components/schemas/MessagesKafkaIncidentsCommand"
+                },
+                "name": "KafkaIncidentsCommand",
+                "title": "KafkaIncidentsCommand",
+                "deprecated": true
+            },
+            "MessagesProtocolMsg": {
+                "payload": {
+                    "$ref": "#/components/schemas/MessagesProtocolMsg"
+                },
+                "name": "ProtocolMsg",
+                "title": "ProtocolMsg"
+            }
+        }
+    }
+}
