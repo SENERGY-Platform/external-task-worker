@@ -83,6 +83,7 @@ func TestComswitch(t *testing.T) {
 	config.ResponseTopic = "test"
 	config.HttpCommandConsumerPort = strconv.Itoa(apiPort)
 	config.Debug = true
+	config.InitTopics = true
 
 	err = comswitch.Factory.NewConsumer(ctx, config, func(msg string) error {
 		messages = append(messages, msg)
@@ -192,6 +193,7 @@ func TestComswitchProduceWithKey(t *testing.T) {
 	config.ErrorTopic = "err"
 	config.HttpCommandConsumerPort = strconv.Itoa(apiPort)
 	config.Debug = true
+	config.InitTopics = true
 
 	err = comswitch.Factory.NewConsumer(ctx, config, func(msg string) error {
 		messages = append(messages, msg)

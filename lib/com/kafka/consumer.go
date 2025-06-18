@@ -33,14 +33,17 @@ type ConsumerConfig struct {
 	MaxBytes       int
 	MaxWait        time.Duration
 	TopicConfigMap map[string][]kafka.ConfigEntry
+	InitTopics     bool
 }
 
 func NewConsumer(ctx context.Context, config ConsumerConfig, listener func(topic string, msg []byte, time time.Time) error, errorhandler func(err error)) (err error) {
 	log.Println("DEBUG: consume topic: \"" + config.Topic + "\"")
-	err = InitTopic(config.KafkaUrl, config.TopicConfigMap, config.Topic)
-	if err != nil {
-		log.Println("ERROR: unable to create topic", err)
-		return err
+	if config.InitTopics {
+		err = InitTopic(config.KafkaUrl, config.TopicConfigMap, config.Topic)
+		if err != nil {
+			log.Println("ERROR: unable to create topic", err)
+			return err
+		}
 	}
 	r := kafka.NewReader(kafka.ReaderConfig{
 		CommitInterval:         0, //synchronous commits

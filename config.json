@@ -63,6 +63,8 @@
 
   "IgnoreUserMetrics":[],
 
+  "InitTopics": false,
+
   "KafkaTopicConfigs": {
     "camunda_incident": [
       {

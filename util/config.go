@@ -105,6 +105,8 @@ type Config struct {
 	IgnoreUserMetrics []string
 
 	ApiDocsProviderBaseUrl string
+
+	InitTopics bool
 }
 
 func LoadConfig(location string) (config Config, err error) {

@@ -38,6 +38,7 @@ func (FactoryType) NewConsumer(ctx context.Context, config util.Config, response
 	}
 	if config.ResponseTopic != "" && config.ResponseTopic != "-" {
 		err = NewConsumer(ctx, ConsumerConfig{
+			InitTopics:     config.InitTopics,
 			KafkaUrl:       config.KafkaUrl,
 			GroupId:        config.KafkaConsumerGroup,
 			Topic:          config.ResponseTopic,
@@ -62,6 +63,7 @@ func (FactoryType) NewConsumer(ctx context.Context, config util.Config, response
 
 	if config.ErrorTopic != "" && config.ErrorTopic != "-" && !(strings.HasPrefix(config.ErrorTopic, "http://") || strings.HasPrefix(config.ErrorTopic, "https://")) {
 		err = NewConsumer(ctx, ConsumerConfig{
+			InitTopics:     config.InitTopics,
 			KafkaUrl:       config.KafkaUrl,
 			GroupId:        config.KafkaConsumerGroup,
 			Topic:          config.ErrorTopic,
@@ -93,6 +95,7 @@ func (FactoryType) NewProducer(ctx context.Context, config util.Config) (com.Pro
 		return nil, err
 	}
 	return PrepareProducerWithConfig(ctx, config.KafkaUrl, ProducerConfig{
+		InitTopics:          config.InitTopics,
 		AsyncFlushFrequency: flushFrequency,
 		AsyncCompression:    getKafkaCompression(config.AsyncCompression),
 		SyncCompression:     getKafkaCompression(config.SyncCompression),
