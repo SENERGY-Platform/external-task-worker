@@ -1,12 +1,12 @@
 module github.com/SENERGY-Platform/external-task-worker
 
-go 1.24
+go 1.24.0
 
-toolchain go1.24.1
+toolchain go1.24.4
 
 require (
 	github.com/SENERGY-Platform/converter v0.0.10
-	github.com/SENERGY-Platform/marshaller v0.0.20
+	github.com/SENERGY-Platform/marshaller v0.0.21
 	github.com/bradfitz/gomemcache v0.0.0-20230905024940-24af94b03874
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.6.0
@@ -16,9 +16,10 @@ require (
 
 require (
 	github.com/IBM/sarama v1.43.3
+	github.com/SENERGY-Platform/api-docs-provider/lib/client v0.0.3
 	github.com/SENERGY-Platform/models/go v0.0.0-20241007061544-de7132ae94e4
 	github.com/SENERGY-Platform/process-incident-api v0.0.8
-	github.com/SENERGY-Platform/service-commons v0.0.0-20250123095636-6dfc659ee43e
+	github.com/SENERGY-Platform/service-commons v0.0.0-20250624131956-6c08be412ea0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.21.1
 	github.com/testcontainers/testcontainers-go v0.33.0
@@ -31,12 +32,12 @@ require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/RyanCarrier/dijkstra v1.4.0 // indirect
-	github.com/SENERGY-Platform/api-docs-provider/lib/client v0.0.3 // indirect
 	github.com/SENERGY-Platform/api-docs-provider/lib/models v0.0.3 // indirect
 	github.com/SENERGY-Platform/developer-notifications v0.0.4 // indirect
-	github.com/SENERGY-Platform/device-repository v0.1.52 // indirect
+	github.com/SENERGY-Platform/device-repository v0.2.27 // indirect
 	github.com/SENERGY-Platform/go-base-http-client v0.1.0 // indirect
-	github.com/SENERGY-Platform/permissions-v2 v0.0.27 // indirect
+	github.com/SENERGY-Platform/go-service-base/struct-logger v0.4.1 // indirect
+	github.com/SENERGY-Platform/permissions-v2 v0.0.38 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -53,7 +54,7 @@ require (
 	github.com/eapache/go-xerial-snappy v0.0.0-20230731223053-c322873962e3 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/go-logr/logr v1.4.2 // indirect
+	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
@@ -62,7 +63,6 @@ require (
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
@@ -111,18 +111,20 @@ require (
 	go.mongodb.org/mongo-driver v1.16.1 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.54.0 // indirect
-	go.opentelemetry.io/otel v1.33.0 // indirect
-	go.opentelemetry.io/otel/metric v1.33.0 // indirect
-	go.opentelemetry.io/otel/trace v1.33.0 // indirect
-	golang.org/x/crypto v0.31.0 // indirect
+	go.opentelemetry.io/otel v1.37.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.37.0 // indirect
+	go.opentelemetry.io/otel/metric v1.37.0 // indirect
+	go.opentelemetry.io/otel/sdk v1.37.0 // indirect
+	go.opentelemetry.io/otel/trace v1.37.0 // indirect
+	go.opentelemetry.io/proto/otlp v1.7.0 // indirect
+	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948 // indirect
-	golang.org/x/net v0.33.0 // indirect
-	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/net v0.40.0 // indirect
+	golang.org/x/sync v0.14.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/text v0.25.0 // indirect
 	golang.org/x/tools v0.24.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240604185151-ef581f913117 // indirect
-	google.golang.org/protobuf v1.36.1 // indirect
+	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/go-playground/colors.v1 v1.2.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

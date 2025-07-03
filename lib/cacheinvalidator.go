@@ -35,6 +35,7 @@ func StartCacheInvalidator(ctx context.Context, conf util.Config) (err error) {
 		StartOffset:            kafka.LastOffset,
 		Debug:                  conf.Debug,
 		PartitionWatchInterval: time.Minute,
+		InitTopic:              conf.InitTopics,
 		OnError: func(err error) {
 			log.Println("ERROR:", err)
 			debug.PrintStack()
