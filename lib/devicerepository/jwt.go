@@ -24,12 +24,6 @@ import (
 	"log"
 	"net/http"
 	"time"
-
-	"net/url"
-
-	"io/ioutil"
-
-	"github.com/SENERGY-Platform/external-task-worker/util"
 )
 
 type Impersonate string
@@ -108,85 +102,4 @@ type OpenidToken struct {
 	RefreshToken     string    `json:"refresh_token"`
 	TokenType        string    `json:"token_type"`
 	RequestTime      time.Time `json:"-"`
-}
-
-var openid *OpenidToken
-
-func EnsureAccess(config util.Config) (token Impersonate, err error) {
-	if openid == nil {
-		openid = &OpenidToken{}
-	}
-	duration := util.TimeNow().Sub(openid.RequestTime).Seconds()
-
-	if openid.AccessToken != "" && openid.ExpiresIn-config.AuthExpirationTimeBuffer > duration {
-		token = Impersonate("Bearer " + openid.AccessToken)
-		return
-	}
-
-	if openid.RefreshToken != "" && openid.RefreshExpiresIn-config.AuthExpirationTimeBuffer > duration {
-		log.Println("refresh token", openid.RefreshExpiresIn, duration)
-		err = refreshOpenidToken(openid, config)
-		if err != nil {
-			log.Println("WARNING: unable to use refreshtoken", err)
-		} else {
-			token = Impersonate("Bearer " + openid.AccessToken)
-			return
-		}
-	}
-
-	log.Println("get new access token")
-	err = getOpenidToken(openid, config)
-	if err != nil {
-		log.Println("ERROR: unable to get new access token", err)
-		openid = &OpenidToken{}
-	}
-	token = Impersonate("Bearer " + openid.AccessToken)
-	return
-}
-
-func getOpenidToken(token *OpenidToken, config util.Config) (err error) {
-	requesttime := util.TimeNow()
-	resp, err := http.PostForm(config.AuthEndpoint+"/auth/realms/master/protocol/openid-connect/token", url.Values{
-		"client_id":     {config.AuthClientId},
-		"client_secret": {config.AuthClientSecret},
-		"grant_type":    {"client_credentials"},
-		"scope":         {"offline_access"},
-	})
-
-	if err != nil {
-		log.Println("ERROR: getOpenidToken::PostForm()", err)
-		return err
-	}
-	if resp.StatusCode != http.StatusOK {
-		body, _ := ioutil.ReadAll(resp.Body)
-		err = errors.New(string(body))
-		resp.Body.Close()
-		return
-	}
-	err = json.NewDecoder(resp.Body).Decode(token)
-	token.RequestTime = requesttime
-	return
-}
-
-func refreshOpenidToken(token *OpenidToken, config util.Config) (err error) {
-	requesttime := util.TimeNow()
-	resp, err := http.PostForm(config.AuthEndpoint+"/auth/realms/master/protocol/openid-connect/token", url.Values{
-		"client_id":     {config.AuthClientId},
-		"client_secret": {config.AuthClientSecret},
-		"refresh_token": {token.RefreshToken},
-		"grant_type":    {"refresh_token"},
-	})
-
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode != http.StatusOK {
-		body, _ := ioutil.ReadAll(resp.Body)
-		err = errors.New(string(body))
-		resp.Body.Close()
-		return
-	}
-	err = json.NewDecoder(resp.Body).Decode(token)
-	token.RequestTime = requesttime
-	return
 }
