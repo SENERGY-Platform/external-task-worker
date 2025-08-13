@@ -3,6 +3,12 @@ package test
 import (
 	"context"
 	"errors"
+	"log"
+	"reflect"
+	"sync"
+	"testing"
+	"time"
+
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/shards"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
@@ -10,11 +16,6 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/test/docker"
 	"github.com/SENERGY-Platform/external-task-worker/lib/test/mock"
 	"github.com/SENERGY-Platform/external-task-worker/util"
-	"log"
-	"reflect"
-	"sync"
-	"testing"
-	"time"
 )
 
 func TestFetch(t *testing.T) {
@@ -188,6 +189,7 @@ func testCompleteTask(s *shards.Shards, tasks []messages.CamundaExternalTask) fu
 			WorkerId:            "test-worker",
 			TaskId:              tasks[0].Id,
 			ProcessInstanceId:   tasks[0].ProcessInstanceId,
+			BusinessKey:         tasks[0].BusinessKey,
 			ProcessDefinitionId: tasks[0].ProcessDefinitionId,
 			TenantId:            tasks[0].TenantId,
 		}, "result", map[string]interface{}{"r": 255, "g": 0, "b": 100})

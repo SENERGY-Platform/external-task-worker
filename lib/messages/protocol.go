@@ -17,8 +17,9 @@
 package messages
 
 import (
-	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"time"
+
+	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 )
 
 type TaskInfo struct {
@@ -29,6 +30,7 @@ type TaskInfo struct {
 	CompletionStrategy  string `json:"completion_strategy"`
 	Time                string `json:"time"`
 	TenantId            string `json:"tenant_id"`
+	BusinessKey         string `json:"business_key"`
 }
 
 type ProtocolRequest struct {

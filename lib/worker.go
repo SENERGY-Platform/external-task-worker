@@ -21,6 +21,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
+	"reflect"
+	"runtime/debug"
+	"strconv"
+	"sync"
+	"time"
+
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/interfaces"
 	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicegroups"
@@ -29,12 +36,6 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
 	"github.com/SENERGY-Platform/external-task-worker/lib/prometheus"
 	"github.com/SENERGY-Platform/external-task-worker/lib/timescale"
-	"log"
-	"reflect"
-	"runtime/debug"
-	"strconv"
-	"sync"
-	"time"
 
 	"github.com/SENERGY-Platform/external-task-worker/util"
 
@@ -210,13 +211,13 @@ func (this *CmdWorker) ExecuteTask(task messages.CamundaExternalTask, caller str
 	}
 	incident := GetIncident(task)
 	if incident != nil {
-		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, "user triggered incident: "+*incident, task.TenantId)
+		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, task.BusinessKey, "user triggered incident: "+*incident, task.TenantId)
 		return
 	}
 	request, err := GetCommandRequest(task)
 	if err != nil {
 		log.Println("error on GetCommandRequest(): ", err)
-		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, "invalid task format (json)", task.TenantId)
+		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, task.BusinessKey, "invalid task format (json)", task.TenantId)
 		return
 	}
 
@@ -229,7 +230,7 @@ func (this *CmdWorker) ExecuteCommand(command messages.Command, task messages.Ca
 	}
 	completed, nextProtocolMessages, results, err := this.deviceGroupsHandler.ProcessCommand(command, task, caller)
 	if err != nil {
-		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, err.Error(), task.TenantId)
+		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, task.BusinessKey, err.Error(), task.TenantId)
 		return
 	}
 
@@ -239,6 +240,7 @@ func (this *CmdWorker) ExecuteCommand(command messages.Command, task messages.Ca
 			WorkerId:            this.camunda.GetWorkerId(),
 			TaskId:              task.Id,
 			ProcessInstanceId:   task.ProcessInstanceId,
+			BusinessKey:         task.BusinessKey,
 			ProcessDefinitionId: task.ProcessDefinitionId,
 			TenantId:            task.TenantId,
 		}
@@ -282,6 +284,7 @@ func (this *CmdWorker) ExecuteCommand(command messages.Command, task messages.Ca
 					WorkerId:            this.camunda.GetWorkerId(),
 					TaskId:              message.Metadata.Task.Id,
 					ProcessInstanceId:   task.ProcessInstanceId,
+					BusinessKey:         task.BusinessKey,
 					ProcessDefinitionId: task.ProcessDefinitionId,
 					CompletionStrategy:  this.config.CompletionStrategy,
 					Time:                strconv.FormatInt(util.TimeNow().Unix(), 10),
@@ -407,6 +410,7 @@ func (this *CmdWorker) handleTaskResponse(taskInfo messages.TaskInfo, output int
 			WorkerId:            taskInfo.WorkerId,
 			TaskId:              parent.Task.Id,
 			ProcessInstanceId:   parent.Task.ProcessInstanceId,
+			BusinessKey:         parent.Task.BusinessKey,
 			ProcessDefinitionId: parent.Task.ProcessDefinitionId,
 			CompletionStrategy:  taskInfo.CompletionStrategy,
 			Time:                taskInfo.Time,

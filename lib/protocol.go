@@ -19,16 +19,17 @@ package lib
 import (
 	"encoding/json"
 	"errors"
-	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
-	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
-	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
-	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
-	"github.com/SENERGY-Platform/external-task-worker/util"
 	"log"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
+	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
+	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
+	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
+	"github.com/SENERGY-Platform/external-task-worker/util"
 )
 
 // CreateProtocolMessage implements: devicegroups.Callback
@@ -188,6 +189,7 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 			WorkerId:            this.camunda.GetWorkerId(),
 			TaskId:              task.Id,
 			ProcessInstanceId:   task.ProcessInstanceId,
+			BusinessKey:         task.BusinessKey,
 			ProcessDefinitionId: task.ProcessDefinitionId,
 			CompletionStrategy:  this.config.CompletionStrategy,
 			Time:                strconv.FormatInt(util.TimeNow().Unix(), 10),

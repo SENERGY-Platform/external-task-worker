@@ -22,6 +22,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"runtime/debug"
+	"sync"
+	"time"
+
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/interfaces"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/shards"
 	"github.com/SENERGY-Platform/external-task-worker/lib/com"
@@ -30,13 +38,6 @@ import (
 	"github.com/SENERGY-Platform/process-incident-api/lib/client"
 	"github.com/SENERGY-Platform/service-commons/pkg/cache"
 	"github.com/SENERGY-Platform/service-commons/pkg/signal"
-	"io"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"runtime/debug"
-	"sync"
-	"time"
 )
 
 type Camunda struct {
@@ -223,7 +224,7 @@ func (this *Camunda) completeTask(taskInfo messages.TaskInfo, outputName string,
 		log.Println("retry complete request")
 		err = send()
 		if err != nil && errors.Is(err, UnableToCompleteErrResp) {
-			this.Error(taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, err.Error(), taskInfo.TenantId)
+			this.Error(taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, taskInfo.BusinessKey, err.Error(), taskInfo.TenantId)
 		}
 	}
 
@@ -300,7 +301,7 @@ func (this *Camunda) SetRetry(taskid string, tenantId string, retries int64) {
 	}
 }
 
-func (this *Camunda) Error(externalTaskId string, processInstanceId string, processDefinitionId string, msg string, tenantId string) {
+func (this *Camunda) Error(externalTaskId string, processInstanceId string, processDefinitionId string, businessKey string, msg string, tenantId string) {
 	this.metrics.LogIncident()
 	incident := messages.Incident{
 		Id:                  util.GetId(),
@@ -311,6 +312,7 @@ func (this *Camunda) Error(externalTaskId string, processInstanceId string, proc
 		ErrorMessage:        msg,
 		Time:                util.TimeNow(),
 		TenantId:            tenantId,
+		BusinessKey:         businessKey,
 	}
 	if this.config.UseHttpIncidentProducer && this.config.IncidentApiUrl != "" && this.config.IncidentApiUrl != "-" {
 		err, _ := client.New(this.config.IncidentApiUrl).CreateIncident(client.InternalAdminToken, incident)

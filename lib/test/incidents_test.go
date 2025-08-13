@@ -19,12 +19,6 @@ package test
 import (
 	"context"
 	"fmt"
-	"github.com/SENERGY-Platform/external-task-worker/lib"
-	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
-	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
-	"github.com/SENERGY-Platform/external-task-worker/lib/prometheus"
-	"github.com/SENERGY-Platform/external-task-worker/lib/test/mock"
-	"github.com/SENERGY-Platform/external-task-worker/util"
 	"io"
 	"log"
 	"net/http"
@@ -33,6 +27,13 @@ import (
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/SENERGY-Platform/external-task-worker/lib"
+	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
+	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
+	"github.com/SENERGY-Platform/external-task-worker/lib/prometheus"
+	"github.com/SENERGY-Platform/external-task-worker/lib/test/mock"
+	"github.com/SENERGY-Platform/external-task-worker/util"
 )
 
 func TestUserIncident(t *testing.T) {
@@ -87,7 +88,7 @@ func TestUserIncident(t *testing.T) {
 
 	incidents := mock.Kafka.GetProduced(config.KafkaIncidentTopic)
 
-	expected := []string{`{"command":"POST","msg_version":3,"incident":{"id":"2","external_task_id":"1","process_instance_id":"piid1","process_definition_id":"pdid1","worker_id":"1","error_message":"user triggered incident: test error","time":"0001-01-01T00:00:00Z","tenant_id":"user","deployment_name":""}}`}
+	expected := []string{`{"command":"POST","msg_version":3,"incident":{"id":"2","external_task_id":"1","process_instance_id":"piid1","process_definition_id":"pdid1","worker_id":"1","error_message":"user triggered incident: test error","time":"0001-01-01T00:00:00Z","tenant_id":"user","deployment_name":"","business_key":""}}`}
 
 	if !reflect.DeepEqual(incidents, expected) {
 		t.Errorf("expected != actual\n%#v\n%#v\n", expected, incidents)
@@ -128,8 +129,8 @@ func Example_camunda_Error() {
 		fmt.Println(err)
 		return
 	}
-	camunda.Error("task_id_1", "piid_1", "pdid_1", "error message", "user1")
-	camunda.Error("task_id_2", "piid_2", "pdid_2", "error message", "user1")
+	camunda.Error("task_id_1", "piid_1", "pdid_1", "bk1", "error message", "user1")
+	camunda.Error("task_id_2", "piid_2", "pdid_2", "bk2", "error message", "user1")
 
 	incidents := mock.Kafka.GetProduced(config.KafkaIncidentTopic)
 
@@ -138,8 +139,8 @@ func Example_camunda_Error() {
 	}
 
 	//output:
-	//{"command":"POST","msg_version":3,"incident":{"id":"2","external_task_id":"task_id_1","process_instance_id":"piid_1","process_definition_id":"pdid_1","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":""}}
-	//{"command":"POST","msg_version":3,"incident":{"id":"3","external_task_id":"task_id_2","process_instance_id":"piid_2","process_definition_id":"pdid_2","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":""}}
+	//{"command":"POST","msg_version":3,"incident":{"id":"2","external_task_id":"task_id_1","process_instance_id":"piid_1","process_definition_id":"pdid_1","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":"","business_key":"bk1"}}
+	//{"command":"POST","msg_version":3,"incident":{"id":"3","external_task_id":"task_id_2","process_instance_id":"piid_2","process_definition_id":"pdid_2","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":"","business_key":"bk2"}}
 }
 
 func Example_camunda_ErrorOverHttp() {
@@ -183,8 +184,8 @@ func Example_camunda_ErrorOverHttp() {
 		fmt.Println(err)
 		return
 	}
-	camunda.Error("task_id_1", "piid_1", "pdid_1", "error message", "user1")
-	camunda.Error("task_id_2", "piid_2", "pdid_2", "error message", "user1")
+	camunda.Error("task_id_1", "piid_1", "pdid_1", "bk1", "error message", "user1")
+	camunda.Error("task_id_2", "piid_2", "pdid_2", "bk2", "error message", "user1")
 
 	incidents := mock.Kafka.GetProduced(config.KafkaIncidentTopic)
 
@@ -193,6 +194,6 @@ func Example_camunda_ErrorOverHttp() {
 	}
 
 	//output:
-	//http incident: POST /incidents {"id":"2","external_task_id":"task_id_1","process_instance_id":"piid_1","process_definition_id":"pdid_1","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":""}
-	//http incident: POST /incidents {"id":"3","external_task_id":"task_id_2","process_instance_id":"piid_2","process_definition_id":"pdid_2","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":""}
+	//http incident: POST /incidents {"id":"2","external_task_id":"task_id_1","process_instance_id":"piid_1","process_definition_id":"pdid_1","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":"","business_key":"bk1"}
+	//http incident: POST /incidents {"id":"3","external_task_id":"task_id_2","process_instance_id":"piid_2","process_definition_id":"pdid_2","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":"","business_key":"bk2"}
 }

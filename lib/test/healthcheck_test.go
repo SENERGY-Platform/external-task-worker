@@ -20,13 +20,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/SENERGY-Platform/external-task-worker/lib"
-	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/interfaces"
-	"github.com/SENERGY-Platform/external-task-worker/lib/com"
-	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
-	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
-	"github.com/SENERGY-Platform/external-task-worker/lib/test/mock"
-	"github.com/SENERGY-Platform/external-task-worker/util"
 	"log"
 	"net"
 	"net/http"
@@ -34,6 +27,14 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/SENERGY-Platform/external-task-worker/lib"
+	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/interfaces"
+	"github.com/SENERGY-Platform/external-task-worker/lib/com"
+	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
+	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
+	"github.com/SENERGY-Platform/external-task-worker/lib/test/mock"
+	"github.com/SENERGY-Platform/external-task-worker/util"
 )
 
 func TestHealthCheckBy(t *testing.T) {
@@ -284,7 +285,7 @@ func (this *StoppableTestCamunda) CompleteTask(taskInfo messages.TaskInfo, outpu
 
 func (this *StoppableTestCamunda) SetRetry(taskid string, tenantId string, number int64) {}
 
-func (this *StoppableTestCamunda) Error(externalTaskId string, processInstanceId string, processDefinitionId string, msg string, tenantId string) {
+func (this *StoppableTestCamunda) Error(externalTaskId string, processInstanceId string, processDefinitionId string, businessKey string, msg string, tenantId string) {
 }
 
 func (this *StoppableTestCamunda) GetWorkerId() string {

@@ -41,6 +41,7 @@ type CamundaExternalTask struct {
 	ProcessDefinitionId string                     `json:"processDefinitionId"`
 	TenantId            string                     `json:"tenantId"`
 	Error               string                     `json:"errorMessage"`
+	BusinessKey         string                     `json:"businessKey"`
 }
 
 type CamundaTopic struct {

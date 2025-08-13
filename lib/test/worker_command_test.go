@@ -20,13 +20,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/SENERGY-Platform/external-task-worker/lib"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/lib/test/mock"
 	"github.com/SENERGY-Platform/external-task-worker/util"
-	"log"
-	"time"
 )
 
 func Example_lib_Worker() {
@@ -123,8 +124,9 @@ func Example_lib_Worker() {
 	}
 
 	mockCamunda.AddTask(messages.CamundaExternalTask{
-		Id:       "1",
-		TenantId: "user",
+		Id:          "1",
+		TenantId:    "user",
+		BusinessKey: "bk",
 		Variables: map[string]messages.CamundaVariable{
 			util.CAMUNDA_VARIABLES_PAYLOAD: {
 				Value: string(cmdMsg1),
@@ -135,8 +137,9 @@ func Example_lib_Worker() {
 	time.Sleep(1 * time.Second)
 
 	mockCamunda.AddTask(messages.CamundaExternalTask{
-		Id:       "2",
-		TenantId: "user",
+		Id:          "2",
+		TenantId:    "user",
+		BusinessKey: "bk",
 		Variables: map[string]messages.CamundaVariable{
 			util.CAMUNDA_VARIABLES_PAYLOAD: {
 				Value: string(cmdMsg1),
@@ -148,8 +151,9 @@ func Example_lib_Worker() {
 	time.Sleep(1 * time.Second)
 
 	mockCamunda.AddTask(messages.CamundaExternalTask{
-		Id:       "3",
-		TenantId: "user",
+		Id:          "3",
+		TenantId:    "user",
+		BusinessKey: "bk",
 		Variables: map[string]messages.CamundaVariable{
 			util.CAMUNDA_VARIABLES_PAYLOAD: {
 				Value: string(cmdMsg2),
@@ -160,8 +164,9 @@ func Example_lib_Worker() {
 	time.Sleep(1 * time.Second)
 
 	mockCamunda.AddTask(messages.CamundaExternalTask{
-		Id:       "4",
-		TenantId: "user",
+		Id:          "4",
+		TenantId:    "user",
+		BusinessKey: "bk",
 		Variables: map[string]messages.CamundaVariable{
 			util.CAMUNDA_VARIABLES_PAYLOAD: {
 				Value: string(cmdMsg2),
@@ -183,10 +188,10 @@ func Example_lib_Worker() {
 	}
 
 	//output:
-	//{"request":{"input":{"body":"{\"level\":\"#c83200\"}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"1","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"s1u","name":"s1","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"level","name":"level","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_hex","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"input_characteristic":"example_rgb","response_to":"response","error_to":"errors"}}
-	//{"request":{"input":{"body":"{\"level\":\"#c832ff\"}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"2","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"s1u","name":"s1","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"level","name":"level","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_hex","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"input_characteristic":"example_rgb","response_to":"response","error_to":"errors"}}
-	//{"request":{"input":{"body":"{\"level\":\"#ff0064\"}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"3","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"s1u","name":"s1","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"level","name":"level","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_hex","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"input_characteristic":"example_hex","response_to":"response","error_to":"errors"}}
-	//{"request":{"input":{"body":"{\"level\":\"#ff00ff\"}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"4","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"s1u","name":"s1","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"level","name":"level","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_hex","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"input_characteristic":"example_hex","response_to":"response","error_to":"errors"}}
+	//{"request":{"input":{"body":"{\"level\":\"#c83200\"}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"1","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user","business_key":"bk"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"s1u","name":"s1","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"level","name":"level","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_hex","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"input_characteristic":"example_rgb","response_to":"response","error_to":"errors"}}
+	//{"request":{"input":{"body":"{\"level\":\"#c832ff\"}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"2","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user","business_key":"bk"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"s1u","name":"s1","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"level","name":"level","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_hex","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"input_characteristic":"example_rgb","response_to":"response","error_to":"errors"}}
+	//{"request":{"input":{"body":"{\"level\":\"#ff0064\"}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"3","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user","business_key":"bk"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"s1u","name":"s1","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"level","name":"level","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_hex","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"input_characteristic":"example_hex","response_to":"response","error_to":"errors"}}
+	//{"request":{"input":{"body":"{\"level\":\"#ff00ff\"}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"4","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user","business_key":"bk"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"s1u","name":"s1","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"level","name":"level","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_hex","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"input_characteristic":"example_hex","response_to":"response","error_to":"errors"}}
 }
 
 func Example_lib_Worker_OnPowerCommand() {
@@ -263,8 +268,9 @@ func Example_lib_Worker_OnPowerCommand() {
 	}
 
 	mockCamunda.AddTask(messages.CamundaExternalTask{
-		Id:       "1",
-		TenantId: "user",
+		Id:          "1",
+		TenantId:    "user",
+		BusinessKey: "bk",
 		Variables: map[string]messages.CamundaVariable{
 			util.CAMUNDA_VARIABLES_PAYLOAD: {
 				Value: string(cmdMsg1),
@@ -285,5 +291,5 @@ func Example_lib_Worker_OnPowerCommand() {
 	}
 
 	//output:
-	//{"request":{"input":{"body":"{\"power\":true}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"1","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"power","name":"on","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"power","name":"power","is_void":false,"omit_empty":false,"type":"https://schema.org/Boolean","sub_content_variables":null,"characteristic_id":"","value":true,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"response_to":"response","error_to":"errors"}}
+	//{"request":{"input":{"body":"{\"power\":true}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"1","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user","business_key":"bk"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"power","name":"on","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"power","name":"power","is_void":false,"omit_empty":false,"type":"https://schema.org/Boolean","sub_content_variables":null,"characteristic_id":"","value":true,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"response_to":"response","error_to":"errors"}}
 }

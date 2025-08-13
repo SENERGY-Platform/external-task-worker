@@ -19,14 +19,15 @@ package mock
 import (
 	"context"
 	"errors"
+	"log"
+	"sync"
+	"time"
+
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/interfaces"
 	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
-	"log"
-	"sync"
-	"time"
 )
 
 var Camunda = &CamundaMock{ResetOnGetInterface: true}
@@ -151,14 +152,14 @@ func (this *CamundaMock) SetRetry(taskid string, tenantId string, number int64) 
 	}
 }
 
-func (this *CamundaMock) Error(externalTaskId string, processInstanceId string, processDefinitionId string, msg string, tenantId string) {
+func (this *CamundaMock) Error(externalTaskId string, processInstanceId string, processDefinitionId string, businessKey string, msg string, tenantId string) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
 	log.Println("CAMUNDA-FAIL:", externalTaskId, processInstanceId, processDefinitionId, msg)
 	this.failedTasks[externalTaskId] = this.fetchedTasks[externalTaskId]
 	delete(this.fetchedTasks, externalTaskId)
 	if this.Camunda != nil {
-		this.Camunda.Error(externalTaskId, processInstanceId, processDefinitionId, msg, tenantId)
+		this.Camunda.Error(externalTaskId, processInstanceId, processDefinitionId, businessKey, msg, tenantId)
 	}
 }
 
