@@ -23,8 +23,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"log"
 	"net/http"
 	"runtime/debug"
 	"sync"
@@ -190,7 +188,7 @@ func (this *Camunda) completeTask(taskInfo messages.TaskInfo, outputName string,
 		completeRequest = messages.CamundaCompleteRequest{WorkerId: taskInfo.WorkerId}
 	}
 
-	log.Println("Start complete Request", taskInfo.TaskId)
+	this.config.GetLogger().Info("complete task", "taskId", taskInfo.TaskId)
 	send := func() error {
 		client := http.Client{Timeout: 5 * time.Second}
 		b := new(bytes.Buffer)
@@ -211,17 +209,16 @@ func (this *Camunda) completeTask(taskInfo messages.TaskInfo, outputName string,
 		}
 		if resp.StatusCode >= 300 {
 			this.metrics.LogCamundaCompleteTaskError()
-			log.Println("WARNING: unable to complete task", taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, string(pl), taskInfo.TenantId)
+			this.config.GetLogger().Warn("unable to complete task", "taskId", taskInfo.TaskId, "processInstanceId", taskInfo.ProcessInstanceId, "processDefinitionId", taskInfo.ProcessDefinitionId, "error", string(pl), "tenantId", taskInfo.TenantId)
 			return fmt.Errorf("%w: %v, %v", UnableToCompleteErrResp, resp.StatusCode, string(pl))
 		}
 		this.metrics.LogCamundaCompleteTask()
-		log.Println("complete camunda task: ", completeRequest, string(pl))
 		return nil
 	}
 
 	err = send()
 	if err != nil {
-		log.Println("retry complete request")
+		this.config.GetLogger().Warn("retry complete request", "error", err)
 		err = send()
 		if err != nil && errors.Is(err, UnableToCompleteErrResp) {
 			this.Error(taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, taskInfo.BusinessKey, err.Error(), taskInfo.TenantId)
@@ -232,9 +229,7 @@ func (this *Camunda) completeTask(taskInfo messages.TaskInfo, outputName string,
 }
 
 func (this *Camunda) UnlockTask(taskInfo messages.TaskInfo) (err error) {
-	if this.config.Debug {
-		log.Println("unlock task for retry", taskInfo.TaskId)
-	}
+	this.config.GetLogger().Debug("unlock task for retry", "taskId", taskInfo.TaskId)
 	shard, err := this.shards.GetShardForUser(taskInfo.TenantId)
 	if err != nil {
 		return err
@@ -246,16 +241,14 @@ func (this *Camunda) UnlockTask(taskInfo messages.TaskInfo) (err error) {
 		return err
 	}
 	defer resp.Body.Close()
-	pl, err := ioutil.ReadAll(resp.Body)
+	pl, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
 
 	if resp.StatusCode >= 300 {
 		//this.Error(taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, string(pl), taskInfo.TenantId)
-		log.Println("WARNING: unable to unlock task", taskInfo.TaskId, taskInfo.ProcessInstanceId, taskInfo.ProcessDefinitionId, string(pl), taskInfo.TenantId)
-	} else {
-		log.Println("unlock camunda task: ", taskInfo)
+		this.config.GetLogger().Warn("unable to unlock task", "taskId", taskInfo.TaskId, "processInstanceId", taskInfo.ProcessInstanceId, "processDefinitionId", taskInfo.ProcessDefinitionId, "error", string(pl), "tenantId", taskInfo.TenantId)
 	}
 	return
 }
@@ -263,7 +256,7 @@ func (this *Camunda) UnlockTask(taskInfo messages.TaskInfo) (err error) {
 func (this *Camunda) SetRetry(taskid string, tenantId string, retries int64) {
 	shard, err := this.shards.GetShardForUser(tenantId)
 	if err != nil {
-		log.Println("ERROR: unable to get shard for SetRetry()", err)
+		this.config.GetLogger().Error("unable to get shard for SetRetry()", "error", err)
 		debug.PrintStack()
 		return
 	}
@@ -277,7 +270,7 @@ func (this *Camunda) SetRetry(taskid string, tenantId string, retries int64) {
 	}
 	request, err := http.NewRequest("PUT", shard+"/engine-rest/external-task/"+taskid+"/retries", b)
 	if err != nil {
-		log.Println("ERROR: SetRetry():", err)
+		this.config.GetLogger().Error("unable to create SetRetry() request", "error", err)
 		debug.PrintStack()
 		return
 	}
@@ -285,19 +278,19 @@ func (this *Camunda) SetRetry(taskid string, tenantId string, retries int64) {
 
 	resp, err := client.Do(request)
 	if err != nil {
-		log.Println("ERROR: SetRetry():", err)
+		this.config.GetLogger().Error("unable to SetRetry()", "error", err)
 		debug.PrintStack()
 		return
 	}
 	defer resp.Body.Close()
 	pl, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Println("ERROR: ReadAll():", err)
+		this.config.GetLogger().Error("unable to read SetRetry() response", "error", err)
 		debug.PrintStack()
 		return
 	}
 	if resp.StatusCode >= 300 {
-		log.Println("ERROR: unexpected SetRetry() response status", string(pl))
+		this.config.GetLogger().Error("unexpected SetRetry() response status", "status", resp.Status, "code", resp.StatusCode, "error", string(pl))
 	}
 }
 
@@ -317,7 +310,7 @@ func (this *Camunda) Error(externalTaskId string, processInstanceId string, proc
 	if this.config.UseHttpIncidentProducer && this.config.IncidentApiUrl != "" && this.config.IncidentApiUrl != "-" {
 		err, _ := client.New(this.config.IncidentApiUrl).CreateIncident(client.InternalAdminToken, incident)
 		if err != nil {
-			log.Println("ERROR:", err)
+			this.config.GetLogger().Error("unable to report incident", "error", err)
 			debug.PrintStack()
 			return
 		}
@@ -328,13 +321,13 @@ func (this *Camunda) Error(externalTaskId string, processInstanceId string, proc
 			Incident:   &incident,
 		})
 		if err != nil {
-			log.Println("ERROR:", err)
+			this.config.GetLogger().Error("unable to marshal incident", "error", err)
 			debug.PrintStack()
 			return
 		}
 		err = this.producer.ProduceWithKey(this.config.KafkaIncidentTopic, processDefinitionId, string(b))
 		if err != nil {
-			log.Println("ERROR:", err)
+			this.config.GetLogger().Error("unable to report incident to kafka", "error", err)
 			debug.PrintStack()
 			return
 		}

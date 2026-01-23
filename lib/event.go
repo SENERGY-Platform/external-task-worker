@@ -19,6 +19,13 @@ package lib
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
+	"net/http"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
@@ -26,22 +33,16 @@ import (
 	marshallermodel "github.com/SENERGY-Platform/marshaller/lib/marshaller/model"
 	"github.com/SENERGY-Platform/marshaller/lib/marshaller/serialization"
 	"github.com/SENERGY-Platform/models/go/models"
-	"log"
-	"net/http"
-	"sort"
-	"strconv"
-	"strings"
-	"time"
 )
 
 func (this *CmdWorker) GetLastEventValue(token string, userId string, device model.Device, service model.Service, protocol model.Protocol, characteristicId string, functionId string, aspect model.AspectNode, timeout time.Duration) (code int, result interface{}) {
 	output, err, code := this.getLastEventMessage(token, device, service, protocol, timeout)
 	if err != nil {
-		log.Println("ERROR: unable to get event value:", err)
+		this.config.GetLogger().Error("unable to get event value:", "error", err)
 		return 500, "unable to get event value: " + err.Error()
 	}
 	if code >= 300 {
-		log.Println("ERROR: unexpected getLastEventMessage() return code:", code)
+		this.config.GetLogger().Error("unexpected getLastEventMessage() return code", "code", code)
 		return code, "unexpected code " + strconv.Itoa(code)
 	}
 	marshalStartTime := time.Now()
@@ -60,7 +61,6 @@ func (this *CmdWorker) GetLastEventValue(token string, userId string, device mod
 		this.metrics.LogTaskMarshallingLatency("UnmarshalV2", userId, service.Id, functionId, marshalDuration)
 
 		if this.config.Debug {
-			log.Println("ERROR:", err)
 			marshalRequestStr, _ := json.Marshal(marshaller.UnmarshallingV2Request{
 				Service:          service,
 				Protocol:         protocol,
@@ -70,9 +70,9 @@ func (this *CmdWorker) GetLastEventValue(token string, userId string, device mod
 				AspectNode:       aspect,
 				AspectNodeId:     aspect.Id,
 			})
-			log.Println("ERROR: unmarshal request", string(marshalRequestStr))
+			this.config.GetLogger().Debug("unable to unmarshal event value", "error", err, "request", string(marshalRequestStr))
 		}
-		log.Println("ERROR: unmarshal request:", err)
+		this.config.GetLogger().Error("unable to unmarshal event value", "error", err)
 		return http.StatusInternalServerError, "unable to unmarshal event value: " + err.Error()
 	}
 	return 200, temp
@@ -82,9 +82,7 @@ func (this *CmdWorker) getLastEventMessage(token string, device model.Device, se
 	request := createTimescaleRequest(device, service)
 	response := []messages.TimescaleResponse{}
 	response, err = this.timescale.Query(token, request, timeout)
-	if this.config.Debug {
-		log.Printf("DEBUG: getLastEventMessage()\n\trequest: %#v\n\tresponse: %#v\n\terr:%#v", timescale.CastRequest(request), response, err)
-	}
+	this.config.GetLogger().Debug("getLastEventMessage()", "request", timescale.CastRequest(request), "response", response, "error", err)
 	if err != nil {
 		return result, err, http.StatusInternalServerError
 	}
@@ -107,6 +105,7 @@ func (this *CmdWorker) createEventValueFromTimescaleValues(service model.Service
 		if segmentName != "" && segmentValue != nil {
 			result[segmentName], err = marshalSegmentValue(content.Serialization, segmentValue, content.ContentVariable.Name)
 			if err != nil {
+				this.config.GetLogger().Error("unable to marshal segment value", "error", err)
 				return result, err, http.StatusInternalServerError
 			}
 		}
@@ -117,9 +116,7 @@ func (this *CmdWorker) createEventValueFromTimescaleValues(service model.Service
 func marshalSegmentValue(serializationTo models.Serialization, value interface{}, rootName string) (string, error) {
 	m, ok := serialization.Get(serializationTo)
 	if !ok {
-		err := errors.New("unknown serialization")
-		log.Println("ERROR: unknown serialization", serializationTo)
-		return "", err
+		return "", errors.New("unknown serialization")
 	}
 	return m.Marshal(value, marshallermodel.ContentVariable{Name: rootName})
 }
@@ -164,7 +161,7 @@ func setPath(orig map[string]interface{}, path []string, value interface{}) map[
 	} else {
 		subMap, okCast := sub.(map[string]interface{})
 		if !okCast {
-			log.Println("ERROR: setPath() expect map in path", orig, sub, strings.Join(path, "."))
+			slog.Default().Error("setPath() expect map in path", "orig", orig, "sub", sub, "path", strings.Join(path, "."))
 			return orig
 		}
 		orig[first] = setPath(subMap, rest, value)

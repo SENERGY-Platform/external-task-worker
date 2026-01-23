@@ -19,10 +19,12 @@ package kafka
 import (
 	"context"
 	"errors"
+	"log"
+	"log/slog"
+	"time"
+
 	"github.com/IBM/sarama"
 	"github.com/segmentio/kafka-go"
-	"log"
-	"time"
 )
 
 var Fatal = false
@@ -172,7 +174,7 @@ func (this *SyncProducer) Produce(topic string, message string) (err error) {
 	if this.initTopics {
 		err = EnsureTopic(topic, this.kafkaBootstrapUrl, &this.usedTopics, this.topicConfigMap, this.partitionsNum, this.replicationFactor)
 		if err != nil {
-			log.Println("WARNING: unable to ensure topic", err)
+			slog.Default().Warn("unable to ensure topic", "topic", topic, "error", err)
 			err = nil
 		}
 	}
@@ -183,14 +185,14 @@ func (this *SyncProducer) Produce(topic string, message string) (err error) {
 		defer cancel()
 		go func() {
 			<-ctx.Done()
-			if ctx.Err() != nil && ctx.Err() != context.Canceled {
-				log.Println("WARNING: slow produce call", topic, message)
+			if ctx.Err() != nil && !errors.Is(ctx.Err(), context.Canceled) {
+				slog.Default().Warn("slow produce call", "topic", topic, "message", message, "error", ctx.Err())
 			}
 		}()
 	}
 	_, _, err = this.producer.SendMessage(&sarama.ProducerMessage{Topic: topic, Key: nil, Value: sarama.StringEncoder(message), Timestamp: time.Now()})
 	if SlowProducerTimeout > 0 && time.Since(start) >= SlowProducerTimeout {
-		log.Println("WARNING: finished slow produce call", time.Since(start), topic, message)
+		slog.Default().Warn("finished slow produce call", "duration", time.Since(start), "topic", topic, "message", message)
 	}
 	return err
 }
@@ -202,7 +204,7 @@ func (this *AsyncProducer) Produce(topic string, message string) (err error) {
 	if this.initTopics {
 		err = EnsureTopic(topic, this.kafkaBootstrapUrl, &this.usedTopics, this.topicConfigMap, this.partitionsNum, this.replicationFactor)
 		if err != nil {
-			log.Println("WARNING: unable to ensure topic", err)
+			slog.Default().Warn("unable to ensure topic", "topic", topic, "error", err)
 			err = nil
 		}
 	}
@@ -217,7 +219,7 @@ func (this *SyncProducer) ProduceWithKey(topic string, key string, message strin
 	if this.initTopics {
 		err = EnsureTopic(topic, this.kafkaBootstrapUrl, &this.usedTopics, this.topicConfigMap, this.partitionsNum, this.replicationFactor)
 		if err != nil {
-			log.Println("WARNING: unable to ensure topic", err)
+			slog.Default().Warn("unable to ensure topic", "topic", topic, "error", err)
 			err = nil
 		}
 	}
@@ -227,14 +229,14 @@ func (this *SyncProducer) ProduceWithKey(topic string, key string, message strin
 		defer cancel()
 		go func() {
 			<-ctx.Done()
-			if ctx.Err() != nil && ctx.Err() != context.Canceled {
-				log.Println("WARNING: slow produce call", topic, key, message)
+			if ctx.Err() != nil && !errors.Is(ctx.Err(), context.Canceled) {
+				slog.Default().Warn("slow produce call", "topic", topic, "message", message, "error", ctx.Err())
 			}
 		}()
 	}
 	_, _, err = this.producer.SendMessage(&sarama.ProducerMessage{Topic: topic, Key: sarama.StringEncoder(key), Value: sarama.StringEncoder(message), Timestamp: time.Now()})
 	if SlowProducerTimeout > 0 && time.Since(start) >= SlowProducerTimeout {
-		log.Println("WARNING: finished slow produce call", time.Since(start), topic, key, message)
+		slog.Default().Warn("finished slow produce call", "duration", time.Since(start), "topic", topic, "key", key, "message", message)
 	}
 	return err
 }
@@ -246,7 +248,7 @@ func (this *AsyncProducer) ProduceWithKey(topic string, key string, message stri
 	if this.initTopics {
 		err = EnsureTopic(topic, this.kafkaBootstrapUrl, &this.usedTopics, this.topicConfigMap, this.partitionsNum, this.replicationFactor)
 		if err != nil {
-			log.Println("WARNING: unable to ensure topic", err)
+			slog.Default().Warn("unable to ensure topic", "topic", topic, "error", err)
 			err = nil
 		}
 	}

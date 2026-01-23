@@ -1,6 +1,6 @@
 module asyncapi-gen
 
-go 1.25
+go 1.25.0
 
 require (
 	github.com/SENERGY-Platform/external-task-worker v0.0.0-00010101000000-000000000000

@@ -18,13 +18,15 @@ package httpcommand
 
 import (
 	"context"
-	"github.com/SENERGY-Platform/external-task-worker/lib/com"
-	"github.com/SENERGY-Platform/external-task-worker/util"
+	"errors"
 	"io"
 	"log"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/SENERGY-Platform/external-task-worker/lib/com"
+	"github.com/SENERGY-Platform/external-task-worker/util"
 )
 
 type FactoryType struct{}
@@ -44,14 +46,14 @@ func (this FactoryType) NewConsumer(ctx context.Context, config util.Config, res
 		}
 		msg, err := io.ReadAll(request.Body)
 		if err != nil {
-			log.Println("ERROR:", err)
+			config.GetLogger().Error("unable to read http response consumer body", "error", err)
 			http.Error(writer, err.Error(), http.StatusBadRequest)
 			return
 		}
 		if config.HttpCommandConsumerSync {
 			err = handler(string(msg))
 			if err != nil {
-				log.Println("ERROR:", err)
+				config.GetLogger().Error("unable to handle http response consumer message", "error", err)
 				http.Error(writer, err.Error(), http.StatusBadRequest)
 				return
 			}
@@ -59,7 +61,7 @@ func (this FactoryType) NewConsumer(ctx context.Context, config util.Config, res
 			go func() {
 				err = handler(string(msg))
 				if err != nil {
-					log.Println("ERROR: http response consumer listener: ", err)
+					config.GetLogger().Error("unable to handle http response consumer message", "error", err)
 					return
 				}
 			}()
@@ -71,13 +73,13 @@ func (this FactoryType) NewConsumer(ctx context.Context, config util.Config, res
 	logger := NewLogger(corsHandler)
 	server := &http.Server{Addr: ":" + config.HttpCommandConsumerPort, Handler: logger, WriteTimeout: 10 * time.Second, ReadTimeout: 10 * time.Second, ReadHeaderTimeout: 2 * time.Second}
 	go func() {
-		log.Println("Listening on ", server.Addr)
+		config.GetLogger().Debug("starting http response consumer", "address", server.Addr)
 		if err := server.ListenAndServe(); err != nil {
-			if err != http.ErrServerClosed {
-				log.Println("ERROR: http response consumer server error", err)
+			if !errors.Is(err, http.ErrServerClosed) {
+				config.GetLogger().Error("FATAL: http response consumer server error", "error", err)
 				log.Fatal(err)
 			} else {
-				log.Println("closing http response consumer server")
+				config.GetLogger().Info("http response consumer server closed")
 			}
 		}
 	}()

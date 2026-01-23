@@ -96,7 +96,7 @@ func TestUserIncident(t *testing.T) {
 
 }
 
-func Example_camunda_Error() {
+func TestError(t *testing.T) {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -134,16 +134,17 @@ func Example_camunda_Error() {
 
 	incidents := mock.Kafka.GetProduced(config.KafkaIncidentTopic)
 
-	for _, message := range incidents {
-		fmt.Println(message)
+	expected := []string{
+		`{"command":"POST","msg_version":3,"incident":{"id":"2","external_task_id":"task_id_1","process_instance_id":"piid_1","process_definition_id":"pdid_1","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":"","business_key":"bk1"}}`,
+		`{"command":"POST","msg_version":3,"incident":{"id":"3","external_task_id":"task_id_2","process_instance_id":"piid_2","process_definition_id":"pdid_2","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":"","business_key":"bk2"}}`,
 	}
 
-	//output:
-	//{"command":"POST","msg_version":3,"incident":{"id":"2","external_task_id":"task_id_1","process_instance_id":"piid_1","process_definition_id":"pdid_1","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":"","business_key":"bk1"}}
-	//{"command":"POST","msg_version":3,"incident":{"id":"3","external_task_id":"task_id_2","process_instance_id":"piid_2","process_definition_id":"pdid_2","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":"","business_key":"bk2"}}
+	if !reflect.DeepEqual(incidents, expected) {
+		t.Errorf("\ne: %#v\n, a: %#v\n", expected, incidents)
+	}
 }
 
-func Example_camunda_ErrorOverHttp() {
+func TestErrorOverHttp(t *testing.T) {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -171,9 +172,10 @@ func Example_camunda_ErrorOverHttp() {
 		return
 	}
 
+	incidents := []string{}
 	incidentsApiMockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		msg, _ := io.ReadAll(r.Body)
-		fmt.Printf("http incident: %v %v %v\n", r.Method, r.URL.Path, string(msg))
+		incidents = append(incidents, fmt.Sprintf("http incident: %v %v %v", r.Method, r.URL.Path, string(msg)))
 	}))
 	defer incidentsApiMockServer.Close()
 	config.IncidentApiUrl = incidentsApiMockServer.URL
@@ -187,13 +189,15 @@ func Example_camunda_ErrorOverHttp() {
 	camunda.Error("task_id_1", "piid_1", "pdid_1", "bk1", "error message", "user1")
 	camunda.Error("task_id_2", "piid_2", "pdid_2", "bk2", "error message", "user1")
 
-	incidents := mock.Kafka.GetProduced(config.KafkaIncidentTopic)
+	incidents = append(incidents, mock.Kafka.GetProduced(config.KafkaIncidentTopic)...)
 
-	for _, message := range incidents {
-		fmt.Println("kafka incident:", message)
+	expected := []string{
+		`http incident: POST /incidents {"id":"2","external_task_id":"task_id_1","process_instance_id":"piid_1","process_definition_id":"pdid_1","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":"","business_key":"bk1"}`,
+		`http incident: POST /incidents {"id":"3","external_task_id":"task_id_2","process_instance_id":"piid_2","process_definition_id":"pdid_2","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":"","business_key":"bk2"}`,
 	}
 
-	//output:
-	//http incident: POST /incidents {"id":"2","external_task_id":"task_id_1","process_instance_id":"piid_1","process_definition_id":"pdid_1","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":"","business_key":"bk1"}
-	//http incident: POST /incidents {"id":"3","external_task_id":"task_id_2","process_instance_id":"piid_2","process_definition_id":"pdid_2","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":"","business_key":"bk2"}
+	if !reflect.DeepEqual(incidents, expected) {
+		t.Errorf("\ne: %#v\na: %#v\n", expected, incidents)
+	}
+
 }

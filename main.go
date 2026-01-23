@@ -19,6 +19,12 @@ package main
 import (
 	"context"
 	"flag"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
+
 	"github.com/SENERGY-Platform/api-docs-provider/lib/client"
 	"github.com/SENERGY-Platform/external-task-worker/docs"
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda"
@@ -26,11 +32,6 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
 	"github.com/SENERGY-Platform/external-task-worker/lib/timescale"
-	"log"
-	"net/http"
-	"os"
-	"os/signal"
-	"time"
 
 	"syscall"
 
@@ -47,34 +48,31 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Println("wait for cluster routing")
-	time.Sleep(10 * time.Second)
-
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
 		shutdown := make(chan os.Signal, 1)
 		signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 		sig := <-shutdown
-		log.Println("received shutdown signal", sig)
+		config.GetLogger().Info("received shutdown signal", "signal", sig)
 		cancel()
 	}()
 
 	err = lib.StartCacheInvalidator(ctx, config)
 	if err != nil {
-		log.Println("WARNING: unable to start cache invalidator", err)
+		config.GetLogger().Warn("unable to start cache invalidator", "error", err)
 	}
 
 	if config.ApiDocsProviderBaseUrl != "" && config.ApiDocsProviderBaseUrl != "-" {
 		err = PublishAsyncApiDoc(config)
 		if err != nil {
-			log.Fatal(err)
+			config.GetLogger().Error("unable to publish async api docs", "error", err.Error())
 		}
 	}
 
 	lib.Worker(ctx, config, comswitch.Factory, devicerepository.Factory, camunda.Factory, marshaller.Factory, timescale.Factory)
 
-	log.Println("worker stopped")
+	config.GetLogger().Info("worker stopped")
 }
 
 func PublishAsyncApiDoc(conf util.Config) error {

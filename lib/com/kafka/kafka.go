@@ -19,12 +19,14 @@ package kafka
 import (
 	"context"
 	"errors"
+	"log"
+	"log/slog"
+	"strings"
+	"time"
+
 	"github.com/IBM/sarama"
 	"github.com/SENERGY-Platform/external-task-worker/lib/com"
 	"github.com/SENERGY-Platform/external-task-worker/util"
-	"log"
-	"strings"
-	"time"
 )
 
 type FactoryType struct{}
@@ -49,11 +51,11 @@ func (FactoryType) NewConsumer(ctx context.Context, config util.Config, response
 		}, func(topic string, msg []byte, time time.Time) error {
 			return responseListener(string(msg))
 		}, func(err error) {
-			if err != context.Canceled {
-				log.Println("FATAL ERROR: kafka", err)
+			if !errors.Is(err, context.Canceled) {
+				config.GetLogger().Error("FATAL ERROR in kafka consumer", "error", err)
 				log.Fatal(err)
 			} else {
-				log.Println("KAFKA CTX CANCELED", err)
+				config.GetLogger().Info("kafka consumer canceled", "error", err)
 			}
 		})
 		if err != nil {
@@ -74,11 +76,11 @@ func (FactoryType) NewConsumer(ctx context.Context, config util.Config, response
 		}, func(topic string, msg []byte, time time.Time) error {
 			return errorListener(string(msg))
 		}, func(err error) {
-			if err != context.Canceled {
-				log.Println("FATAL ERROR: kafka", err)
+			if !errors.Is(err, context.Canceled) {
+				config.GetLogger().Error("FATAL ERROR in kafka consumer", "error", err)
 				log.Fatal(err)
 			} else {
-				log.Println("KAFKA CTX CANCELED", err)
+				config.GetLogger().Info("kafka consumer canceled", "error", err)
 			}
 		})
 		if err != nil {
@@ -121,6 +123,6 @@ func getKafkaCompression(compression string) sarama.CompressionCodec {
 	case "snappy":
 		return sarama.CompressionSnappy
 	}
-	log.Println("WARNING: unknown compression", compression, "fallback to none")
+	slog.Default().Warn("unknown compression --> fallback to none", "compression", compression)
 	return sarama.CompressionNone
 }

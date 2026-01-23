@@ -18,11 +18,11 @@ package httpcommand
 
 import (
 	"errors"
-	"github.com/SENERGY-Platform/external-task-worker/util"
 	"io"
-	"log"
 	"net/http"
 	"strings"
+
+	"github.com/SENERGY-Platform/external-task-worker/util"
 )
 
 type Producer struct {
@@ -32,14 +32,14 @@ type Producer struct {
 func (this *Producer) Produce(topic string, message string) (err error) {
 	resp, err := http.Post(topic, "application/json", strings.NewReader(message))
 	if err != nil {
-		log.Println("ERROR:", topic, err)
+		this.config.GetLogger().Error("unable to use http producer", "topic", topic, "error", err)
 		return err
 	}
 	defer resp.Body.Close()
 	respMsg, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
 		err = errors.New("http producer: " + resp.Status + " " + string(respMsg))
-		log.Println("ERROR:", topic, err)
+		this.config.GetLogger().Error("unable to use http producer", "topic", topic, "error", err)
 		return err
 	}
 	return nil

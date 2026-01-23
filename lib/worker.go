@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 	"reflect"
 	"runtime/debug"
 	"strconv"
@@ -74,14 +75,16 @@ type DeviceGroupsHandler interface {
 }
 
 func Worker(ctx context.Context, config util.Config, comFactory com.FactoryInterface, repoFactory devicerepository.FactoryInterface, camundaFactory interfaces.FactoryInterface, marshallerFactory marshaller.FactoryInterface, timescaleFactory timescale.FactoryInterface) {
-	log.Println("start camunda worker")
+	config.GetLogger().Info("start camunda worker")
 	w, err := New(ctx, config, comFactory, repoFactory, camundaFactory, marshallerFactory, timescaleFactory)
 	if err != nil {
+		config.GetLogger().Error("FATAL-ERROR", "error", err)
 		log.Fatal("FATAL-ERROR:", err)
 	}
 	StartHealthCheckEndpoint(ctx, config, w)
 	err = w.Loop(ctx)
 	if err != nil {
+		config.GetLogger().Error("FATAL-ERROR", "error", err)
 		log.Fatal("FATAL-ERROR:", err)
 	}
 }
@@ -140,7 +143,7 @@ func (w *CmdWorker) Loop(ctx context.Context) error {
 	}
 	go func() {
 		for err := range errChan {
-			log.Println("error from ProvideTasks():", err)
+			w.config.GetLogger().Error("error from ProvideTasks()", "error", err)
 		}
 	}()
 	workerCount := 10
@@ -199,15 +202,13 @@ func (this *CmdWorker) ExecuteTaskBatch(tasks []messages.CamundaExternalTask) {
 func (this *CmdWorker) ExecuteTask(task messages.CamundaExternalTask, caller string) {
 	defer func() {
 		if r := recover(); r != nil {
+			this.config.GetLogger().Error("panic in ExecuteTask()", "error", r)
 			log.Println("ERROR: ", r, "\n", string(debug.Stack()))
 		}
 	}()
-	if this.config.Debug {
-		log.Println("Start", task.Id, util.TimeNow().Second())
-		log.Println("Get new Task: ", task)
-	}
+	this.config.GetLogger().Debug("execute task", "taskId", task.Id, "task", fmt.Sprintf("%#v", task))
 	if task.Error != "" {
-		log.Println("WARNING: existing failure in camunda task", task.Error)
+		this.config.GetLogger().Warn("existing failure in camunda task", "taskId", task.Id, "error", task.Error)
 	}
 	incident := GetIncident(task)
 	if incident != nil {
@@ -216,7 +217,7 @@ func (this *CmdWorker) ExecuteTask(task messages.CamundaExternalTask, caller str
 	}
 	request, err := GetCommandRequest(task)
 	if err != nil {
-		log.Println("error on GetCommandRequest(): ", err)
+		this.config.GetLogger().Error("error on GetCommandRequest()", "taskId", task.Id, "error", err)
 		this.camunda.Error(task.Id, task.ProcessInstanceId, task.ProcessDefinitionId, task.BusinessKey, "invalid task format (json)", task.TenantId)
 		return
 	}
@@ -247,7 +248,7 @@ func (this *CmdWorker) ExecuteCommand(command messages.Command, task messages.Ca
 		this.metrics.LogTaskCompleted(taskInfo)
 		err = this.camunda.CompleteTask(taskInfo, this.config.CamundaTaskResultName, handleVersioning(command.Version, results))
 		if err != nil {
-			log.Println("error on completeCamundaTask(): ", err)
+			this.config.GetLogger().Error("error on completeCamundaTask()", "taskId", task.Id, "error", err)
 			return
 		}
 		if this.config.CompletionStrategy != util.OPTIMISTIC {
@@ -259,14 +260,14 @@ func (this *CmdWorker) ExecuteCommand(command messages.Command, task messages.Ca
 
 	if this.config.Debug {
 		temp, _ := json.Marshal(nextProtocolMessages)
-		log.Println("DEBUG: nextProtocolMessages:\n", string(temp))
+		this.config.GetLogger().Debug("nextProtocolMessages", "nextProtocolMessages", string(temp))
 	}
 	for _, message := range nextProtocolMessages {
 		if message.Request != nil {
 			this.metrics.LogTaskCommandSend(message.Metadata)
 			err = this.producer.ProduceWithKey(message.Request.Topic, message.Request.Key, message.Request.Payload)
 			if err != nil {
-				log.Println("ERROR: unable to produce kafka msg", err)
+				this.config.GetLogger().Error("unable to produce kafka msg", "topic", message.Request.Topic, "key", message.Request.Key, "error", err)
 				this.logProducerError()
 			} else {
 				this.logProducerSuccess()
@@ -275,7 +276,7 @@ func (this *CmdWorker) ExecuteCommand(command messages.Command, task messages.Ca
 			this.metrics.LogTaskLastEventValueRequest(message.Metadata)
 			token, err := this.repository.GetToken(message.Metadata.Task.TenantId)
 			if err != nil {
-				log.Println("ERROR: unable to get token", err)
+				this.config.GetLogger().Error("unable to get token", "error", err)
 				continue
 			}
 			code, result := this.GetLastEventValue(string(token), message.Metadata.Task.TenantId, message.Event.Device, message.Event.Service, message.Event.Protocol, message.Event.CharacteristicId, message.Event.FunctionId, message.Event.AspectNode, 10*time.Second)
@@ -291,14 +292,14 @@ func (this *CmdWorker) ExecuteCommand(command messages.Command, task messages.Ca
 					TenantId:            task.TenantId,
 				}, result)
 				if err != nil {
-					log.Println("ERROR: unable to handle GetLastEventValue() as task response", err)
+					this.config.GetLogger().Error("unable to handle GetLastEventValue() as task response", "error", err)
 				}
 			} else {
-				log.Println("ERROR: GetLastEventValue()", code, result)
+				this.config.GetLogger().Error("unable to get last event value", "code", code, "error", result)
 			}
 		} else {
 			temp, _ := json.Marshal(message)
-			log.Println("WARNING: unhandled command", string(temp))
+			this.config.GetLogger().Warn("unhandled command", "message", string(temp))
 		}
 	}
 }
@@ -310,7 +311,7 @@ func (this *CmdWorker) GetQueuedResponseHandler(ctx context.Context, workerCount
 			for msg := range queue {
 				err := this.HandleTaskResponse(msg)
 				if err != nil {
-					log.Println("ERROR: ", err)
+					this.config.GetLogger().Error("error on HandleTaskResponse()", "error", err)
 				}
 			}
 		}()
@@ -338,11 +339,9 @@ func (this *CmdWorker) HandleTaskResponse(msg string) (err error) {
 	}
 	defer func() {
 		this.metrics.HandleResponseTrace(message.Trace)
-		if this.config.Debug {
-			log.Println("TRACE: ", message.Trace)
-			if len(message.Trace) >= 2 {
-				log.Println("TRACE-DURATION:", time.Unix(0, message.Trace[len(message.Trace)-1].Timestamp).Sub(time.Unix(0, message.Trace[0].Timestamp)).String())
-			}
+		this.config.GetLogger().Debug("TRACE", "trace", message.Trace)
+		if this.config.Debug && len(message.Trace) >= 2 {
+			this.config.GetLogger().Debug("TRACE-DURATION", "duration", time.Unix(0, message.Trace[len(message.Trace)-1].Timestamp).Sub(time.Unix(0, message.Trace[0].Timestamp)).String())
 		}
 	}()
 
@@ -357,7 +356,7 @@ func (this *CmdWorker) HandleTaskResponse(msg string) (err error) {
 	})
 
 	if CheckCamundaDuration && this.missesCamundaDuration(message) {
-		log.Println("WARNING: drop late response:", msg)
+		this.config.GetLogger().Warn("drop late response", "message", msg)
 		return
 	}
 
@@ -397,8 +396,8 @@ func (this *CmdWorker) handleTaskResponse(taskInfo messages.TaskInfo, output int
 	this.metrics.LogTaskCommandResponseReceived(taskInfo)
 
 	parent, results, finished, err := this.deviceGroupsHandler.ProcessResponse(taskInfo.TaskId, output)
-	if err == devicegroups.ErrNotFount {
-		log.Println("WARNING: no parent task found --> unable to complete task (tasks may already be done):", taskInfo.TaskId, output)
+	if errors.Is(err, devicegroups.ErrNotFount) {
+		this.config.GetLogger().Warn("no parent task found --> unable to complete task (tasks may already be done)", "taskId", taskInfo.TaskId, "output", output)
 		return nil //if parent task is not found -> can not be finished (may already be done)
 	}
 	if err != nil {
@@ -424,11 +423,9 @@ func (this *CmdWorker) handleTaskResponse(taskInfo messages.TaskInfo, output int
 			this.config.CamundaTaskResultName,
 			handleVersioning(parent.Command.Version, results))
 		if err != nil {
-			log.Println("ERROR: handleTaskResponse()", err.Error())
+			this.config.GetLogger().Error("unable to completeCamundaTask()", "taskId", parent.Task.Id, "error", err)
 		}
-		if this.config.Debug {
-			log.Println("Complete", parent.Task.Id, util.TimeNow().Second(), output, err)
-		}
+		this.config.GetLogger().Debug("completeCamundaTask()", "taskId", parent.Task.Id, "output", output, "error", err)
 	} else if this.isSequential() {
 		this.ExecuteTask(parent.Task, util.CALLER_RESPONSE)
 	}
@@ -504,7 +501,7 @@ func (this *CmdWorker) logProducerSuccess() {
 func setVarOnPath(element interface{}, path []string, value interface{}) (result interface{}, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Println("ERROR: Recovered in setVarOnPath: ", r)
+			slog.Default().Error("panic in setVarOnPath()", "error", r)
 			err = errors.New(fmt.Sprint("ERROR: Recovered in setVarOnPath: ", r))
 		}
 	}()

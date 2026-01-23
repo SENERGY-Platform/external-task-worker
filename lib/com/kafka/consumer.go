@@ -18,11 +18,13 @@ package kafka
 
 import (
 	"context"
-	"github.com/segmentio/kafka-go"
+	"errors"
 	"io"
 	"log"
-	"os"
+	"log/slog"
 	"time"
+
+	"github.com/segmentio/kafka-go"
 )
 
 type ConsumerConfig struct {
@@ -37,14 +39,16 @@ type ConsumerConfig struct {
 }
 
 func NewConsumer(ctx context.Context, config ConsumerConfig, listener func(topic string, msg []byte, time time.Time) error, errorhandler func(err error)) (err error) {
-	log.Println("DEBUG: consume topic: \"" + config.Topic + "\"")
+	slog.Default().Info("consume topic", "topic", config.Topic)
 	if config.InitTopics {
 		err = InitTopic(config.KafkaUrl, config.TopicConfigMap, config.Topic)
 		if err != nil {
-			log.Println("ERROR: unable to create topic", err)
+			slog.Default().Error("unable to create topic", "topic", config.Topic, "error", err)
 			return err
 		}
 	}
+	klogger := slog.NewLogLogger(slog.Default().Handler(), slog.LevelError)
+	klogger.SetPrefix("[KAFKA-ERR]")
 	r := kafka.NewReader(kafka.ReaderConfig{
 		CommitInterval:         0, //synchronous commits
 		Brokers:                []string{config.KafkaUrl},
@@ -54,7 +58,7 @@ func NewConsumer(ctx context.Context, config ConsumerConfig, listener func(topic
 		MaxBytes:               config.MaxBytes,
 		MaxWait:                config.MaxWait,
 		Logger:                 log.New(io.Discard, "", 0),
-		ErrorLogger:            log.New(os.Stdout, "[KAFKA-ERR]", log.LstdFlags),
+		ErrorLogger:            klogger,
 		WatchPartitionChanges:  true,
 		PartitionWatchInterval: time.Minute,
 	})
@@ -62,35 +66,35 @@ func NewConsumer(ctx context.Context, config ConsumerConfig, listener func(topic
 		for {
 			select {
 			case <-ctx.Done():
-				log.Println("close kafka reader ", config.Topic)
+				slog.Default().Info("close kafka reader", "topic", config.Topic)
 				return
 			default:
 				m, err := r.FetchMessage(ctx)
-				if err == io.EOF || err == context.Canceled {
-					log.Println("close consumer for topic ", config.Topic)
+				if err == io.EOF || errors.Is(err, context.Canceled) {
+					slog.Default().Info("kafka reader closed", "topic", config.Topic)
 					return
 				}
 				if err != nil {
-					log.Println("ERROR: while consuming topic ", config.Topic, err)
+					slog.Default().Error("while consuming message", "topic", config.Topic, "error", err)
 					errorhandler(err)
 					return
 				}
 				if time.Now().Sub(m.Time) > 1*time.Hour { //floodgate to prevent old messages to DOS the consumer
-					log.Println("WARNING: kafka message older than 1h: ", config.Topic, time.Now().Sub(m.Time))
+					slog.Default().Warn("kafka message older than 1h: ", config.Topic, time.Now().Sub(m.Time))
 					err = r.CommitMessages(ctx, m)
 					if err != nil {
-						log.Println("ERROR: while committing message ", config.Topic, err)
+						slog.Default().Error("while committing message", "topic", config.Topic, "error", err)
 						errorhandler(err)
 						return
 					}
 				} else {
 					err = listener(m.Topic, m.Value, m.Time)
 					if err != nil {
-						log.Println("ERROR: unable to handle message (no commit)", err, m.Topic, string(m.Value))
+						slog.Default().Error("unable to handle message (no commit)", "topic", config.Topic, "message", string(m.Value), "error", err)
 					} else {
 						err = r.CommitMessages(ctx, m)
 						if err != nil {
-							log.Println("ERROR: while committing message ", config.Topic, err)
+							slog.Default().Error("unable to commit kafka message", "topic", config.Topic, "error", err)
 							errorhandler(err)
 							return
 						}

@@ -18,18 +18,20 @@ package devicegroups
 
 import (
 	"errors"
+	"log"
+	"log/slog"
+	"runtime/debug"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/SENERGY-Platform/external-task-worker/lib/camunda/interfaces"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"github.com/bradfitz/gomemcache/memcache"
-	"log"
-	"runtime/debug"
-	"sort"
-	"strconv"
-	"strings"
-	"time"
 )
 
 // Callback is implemented by: lib.CmdWorker::CreateProtocolMessage()
@@ -37,14 +39,14 @@ type Callback = func(command messages.Command, task messages.CamundaExternalTask
 
 func New(scheduler string, camunda interfaces.CamundaInterface, devicerepo devicerepository.RepoInterface, protocolMessageCallback Callback, currentlyRunningTimeoutInMs int64, expirationInSeconds int32, memcachedUrls []string, memcachedTimeout string, memcachedMaxIdleConns int64, filterEvents bool) *DeviceGroups {
 	if len(memcachedUrls) == 0 {
-		log.Println("start with local sub result storage")
+		slog.Default().Info("start with local sub result storage")
 		return NewWithKeyValueStore(scheduler, camunda, devicerepo, protocolMessageCallback, currentlyRunningTimeoutInMs, expirationInSeconds, NewLocalDb(), filterEvents)
 	} else {
 		client := memcache.New(memcachedUrls...)
 		client.MaxIdleConns = int(memcachedMaxIdleConns)
 		timeout, err := time.ParseDuration(memcachedTimeout)
 		if err != nil {
-			log.Println("WARNING: invalid memcached timeout; use default")
+			slog.Default().Warn("invalid memcached timeout; use default")
 		} else {
 			client.Timeout = timeout
 		}
@@ -94,12 +96,12 @@ func (this *DeviceGroups) ProcessResponse(subTaskId string, subResult interface{
 
 func (this *DeviceGroups) ProcessCommand(command messages.Command, task messages.CamundaExternalTask, caller string) (completed bool, nextMessages messages.RequestInfoList, finishedResults []interface{}, err error) {
 	if this.shouldIgnoreTask(caller, task) {
-		log.Println("DEBUG: ignore task execute call", caller, task)
+		slog.Default().Debug("ignore task execute call", "caller", caller, "taskId", task.Id)
 		return false, nil, nil, nil
 	}
 	err = this.saveCallInfo(task, caller)
 	if err != nil {
-		log.Println("WARNING: unable to save last caller", err)
+		slog.Default().Warn("unable to save last caller", "error", err)
 	}
 	nextRequests, finishedResults, err := this.getNextRequests(command, task)
 	if err != nil {

@@ -20,11 +20,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
-	"github.com/SENERGY-Platform/external-task-worker/util"
-	"log"
+	"log/slog"
 	"runtime/debug"
 	"strings"
+
+	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
+	"github.com/SENERGY-Platform/external-task-worker/util"
 )
 
 func GetIncident(task messages.CamundaExternalTask) (incident *string) {
@@ -112,7 +113,7 @@ func setPayloadParameter(msg *messages.Command, parameter map[string]interface{}
 			_, err = setVarOnPath(msg.Input, strings.Split(paramName, "."), value)
 		}
 		if err != nil {
-			log.Println("ERROR: setPayloadParameter() -> ignore param", paramName, value, err)
+			slog.Default().Error("setPayloadParameter() -> ignore param", "param", paramName, "value", value, "error", err)
 			//return err
 		}
 	}

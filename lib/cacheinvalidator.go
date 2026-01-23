@@ -18,12 +18,12 @@ package lib
 
 import (
 	"context"
+	"runtime/debug"
+	"time"
+
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"github.com/SENERGY-Platform/service-commons/pkg/cache/invalidator"
 	"github.com/SENERGY-Platform/service-commons/pkg/kafka"
-	"log"
-	"runtime/debug"
-	"time"
 )
 
 func StartCacheInvalidator(ctx context.Context, conf util.Config) (err error) {
@@ -37,7 +37,7 @@ func StartCacheInvalidator(ctx context.Context, conf util.Config) (err error) {
 		PartitionWatchInterval: time.Minute,
 		InitTopic:              conf.InitTopics,
 		OnError: func(err error) {
-			log.Println("ERROR:", err)
+			conf.GetLogger().Error("kafka error", "error", err)
 			debug.PrintStack()
 		},
 	}

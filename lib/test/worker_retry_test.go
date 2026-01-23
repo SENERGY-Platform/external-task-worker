@@ -20,16 +20,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"testing"
+	"time"
+
 	"github.com/SENERGY-Platform/external-task-worker/lib"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/lib/test/mock"
 	"github.com/SENERGY-Platform/external-task-worker/util"
-	"log"
-	"time"
 )
 
-func Example_lib_Worker_Retries() {
+func TestRetries(t *testing.T) {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -154,9 +156,7 @@ func Example_lib_Worker_Retries() {
 	fetched, completed, failed := mockCamunda.GetStatus()
 
 	if len(fetched) != 0 || len(failed) != 2 || len(completed) != 0 {
-		fmt.Println("fetched:", fetched)
-		fmt.Println("failed:", failed)
-		fmt.Println("completed:", completed)
+		t.Error(fetched, failed, completed)
 		return
 	}
 

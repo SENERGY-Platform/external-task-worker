@@ -17,14 +17,15 @@
 package prometheus
 
 import (
-	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"slices"
 	"time"
+
+	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type Metrics struct {
@@ -176,7 +177,7 @@ func (this *Metrics) ignore(userId string) bool {
 }
 
 func (this *Metrics) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	log.Printf("%v [%v] %v \n", request.RemoteAddr, request.Method, request.URL)
+	slog.Default().Info("http request", "method", request.Method, "path", request.URL, "remote-addr", request.RemoteAddr)
 	this.httphandler.ServeHTTP(writer, request)
 }
 

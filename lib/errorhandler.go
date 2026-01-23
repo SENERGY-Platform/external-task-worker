@@ -18,22 +18,22 @@ package lib
 
 import (
 	"encoding/json"
-	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
-	"log"
 	"runtime/debug"
+
+	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 )
 
 func (this *CmdWorker) ErrorMessageHandler(msg string) error {
 	var message messages.ProtocolMsg
 	err := json.Unmarshal([]byte(msg), &message)
 	if err != nil {
-		log.Println("ERROR:", err)
+		this.config.GetLogger().Error("error message", "error", err)
 		debug.PrintStack()
 		return nil
 	}
 	err = this.camunda.UnlockTask(message.TaskInfo)
 	if err != nil {
-		log.Println("ERROR: unable to unlock task", err)
+		this.config.GetLogger().Error("unable to unlock task", "error", err)
 		return nil
 	}
 	return nil

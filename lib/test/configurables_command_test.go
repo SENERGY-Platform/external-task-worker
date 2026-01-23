@@ -19,7 +19,8 @@ package test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"reflect"
+	"testing"
 
 	"github.com/SENERGY-Platform/external-task-worker/lib"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
@@ -32,7 +33,7 @@ import (
 	"time"
 )
 
-func Example_lib_Worker_ConfigurablesCommand1() {
+func TestConfigurablesCommand1(t *testing.T) {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -154,20 +155,22 @@ func Example_lib_Worker_ConfigurablesCommand1() {
 	time.Sleep(1 * time.Second)
 
 	protocolMessageStrings := mock.Kafka.GetProduced("protocol1")
-
+	actual := []string{}
 	for _, message := range protocolMessageStrings {
 		var temp messages.ProtocolMsg
 		json.Unmarshal([]byte(message), &temp)
 		temp.Trace = nil
 		messageWithoutTrace, _ := json.Marshal(temp)
-		fmt.Println(string(messageWithoutTrace))
+		actual = append(actual, string(messageWithoutTrace))
 	}
+	expected := []string{`{"request":{"input":{"body":"{\"color\":{\"blue\":170,\"green\":0,\"red\":255},\"duration\":3}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"1","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user","business_key":"bk"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"s1u","name":"s1","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"color","name":"color","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"sr","name":"red","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.r","value":null,"serialization_options":null},{"id":"sg","name":"green","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.g","value":null,"serialization_options":null},{"id":"sb","name":"blue","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.b","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},{"id":"duration","name":"duration","is_void":false,"omit_empty":false,"type":"https://schema.org/Float","sub_content_variables":null,"characteristic_id":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"input_characteristic":"example_hex","response_to":"response","error_to":"errors"}}`}
 
-	//output:
-	//{"request":{"input":{"body":"{\"color\":{\"blue\":170,\"green\":0,\"red\":255},\"duration\":3}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"1","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user","business_key":"bk"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"s1u","name":"s1","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"color","name":"color","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"sr","name":"red","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.r","value":null,"serialization_options":null},{"id":"sg","name":"green","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.g","value":null,"serialization_options":null},{"id":"sb","name":"blue","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.b","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},{"id":"duration","name":"duration","is_void":false,"omit_empty":false,"type":"https://schema.org/Float","sub_content_variables":null,"characteristic_id":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"input_characteristic":"example_hex","response_to":"response","error_to":"errors"}}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("\ne: %#v\n, a: %#v\n", expected, actual)
+	}
 }
 
-func Example_lib_Worker_ConfigurablesCommand2() {
+func TestConfigurablesCommand2(t *testing.T) {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -290,19 +293,22 @@ func Example_lib_Worker_ConfigurablesCommand2() {
 
 	protocolMessageStrings := mock.Kafka.GetProduced("protocol1")
 
+	actual := []string{}
 	for _, message := range protocolMessageStrings {
 		var temp messages.ProtocolMsg
 		json.Unmarshal([]byte(message), &temp)
 		temp.Trace = nil
 		messageWithoutTrace, _ := json.Marshal(temp)
-		fmt.Println(string(messageWithoutTrace))
+		actual = append(actual, string(messageWithoutTrace))
 	}
+	expected := []string{`{"request":{"input":{"body":"{\"color\":{\"blue\":170,\"green\":0,\"red\":255},\"duration\":3}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"2","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user","business_key":"bk"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"s1u","name":"s1","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"color","name":"color","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"sr","name":"red","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.r","value":null,"serialization_options":null},{"id":"sg","name":"green","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.g","value":null,"serialization_options":null},{"id":"sb","name":"blue","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.b","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},{"id":"duration","name":"duration","is_void":false,"omit_empty":false,"type":"https://schema.org/Float","sub_content_variables":null,"characteristic_id":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"input_characteristic":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","response_to":"response","error_to":"errors"}}`}
 
-	//output:
-	//{"request":{"input":{"body":"{\"color\":{\"blue\":170,\"green\":0,\"red\":255},\"duration\":3}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"2","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user","business_key":"bk"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"s1u","name":"s1","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"color","name":"color","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"sr","name":"red","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.r","value":null,"serialization_options":null},{"id":"sg","name":"green","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.g","value":null,"serialization_options":null},{"id":"sb","name":"blue","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.b","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},{"id":"duration","name":"duration","is_void":false,"omit_empty":false,"type":"https://schema.org/Float","sub_content_variables":null,"characteristic_id":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"input_characteristic":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","response_to":"response","error_to":"errors"}}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("\ne: %#v\n, a: %#v\n", expected, actual)
+	}
 }
 
-func Example_lib_Worker_ConfigurablesCommand3() {
+func TestConfigurablesCommand3(t *testing.T) {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -436,19 +442,22 @@ func Example_lib_Worker_ConfigurablesCommand3() {
 
 	protocolMessageStrings := mock.Kafka.GetProduced("protocol1")
 
+	actual := []string{}
 	for _, message := range protocolMessageStrings {
 		var temp messages.ProtocolMsg
 		json.Unmarshal([]byte(message), &temp)
 		temp.Trace = nil
 		messageWithoutTrace, _ := json.Marshal(temp)
-		fmt.Println(string(messageWithoutTrace))
+		actual = append(actual, string(messageWithoutTrace))
 	}
+	expected := []string{`{"request":{"input":{"body":"{\"color\":{\"blue\":170,\"green\":0,\"red\":255},\"duration\":3}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"3","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user","business_key":"bk"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"s1u","name":"s1","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"color","name":"color","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"sr","name":"red","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.r","value":null,"serialization_options":null},{"id":"sg","name":"green","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.g","value":null,"serialization_options":null},{"id":"sb","name":"blue","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.b","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},{"id":"duration","name":"duration","is_void":false,"omit_empty":false,"type":"https://schema.org/Float","sub_content_variables":null,"characteristic_id":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"input_characteristic":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","response_to":"response","error_to":"errors"}}`}
 
-	//output:
-	//{"request":{"input":{"body":"{\"color\":{\"blue\":170,\"green\":0,\"red\":255},\"duration\":3}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"3","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user","business_key":"bk"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"s1u","name":"s1","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"color","name":"color","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"sr","name":"red","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.r","value":null,"serialization_options":null},{"id":"sg","name":"green","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.g","value":null,"serialization_options":null},{"id":"sb","name":"blue","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.b","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},{"id":"duration","name":"duration","is_void":false,"omit_empty":false,"type":"https://schema.org/Float","sub_content_variables":null,"characteristic_id":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"input_characteristic":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","response_to":"response","error_to":"errors"}}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("\ne: %#v\n, a: %#v\n", expected, actual)
+	}
 }
 
-func Example_lib_Worker_ConfigurablesCommand4() {
+func TestConfigurablesCommand4(t *testing.T) {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -573,19 +582,22 @@ func Example_lib_Worker_ConfigurablesCommand4() {
 
 	protocolMessageStrings := mock.Kafka.GetProduced("protocol1")
 
+	actual := []string{}
 	for _, message := range protocolMessageStrings {
 		var temp messages.ProtocolMsg
 		json.Unmarshal([]byte(message), &temp)
 		temp.Trace = nil
 		messageWithoutTrace, _ := json.Marshal(temp)
-		fmt.Println(string(messageWithoutTrace))
+		actual = append(actual, string(messageWithoutTrace))
 	}
+	expected := []string{`{"request":{"input":{"body":"{\"color\":{\"blue\":0,\"green\":0,\"red\":0},\"duration\":3}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"3","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user","business_key":"bk"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"s1u","name":"s1","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"color","name":"color","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"sr","name":"red","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.r","value":null,"serialization_options":null},{"id":"sg","name":"green","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.g","value":null,"serialization_options":null},{"id":"sb","name":"blue","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.b","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},{"id":"duration","name":"duration","is_void":false,"omit_empty":false,"type":"https://schema.org/Float","sub_content_variables":null,"characteristic_id":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"input_characteristic":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","response_to":"response","error_to":"errors"}}`}
 
-	//output:
-	//{"request":{"input":{"body":"{\"color\":{\"blue\":0,\"green\":0,\"red\":0},\"duration\":3}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"3","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user","business_key":"bk"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"s1u","name":"s1","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"color","name":"color","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"sr","name":"red","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.r","value":null,"serialization_options":null},{"id":"sg","name":"green","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.g","value":null,"serialization_options":null},{"id":"sb","name":"blue","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.b","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},{"id":"duration","name":"duration","is_void":false,"omit_empty":false,"type":"https://schema.org/Float","sub_content_variables":null,"characteristic_id":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"input_characteristic":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","response_to":"response","error_to":"errors"}}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("\ne: %#v\n, a: %#v\n", expected, actual)
+	}
 }
 
-func Example_lib_Worker_ConfigurablesCommand5() {
+func TestConfigurablesCommand5(t *testing.T) {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -727,19 +739,22 @@ func Example_lib_Worker_ConfigurablesCommand5() {
 
 	protocolMessageStrings := mock.Kafka.GetProduced("protocol1")
 
+	actual := []string{}
 	for _, message := range protocolMessageStrings {
 		var temp messages.ProtocolMsg
 		json.Unmarshal([]byte(message), &temp)
 		temp.Trace = nil
 		messageWithoutTrace, _ := json.Marshal(temp)
-		fmt.Println(string(messageWithoutTrace))
+		actual = append(actual, string(messageWithoutTrace))
 	}
+	expected := []string{`{"request":{"input":{"body":"{\"color\":{\"blue\":170,\"green\":0,\"red\":255},\"duration\":3}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"3","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user","business_key":"bk"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"s1u","name":"s1","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"color","name":"color","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"sr","name":"red","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.r","value":null,"serialization_options":null},{"id":"sg","name":"green","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.g","value":null,"serialization_options":null},{"id":"sb","name":"blue","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.b","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},{"id":"duration","name":"duration","is_void":false,"omit_empty":false,"type":"https://schema.org/Float","sub_content_variables":null,"characteristic_id":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"input_characteristic":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","response_to":"response","error_to":"errors"}}`}
 
-	//output:
-	//{"request":{"input":{"body":"{\"color\":{\"blue\":170,\"green\":0,\"red\":255},\"duration\":3}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"3","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user","business_key":"bk"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"s1u","name":"s1","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"color","name":"color","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"sr","name":"red","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.r","value":null,"serialization_options":null},{"id":"sg","name":"green","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.g","value":null,"serialization_options":null},{"id":"sb","name":"blue","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.b","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},{"id":"duration","name":"duration","is_void":false,"omit_empty":false,"type":"https://schema.org/Float","sub_content_variables":null,"characteristic_id":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"input_characteristic":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","response_to":"response","error_to":"errors"}}
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("\ne: %#v\n, a: %#v\n", expected, actual)
+	}
 }
 
-func Example_lib_Worker_ConfigurablesCommandWithoutFunctionRdfType() {
+func TestConfigurablesCommandWithoutFunctionRdfType(t *testing.T) {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -881,14 +896,18 @@ func Example_lib_Worker_ConfigurablesCommandWithoutFunctionRdfType() {
 
 	protocolMessageStrings := mock.Kafka.GetProduced("protocol1")
 
+	actual := []string{}
 	for _, message := range protocolMessageStrings {
 		var temp messages.ProtocolMsg
 		json.Unmarshal([]byte(message), &temp)
 		temp.Trace = nil
 		messageWithoutTrace, _ := json.Marshal(temp)
-		fmt.Println(string(messageWithoutTrace))
+		actual = append(actual, string(messageWithoutTrace))
+	}
+	expected := []string{`{"request":{"input":{"body":"{\"color\":{\"blue\":170,\"green\":0,\"red\":255},\"duration\":3}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"3","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user","business_key":"bk"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"s1u","name":"s1","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"color","name":"color","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"sr","name":"red","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.r","value":null,"serialization_options":null},{"id":"sg","name":"green","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.g","value":null,"serialization_options":null},{"id":"sb","name":"blue","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.b","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},{"id":"duration","name":"duration","is_void":false,"omit_empty":false,"type":"https://schema.org/Float","sub_content_variables":null,"characteristic_id":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"input_characteristic":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","response_to":"response","error_to":"errors"}}`}
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("\ne: %#v\n, a: %#v\n", expected, actual)
 	}
 
-	//output:
-	//{"request":{"input":{"body":"{\"color\":{\"blue\":170,\"green\":0,\"red\":255},\"duration\":3}"}},"response":{"output":null},"task_info":{"worker_id":"workerid","task_id":"3","process_instance_id":"","process_definition_id":"","completion_strategy":"optimistic","time":"-62135596800","tenant_id":"user","business_key":"bk"},"metadata":{"device":{"id":"device_1","local_id":"d1u","name":"d1","attributes":null,"device_type_id":"dt1","owner_id":""},"service":{"id":"service_1","local_id":"s1u","name":"s1","description":"","interaction":"","protocol_id":"p1","inputs":[{"id":"metrics","content_variable":{"id":"metrics","name":"metrics","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"color","name":"color","is_void":false,"omit_empty":false,"type":"https://schema.org/StructuredValue","sub_content_variables":[{"id":"sr","name":"red","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.r","value":null,"serialization_options":null},{"id":"sg","name":"green","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.g","value":null,"serialization_options":null},{"id":"sb","name":"blue","is_void":false,"omit_empty":false,"type":"https://schema.org/Integer","sub_content_variables":null,"characteristic_id":"example_rgb.b","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},{"id":"duration","name":"duration","is_void":false,"omit_empty":false,"type":"https://schema.org/Float","sub_content_variables":null,"characteristic_id":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","value":null,"serialization_options":null}],"characteristic_id":"","value":null,"serialization_options":null},"serialization":"json","protocol_segment_id":"ms1"}],"outputs":null,"attributes":null,"service_group_key":""},"protocol":{"id":"p1","name":"protocol1","handler":"protocol1","protocol_segments":[{"id":"ms1","name":"body"}],"constraints":null},"input_characteristic":"urn:infai:ses:characteristic:9e1024da-3b60-4531-9f29-464addccb13c","response_to":"response","error_to":"errors"}}
 }

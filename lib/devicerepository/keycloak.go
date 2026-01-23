@@ -19,11 +19,11 @@ package devicerepository
 import (
 	"encoding/json"
 	"errors"
-	"github.com/SENERGY-Platform/external-task-worker/util"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
+
+	"github.com/SENERGY-Platform/external-task-worker/util"
 )
 
 type RoleMapping struct {
@@ -46,7 +46,7 @@ func (this Keycloak) GetUserToken(userid string) (token Impersonate, expirationI
 	}
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		log.Println("ERROR: GetUserToken()", resp.StatusCode, string(body))
+		this.config.GetLogger().Error("unable to get user token", "error", string(body), "status-code", resp.StatusCode)
 		err = errors.New("access denied")
 		resp.Body.Close()
 		return

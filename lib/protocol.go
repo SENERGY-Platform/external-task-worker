@@ -18,8 +18,7 @@ package lib
 
 import (
 	"encoding/json"
-	"errors"
-	"log"
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -36,11 +35,8 @@ import (
 func (this *CmdWorker) CreateProtocolMessage(command messages.Command, task messages.CamundaExternalTask) (request *messages.KafkaMessage, event *messages.EventRequest, err error) {
 	value, event, err := this.createMessageForProtocolHandler(command, task)
 	if err != nil {
-		if this.config.Debug {
-			log.Println("DEBUG:", task.TenantId)
-		}
-		log.Println("ERROR: on CreateProtocolMessage createMessageForProtocolHandler(): ", err)
-		err = errors.New("internal format error: " + err.Error())
+		this.config.GetLogger().Error("CreateProtocolMessage createMessageForProtocolHandler()", "error", err, "tenantId", task.TenantId)
+		err = fmt.Errorf("internal format error: %w", err)
 		return
 	}
 	if value != nil {
@@ -76,7 +72,7 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 	if device == nil {
 		temp, err := this.repository.GetDevice(token, command.DeviceId)
 		if err != nil {
-			log.Println("ERROR: unable to load device", command.DeviceId, task.TenantId, token)
+			this.config.GetLogger().Error("unable to load device", "error", err, "deviceId", command.DeviceId, "tenantId", task.TenantId, "token", token)
 			return nil, nil, err
 		}
 		device = &temp
@@ -84,7 +80,7 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 	if service == nil {
 		temp, err := this.repository.GetService(token, *device, command.ServiceId)
 		if err != nil {
-			log.Println("ERROR: unable to load service", command.ServiceId, task.TenantId, token)
+			this.config.GetLogger().Error("unable to load service", "error", err, "serviceId", command.ServiceId, "tenantId", task.TenantId, "token", token)
 			return nil, nil, err
 		}
 		service = &temp
@@ -95,7 +91,7 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 		}
 		temp, err := this.repository.GetProtocol(token, command.ProtocolId)
 		if err != nil {
-			log.Println("ERROR: unable to load protocol", command.ProtocolId, task.TenantId, token)
+			this.config.GetLogger().Error("unable to load protocol", "error", err, "protocolId", command.ProtocolId, "tenantId", task.TenantId, "token", token)
 			return nil, nil, err
 		}
 		protocol = &temp

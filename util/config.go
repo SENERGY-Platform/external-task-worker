@@ -19,13 +19,17 @@ package util
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/segmentio/kafka-go"
-	"log"
+	"log/slog"
 	"os"
 	"reflect"
 	"regexp"
+	"runtime/debug"
 	"strconv"
 	"strings"
+	"time"
+
+	struct_logger "github.com/SENERGY-Platform/go-service-base/struct-logger"
+	"github.com/segmentio/kafka-go"
 )
 
 const OPTIMISTIC = "optimistic"
@@ -107,25 +111,59 @@ type Config struct {
 	ApiDocsProviderBaseUrl string
 
 	InitTopics bool
+
+	LogLevel string
+	logger   *slog.Logger
 }
 
 func LoadConfig(location string) (config Config, err error) {
 	file, error := os.Open(location)
 	if error != nil {
-		log.Println("error on config load: ", error)
+		config.GetLogger().Error("error on config load", "error", error)
 		return config, error
 	}
 	error = json.NewDecoder(file).Decode(&config)
 	if error != nil {
-		log.Println("invalid config json: ", error)
+		config.GetLogger().Error("invalid config json", "error", error)
 		return config, error
 	}
 	handleEnvironmentVars(&config)
 	if config.CompletionStrategy == OPTIMISTIC && config.GroupScheduler != PARALLEL {
-		log.Println("WARNING: CompletionStrategy == optimistic && GroupScheduler != parallel --> set GroupScheduler to parallel")
+		config.GetLogger().Warn("CompletionStrategy == optimistic && GroupScheduler != parallel --> set GroupScheduler to parallel")
 		config.GroupScheduler = PARALLEL
 	}
 	return config, err
+}
+
+func (this *Config) GetLogger() *slog.Logger {
+	if this.logger == nil {
+		if this.Debug {
+			this.LogLevel = "debug"
+		}
+		info, ok := debug.ReadBuildInfo()
+		project := ""
+		org := ""
+		if ok {
+			if parts := strings.Split(info.Main.Path, "/"); len(parts) > 2 {
+				project = strings.Join(parts[2:], "/")
+				org = strings.Join(parts[:2], "/")
+			}
+		}
+		this.logger = struct_logger.New(
+			struct_logger.Config{
+				Handler:    struct_logger.JsonHandlerSelector,
+				Level:      this.LogLevel,
+				TimeFormat: time.RFC3339Nano,
+				TimeUtc:    true,
+				AddMeta:    true,
+			},
+			os.Stdout,
+			org,
+			project,
+		)
+		slog.SetDefault(this.logger)
+	}
+	return this.logger
 }
 
 var camel = regexp.MustCompile("(^[^A-Z]*|[A-Z]*)([A-Z][^A-Z]+|$)")

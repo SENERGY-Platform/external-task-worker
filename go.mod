@@ -1,6 +1,6 @@
 module github.com/SENERGY-Platform/external-task-worker
 
-go 1.25
+go 1.25.0
 
 require (
 	github.com/SENERGY-Platform/converter v0.0.10
@@ -15,9 +15,10 @@ require (
 require (
 	github.com/IBM/sarama v1.43.3
 	github.com/SENERGY-Platform/api-docs-provider/lib/client v0.0.3
+	github.com/SENERGY-Platform/go-service-base/struct-logger v0.6.0
 	github.com/SENERGY-Platform/models/go v0.0.0-20251202070403-e7e5579f7111
 	github.com/SENERGY-Platform/process-incident-api v0.0.10
-	github.com/SENERGY-Platform/service-commons v0.0.0-20251120132821-0c66860f211e
+	github.com/SENERGY-Platform/service-commons v0.0.0-20260106114257-16bca4ba28e7
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.21.1
 	github.com/testcontainers/testcontainers-go v0.40.0
@@ -32,10 +33,9 @@ require (
 	github.com/RyanCarrier/dijkstra v1.4.0 // indirect
 	github.com/SENERGY-Platform/api-docs-provider/lib/models v0.0.3 // indirect
 	github.com/SENERGY-Platform/developer-notifications v0.0.4 // indirect
-	github.com/SENERGY-Platform/device-repository v0.2.32 // indirect
+	github.com/SENERGY-Platform/device-repository v0.2.36 // indirect
 	github.com/SENERGY-Platform/go-base-http-client v0.1.0 // indirect
-	github.com/SENERGY-Platform/go-service-base/struct-logger v0.4.1 // indirect
-	github.com/SENERGY-Platform/permissions-v2 v0.0.38 // indirect
+	github.com/SENERGY-Platform/permissions-v2 v0.0.40 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

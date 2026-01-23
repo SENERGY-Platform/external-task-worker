@@ -19,25 +19,27 @@ package lib
 import (
 	"context"
 	"encoding/json"
-	"github.com/SENERGY-Platform/external-task-worker/util"
+	"errors"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/SENERGY-Platform/external-task-worker/util"
 )
 
 func StartHealthCheckEndpoint(ctx context.Context, config util.Config, worker *CmdWorker) {
 	if config.HealthCheckPort != "" {
-		log.Println("start health-check api on " + config.HealthCheckPort)
+		config.GetLogger().Info("start health-check api", "port", config.HealthCheckPort)
 		server := &http.Server{Addr: ":" + config.HealthCheckPort, Handler: getHealthCheckEndpoint(config, worker), WriteTimeout: 10 * time.Second, ReadTimeout: 2 * time.Second, ReadHeaderTimeout: 2 * time.Second}
 		go func() {
-			if err := server.ListenAndServe(); err != http.ErrServerClosed {
-				log.Println("ERROR: server error", err)
+			if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+				config.GetLogger().Error("FATAL: server error", "error", err)
 				log.Fatal(err)
 			}
 		}()
 		go func() {
 			<-ctx.Done()
-			log.Println("DEBUG: health-check shutdown", server.Shutdown(context.Background()))
+			config.GetLogger().Debug("shutdown health-check api", "result", server.Shutdown(context.Background()))
 		}()
 	}
 	return

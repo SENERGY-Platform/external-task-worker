@@ -20,10 +20,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/SENERGY-Platform/external-task-worker/util"
 	"log"
 	"net/http"
 	"runtime/debug"
+
+	"github.com/SENERGY-Platform/external-task-worker/util"
 )
 
 func Start(ctx context.Context, config util.Config) (metrics *Metrics, err error) {
@@ -45,15 +46,16 @@ func Start(ctx context.Context, config util.Config) (metrics *Metrics, err error
 
 	server := &http.Server{Addr: ":" + config.PrometheusPort, Handler: router}
 	go func() {
-		log.Println("listening on ", server.Addr)
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		config.GetLogger().Info("prometheus api started")
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			config.GetLogger().Error("FATAL: prometheus api error", "error", err)
 			debug.PrintStack()
 			log.Fatal("FATAL:", err)
 		}
 	}()
 	go func() {
 		<-ctx.Done()
-		log.Println("api shutdown", server.Shutdown(context.Background()))
+		config.GetLogger().Info("prometheus api shutdown", "result", server.Shutdown(context.Background()))
 	}()
 	return
 }

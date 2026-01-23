@@ -19,19 +19,21 @@ package test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"reflect"
+	"sort"
+	"testing"
+
 	"github.com/SENERGY-Platform/external-task-worker/lib"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/lib/test/mock"
 	"github.com/SENERGY-Platform/external-task-worker/util"
-	"sort"
 
 	"log"
 	"time"
 )
 
-func Example_lib_Worker_ResponseWithHints() {
+func TestResponseWithHints(t *testing.T) {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -193,11 +195,9 @@ func Example_lib_Worker_ResponseWithHints() {
 		list = append(list, string(temp))
 	}
 	sort.Strings(list)
-	for _, cmd := range list {
-		fmt.Println(cmd)
-	}
 
-	//output:
-	//{"b":0,"g":50,"r":200}
-	//{"b":170,"g":0,"r":255}
+	expected := []string{`{"b":0,"g":50,"r":200}`, `{"b":170,"g":0,"r":255}`}
+	if !reflect.DeepEqual(list, expected) {
+		t.Errorf("\ne: %#v\n, a: %#v\n", expected, list)
+	}
 }

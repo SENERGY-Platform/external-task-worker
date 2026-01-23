@@ -18,6 +18,7 @@ package httpcommand
 
 import (
 	"log"
+	"log/slog"
 	"net/http"
 )
 
@@ -42,4 +43,5 @@ func (this *LoggerMiddleWare) log(request *http.Request) {
 	method := request.Method
 	path := request.URL
 	log.Printf("%v [%v] %v \n", request.RemoteAddr, method, path)
+	slog.Default().Info("http request", "method", method, "path", path, "remote-addr", request.RemoteAddr)
 }

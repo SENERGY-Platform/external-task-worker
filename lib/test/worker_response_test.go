@@ -20,18 +20,21 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
+	"sort"
+	"testing"
+
 	"github.com/SENERGY-Platform/external-task-worker/lib"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/lib/test/mock"
 	"github.com/SENERGY-Platform/external-task-worker/util"
-	"sort"
 
 	"log"
 	"time"
 )
 
-func Example_lib_Worker_Response() {
+func TestWorkerResponse(t *testing.T) {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -169,10 +172,7 @@ func Example_lib_Worker_Response() {
 	fetched, completed, failed := mockCamunda.GetStatus()
 
 	if len(fetched) != 0 || len(failed) != 0 || len(completed) != 2 {
-		log.Println("fetched:", fetched)
-		log.Println("failed:", failed)
-		log.Println("completed:", completed)
-		log.Println(len(fetched), len(failed), len(completed))
+		t.Error(fetched, failed, completed)
 		return
 	}
 
@@ -186,16 +186,14 @@ func Example_lib_Worker_Response() {
 		list = append(list, string(temp))
 	}
 	sort.Strings(list)
-	for _, cmd := range list {
-		fmt.Println(cmd)
-	}
+	expected := []string{`"#c83200"`, `{"b":0,"g":50,"r":200}`}
 
-	//output:
-	//"#c83200"
-	//{"b":0,"g":50,"r":200}
+	if !reflect.DeepEqual(list, expected) {
+		t.Errorf("\ne: %#v\n, a: %#v\n", expected, list)
+	}
 }
 
-func Example_lib_Worker_NullResponse() {
+func TestWorkerNullResponse(t *testing.T) {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -311,10 +309,7 @@ func Example_lib_Worker_NullResponse() {
 	fetched, completed, failed := mockCamunda.GetStatus()
 
 	if len(fetched) != 0 || len(failed) != 0 || len(completed) != 2 {
-		log.Println("fetched:", fetched)
-		log.Println("failed:", failed)
-		log.Println("completed:", completed)
-		log.Println(len(fetched), len(failed), len(completed))
+		t.Error(fetched, failed, completed)
 		return
 	}
 
@@ -332,12 +327,14 @@ func Example_lib_Worker_NullResponse() {
 		fmt.Println(cmd)
 	}
 
-	//output:
-	//null
-	//null
+	expected := []string{`null`, `null`}
+
+	if !reflect.DeepEqual(list, expected) {
+		t.Errorf("\ne: %#v\n, a: %#v\n", expected, list)
+	}
 }
 
-func Example_lib_Worker_NullResponse2() {
+func TestWorkerNullResponse2(t *testing.T) {
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -453,10 +450,7 @@ func Example_lib_Worker_NullResponse2() {
 	fetched, completed, failed := mockCamunda.GetStatus()
 
 	if len(fetched) != 0 || len(failed) != 0 || len(completed) != 2 {
-		log.Println("fetched:", fetched)
-		log.Println("failed:", failed)
-		log.Println("completed:", completed)
-		log.Println(len(fetched), len(failed), len(completed))
+		t.Error(fetched, failed, completed)
 		return
 	}
 
@@ -470,11 +464,9 @@ func Example_lib_Worker_NullResponse2() {
 		list = append(list, string(temp))
 	}
 	sort.Strings(list)
-	for _, cmd := range list {
-		fmt.Println(cmd)
-	}
+	expected := []string{`null`, `null`}
 
-	//output:
-	//null
-	//null
+	if !reflect.DeepEqual(list, expected) {
+		t.Errorf("\ne: %#v\n, a: %#v\n", expected, list)
+	}
 }

@@ -18,13 +18,14 @@ package devicerepository
 
 import (
 	"errors"
+	"log/slog"
+	"net/url"
+	"time"
+
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/util"
 	"github.com/SENERGY-Platform/service-commons/pkg/cache"
 	"github.com/SENERGY-Platform/service-commons/pkg/signal"
-	"log"
-	"net/url"
-	"time"
 )
 
 type Iot struct {
@@ -111,7 +112,7 @@ func (this *Iot) GetService(token Impersonate, device model.Device, id string) (
 	if err != nil {
 		dt, err := this.GetDeviceType(token, device.DeviceTypeId)
 		if err != nil {
-			log.Println("ERROR: unable to load device-type", device.DeviceTypeId, token)
+			slog.Default().Error("unable to load device-type", "error", err, "deviceTypeId", device.DeviceTypeId, "token", token)
 			return result, err
 		}
 		for _, service := range dt.Services {
@@ -120,7 +121,7 @@ func (this *Iot) GetService(token Impersonate, device model.Device, id string) (
 				return service, nil
 			}
 		}
-		log.Println("ERROR: unable to find service in device-type", device.DeviceTypeId, id)
+		slog.Default().Error("unable to find service in device-type", "deviceTypeId", device.DeviceTypeId, "serviceId", id)
 		return result, errors.New("service not found")
 	}
 	return
