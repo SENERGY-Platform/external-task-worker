@@ -66,6 +66,8 @@
 
   "InitTopics": false,
 
+  "FetchRetries": 5,
+
   "KafkaTopicConfigs": {
     "camunda_incident": [
       {

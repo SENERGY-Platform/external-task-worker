@@ -95,7 +95,9 @@ func (this *Camunda) ProvideTasks(ctx context.Context) (<-chan []messages.Camund
 				case <-ctx.Done():
 					return
 				default:
-					temp, err := this.getShardTasks(ctx, shard)
+					temp, err := retry(this.config.FetchRetries, 0, func() ([]messages.CamundaExternalTask, error) {
+						return this.getShardTasks(ctx, shard)
+					})
 					if err != nil {
 						this.metrics.LogCamundaGetTasksError()
 						errChan <- err
@@ -336,4 +338,20 @@ func (this *Camunda) Error(externalTaskId string, processInstanceId string, proc
 
 func (this *Camunda) GetWorkerId() string {
 	return this.workerId
+}
+
+func retry[T any](attempts int, sleep time.Duration, f func() (T, error)) (result T, err error) {
+	if attempts == 0 {
+		attempts = 1
+	}
+	for i := 0; i < attempts; i++ {
+		result, err = f()
+		if err == nil {
+			return
+		}
+		if sleep > 0 {
+			time.Sleep(sleep)
+		}
+	}
+	return result, fmt.Errorf("after %d attempts, last error: %w", attempts, err)
 }

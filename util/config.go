@@ -114,6 +114,8 @@ type Config struct {
 
 	LogLevel string
 	logger   *slog.Logger
+
+	FetchRetries int
 }
 
 func LoadConfig(location string) (config Config, err error) {
