@@ -63,6 +63,10 @@ func NewConsumer(ctx context.Context, config ConsumerConfig, listener func(topic
 		PartitionWatchInterval: time.Minute,
 	})
 	go func() {
+		//the reader owns goroutines of its own, a partition watcher and the connections it
+		//dials; without closing it they outlive this loop and keep reporting through
+		//ErrorLogger against a broker nobody listens to any more
+		defer r.Close()
 		for {
 			select {
 			case <-ctx.Done():
