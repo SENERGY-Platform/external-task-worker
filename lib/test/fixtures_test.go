@@ -17,15 +17,9 @@
 package test
 
 import (
-	"context"
-	"github.com/SENERGY-Platform/external-task-worker/lib/test/docker"
 	"io"
-	"log"
-	"os"
 	"runtime/debug"
 	"strings"
-	"sync"
-	"testing"
 )
 
 var example = struct {
@@ -80,23 +74,4 @@ func (s StackWriter) Write(p []byte) (n int, err error) {
 		debug.PrintStack()
 	}
 	return s.Out.Write(p)
-}
-
-// TODO: remove as soon as https://github.com/testcontainers/testcontainers-go/issues/1671 is fixed
-func TestMain(m *testing.M) {
-	//this main is needed to keep ryuk from closing
-	//which is needed because ryuk is currently (github.com/testcontainers/testcontainers-go v0.26.0) not able to restart
-	//https://github.com/testcontainers/testcontainers-go/issues/1671
-	var code int
-	defer os.Exit(code)
-	wg := &sync.WaitGroup{}
-	defer wg.Wait()
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	//keep ryuk alive by keeping a container for the context of all tests
-	_, _, err := docker.Memcached(ctx, wg)
-	if err != nil {
-		log.Fatal(err)
-	}
-	code = m.Run()
 }
