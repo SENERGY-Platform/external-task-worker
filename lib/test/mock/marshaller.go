@@ -18,123 +18,43 @@ package mock
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
-	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
+	"net/http/httptest"
+
 	"github.com/SENERGY-Platform/external-task-worker/lib/marshaller"
+	"github.com/SENERGY-Platform/marshaller/lib/api"
 	"github.com/SENERGY-Platform/marshaller/lib/config"
-	marshaller_service_configurables "github.com/SENERGY-Platform/marshaller/lib/configurables"
+	"github.com/SENERGY-Platform/marshaller/lib/configurables"
+	"github.com/SENERGY-Platform/marshaller/lib/controller"
 	marshaller_service "github.com/SENERGY-Platform/marshaller/lib/marshaller"
-	marshaller_service_model "github.com/SENERGY-Platform/marshaller/lib/marshaller/model"
 	marshaller_service_v2 "github.com/SENERGY-Platform/marshaller/lib/marshaller/v2"
 	"github.com/SENERGY-Platform/marshaller/lib/tests/mocks"
-	"log"
 )
 
-var Marshaller = &MarshallerMock{}
+var Marshaller = MarshallerService{}
 
-type MarshallerMock struct {
-	marshaller *marshaller_service.Marshaller
-	v2         *marshaller_service_v2.Marshaller
-}
+// MarshallerService runs the marshaller service itself in the test process and answers with
+// the client of this worker pointed at it. The worker therefore crosses the boundary it
+// crosses in production, which is what makes the test trustworthy in two ways: the request
+// travels as json, so nothing the worker hands over stays shared with the service — the
+// marshalling writes the value it marshals into the content variables of the service it is
+// given, and a shared service would make every message report the value of whichever task
+// marshalled last — and the client has to reach the endpoint that serves the operation,
+// which the shared interface alone does not prove.
+type MarshallerService struct{}
 
-func (this *MarshallerMock) New(ctx context.Context, url string) marshaller.Interface {
+func (this MarshallerService) New(ctx context.Context, url string) marshaller.Interface {
 	conceptRepo, err := mocks.NewMockConceptRepo(ctx)
 	if err != nil {
 		panic(err)
 	}
-	this.marshaller = marshaller_service.New(mocks.Converter{}, conceptRepo, mocks.DeviceRepo)
-	this.v2 = marshaller_service_v2.New(config.Config{}, mocks.Converter{}, conceptRepo)
-	return this
-}
-
-func jsonCast(in interface{}, out interface{}) (err error) {
-	temp, err := json.Marshal(in)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(temp, out)
-}
-
-func (this *MarshallerMock) MarshalFromServiceAndProtocol(characteristicId string, service model.Service, protocol model.Protocol, characteristicData interface{}, configurables []marshaller.Configurable) (result map[string]string, err error) {
-	mockService := marshaller_service_model.Service{}
-	mockProtocol := marshaller_service_model.Protocol{}
-	mockConfigurables := []marshaller_service_configurables.Configurable{}
-	err = jsonCast(service, &mockService)
-	if err != nil {
-		return result, err
-	}
-	err = jsonCast(protocol, &mockProtocol)
-	if err != nil {
-		return result, err
-	}
-	err = jsonCast(configurables, &mockConfigurables)
-	if err != nil {
-		return result, err
-	}
-	return this.marshaller.MarshalInputs(mockProtocol, mockService, characteristicData, characteristicId, nil, mockConfigurables...)
-}
-
-func (this *MarshallerMock) UnmarshalFromServiceAndProtocol(characteristicId string, service model.Service, protocol model.Protocol, message map[string]string, hints []string) (characteristicData interface{}, err error) {
-	mockService := marshaller_service_model.Service{}
-	mockProtocol := marshaller_service_model.Protocol{}
-	err = jsonCast(service, &mockService)
-	if err != nil {
-		return characteristicData, err
-	}
-	err = jsonCast(protocol, &mockProtocol)
-	if err != nil {
-		return characteristicData, err
-	}
-	return this.marshaller.UnmarshalOutputs(mockProtocol, mockService, message, characteristicId, nil, hints...)
-}
-
-func (this *MarshallerMock) MarshalV2(service model.Service, protocol model.Protocol, data []marshaller.MarshallingV2RequestData) (result map[string]string, err error) {
-	mockService := marshaller_service_model.Service{}
-	mockProtocol := marshaller_service_model.Protocol{}
-	mockData := []marshaller_service_model.MarshallingV2RequestData{}
-	err = jsonCast(service, &mockService)
-	if err != nil {
-		return result, err
-	}
-	err = jsonCast(protocol, &mockProtocol)
-	if err != nil {
-		return result, err
-	}
-	err = jsonCast(data, &mockData)
-	if err != nil {
-		return result, err
-	}
-	return this.v2.Marshal(mockProtocol, mockService, mockData)
-}
-
-func (this *MarshallerMock) UnmarshalV2(request marshaller.UnmarshallingV2Request) (result interface{}, err error) {
-	mockProtocol := marshaller_service_model.Protocol{}
-	err = jsonCast(request.Protocol, &mockProtocol)
-	if err != nil {
-		return result, err
-	}
-	mockService := marshaller_service_model.Service{}
-	err = jsonCast(request.Service, &mockService)
-	if err != nil {
-		return result, err
-	}
-	var mockAspect marshaller_service_model.AspectNode
-	if request.AspectNode.Id != "" {
-		err = jsonCast(request.AspectNode, &mockAspect)
-		if err != nil {
-			return result, err
-		}
-	}
-	if request.Path == "" {
-		paths := this.v2.GetOutputPaths(mockService, request.FunctionId, &mockAspect)
-		if len(paths) > 1 {
-			log.Println("WARNING: only first path found by FunctionId and AspectNode is used for Unmarshal:", paths)
-		}
-		if len(paths) == 0 {
-			return result, errors.New("no output path found for criteria")
-		}
-		request.Path = paths[0]
-	}
-	return this.v2.Unmarshal(mockProtocol, mockService, request.CharacteristicId, request.Path, request.Message, nil)
+	conf := config.Config{}
+	m := marshaller_service.New(mocks.Converter{}, conceptRepo, mocks.DeviceRepo)
+	mV2 := marshaller_service_v2.New(conf, mocks.Converter{}, conceptRepo)
+	ctrl := controller.New(conf, m, mV2, configurables.New(conceptRepo), mocks.DeviceRepo, nil)
+	server := httptest.NewServer(api.GetRouter(conf, ctrl, nil))
+	go func() {
+		<-ctx.Done()
+		server.Close()
+	}()
+	return marshaller.New(server.URL)
 }

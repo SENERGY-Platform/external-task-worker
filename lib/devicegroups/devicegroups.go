@@ -31,6 +31,7 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
 	"github.com/SENERGY-Platform/external-task-worker/lib/messages"
 	"github.com/SENERGY-Platform/external-task-worker/util"
+	marshallermodel "github.com/SENERGY-Platform/marshaller/lib/marshaller/model"
 	"github.com/bradfitz/gomemcache/memcache"
 )
 
@@ -370,16 +371,13 @@ func (this *DeviceGroups) GetGroupSubTasks(request messages.Command, task messag
 
 func (this *DeviceGroups) getFilteredServices(command messages.Command, services []model.Service) (result []model.Service) {
 	serviceIndex := map[string]model.Service{}
+	aspectNodes := command.GetAspects()
 	for _, service := range services {
 		contents := service.Inputs
 		if isMeasuringFunctionId(command.Function.Id) {
 			contents = service.Outputs
 		}
-		aspect := model.AspectNode{}
-		if command.Aspect != nil {
-			aspect = *command.Aspect
-		}
-		matchesCriteria := anyContentMatchesCriteria(contents, model.DeviceGroupFilterCriteria{FunctionId: command.Function.Id, AspectId: aspect.Id}, aspect)
+		matchesCriteria := anyContentMatchesCriteria(contents, command.Function.Id, aspectNodes)
 		isEvent := isMeasuringFunctionId(command.Function.Id) && service.Interaction == model.EVENT
 		if matchesCriteria && (!this.filterEvents || !isEvent) {
 			serviceIndex[service.Id] = service
@@ -394,33 +392,26 @@ func (this *DeviceGroups) getFilteredServices(command messages.Command, services
 	return result
 }
 
-func anyContentMatchesCriteria(contents []model.Content, criteria model.DeviceGroupFilterCriteria, aspectNode model.AspectNode) bool {
+func anyContentMatchesCriteria(contents []model.Content, functionId string, aspectNodes []model.AspectNode) bool {
 	for _, content := range contents {
-		if contentVariableContainsCriteria(content.ContentVariable, criteria, aspectNode) {
+		if contentVariableContainsCriteria(content.ContentVariable, functionId, aspectNodes) {
 			return true
 		}
 	}
 	return false
 }
 
-func contentVariableContainsCriteria(variable model.ContentVariable, criteria model.DeviceGroupFilterCriteria, aspectNode model.AspectNode) bool {
-	if variable.FunctionId == criteria.FunctionId &&
-		(criteria.AspectId == "" ||
-			variable.AspectId == criteria.AspectId ||
-			listContains(aspectNode.DescendentIds, variable.AspectId)) {
+// contentVariableContainsCriteria reports whether a content variable serves the function and
+// the aspects of the command. Every requested aspect has to be matched, by the aspect itself
+// or by one of its descendants, the way the device-repository reads a filter-criteria that
+// names several aspects; without a requested aspect the function alone decides.
+func contentVariableContainsCriteria(variable model.ContentVariable, functionId string, aspectNodes []model.AspectNode) bool {
+	if variable.FunctionId == functionId &&
+		marshallermodel.AspectMatchLevel(marshallermodel.ContentVariableAspectIds(variable), aspectNodes) >= 0 {
 		return true
 	}
 	for _, sub := range variable.SubContentVariables {
-		if contentVariableContainsCriteria(sub, criteria, aspectNode) {
-			return true
-		}
-	}
-	return false
-}
-
-func listContains(list []string, search string) bool {
-	for _, element := range list {
-		if element == search {
+		if contentVariableContainsCriteria(sub, functionId, aspectNodes) {
 			return true
 		}
 	}

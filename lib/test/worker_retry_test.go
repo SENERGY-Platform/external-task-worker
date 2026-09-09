@@ -32,6 +32,8 @@ import (
 )
 
 func TestRetries(t *testing.T) {
+	mockKafka := mock.NewKafka()
+	mockRepo := mock.NewRepo()
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -44,32 +46,31 @@ func TestRetries(t *testing.T) {
 	config.CompletionStrategy = util.PESSIMISTIC
 	config.CamundaFetchLockDuration = 100
 	config.HttpCommandConsumerPort = ""
-	mock.CleanKafkaMock()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	mockCamunda := &mock.CamundaMock{}
 	mockCamunda.Init()
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
+	go lib.Worker(ctx, config, mockKafka, mockRepo, mockCamunda, mock.Marshaller, mock.Timescale)
 
 	time.Sleep(1 * time.Second)
 
 	//populate repository
-	mock.Repo.RegisterDevice(model.Device{
+	mockRepo.RegisterDevice(model.Device{
 		Id:           "device_1",
 		Name:         "d1",
 		DeviceTypeId: "dt1",
 		LocalId:      "d1u",
 	})
 
-	mock.Repo.RegisterProtocol(model.Protocol{
+	mockRepo.RegisterProtocol(model.Protocol{
 		Id:               "p1",
 		Name:             "protocol1",
 		Handler:          "protocol1",
 		ProtocolSegments: []model.ProtocolSegment{{Id: "ms1", Name: "body"}},
 	})
 
-	mock.Repo.RegisterService(model.Service{
+	mockRepo.RegisterService(model.Service{
 		Id:         "service_1",
 		Name:       "s1",
 		LocalId:    "s1u",
@@ -145,7 +146,7 @@ func TestRetries(t *testing.T) {
 
 	time.Sleep(time.Duration(config.CamundaFetchLockDuration) * time.Millisecond * 10) //wait for all fetches and timeouts
 
-	protocolMessageStrings := mock.Kafka.GetProduced("protocol1")
+	protocolMessageStrings := mockKafka.GetProduced("protocol1")
 
 	if len(protocolMessageStrings) != 4 {
 		fmt.Println(len(protocolMessageStrings))

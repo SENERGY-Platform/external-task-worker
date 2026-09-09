@@ -40,9 +40,13 @@ func TestGroupScheduler(t *testing.T) {
 	}
 
 	config.CompletionStrategy = util.PESSIMISTIC
-	config.CamundaFetchLockDuration = 1000 //in ms
+	//in ms; the mocked camunda re-serves a task after this duration and the scheduler uses it as
+	//its currently-running timeout, so it is also the interval between two scheduling decisions.
+	//it has to stay clearly above the simulated device response times below: with both at 1000ms
+	//a response and the decision that ends the task fall on the same instant, and whether the
+	//result still counts is decided by microseconds of processing overhead
+	config.CamundaFetchLockDuration = 2000
 	config.HealthCheckPort = ""
-	mock.CleanKafkaMock()
 
 	config.GroupScheduler = util.SEQUENTIAL
 	t.Run("simple sequential", getGroupShedullerTest(config, GroupSimConfig{
@@ -258,10 +262,10 @@ func getGroupShedullerTest(config util.Config, simConfig GroupSimConfig) func(t 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		mockRepo := mock.Repo.New()
+		mockRepo := mock.NewRepo()
 		mockCamunda := &mock.CamundaMock{}
 		mockCamunda.Init()
-		mockKafka := mock.Kafka.New()
+		mockKafka := mock.NewKafka()
 
 		group := NewGroupSim(config, simConfig, mockKafka)
 
@@ -349,7 +353,7 @@ func getGroupShedullerTest(config util.Config, simConfig GroupSimConfig) func(t 
 			},
 		})
 
-		go lib.Worker(ctx, config, mockKafka, mockRepo, mockCamunda, &mock.MarshallerMock{}, mock.Timescale)
+		go lib.Worker(ctx, config, mockKafka, mockRepo, mockCamunda, mock.Marshaller, mock.Timescale)
 
 		time.Sleep(simConfig.CheckAfter)
 

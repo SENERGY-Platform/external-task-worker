@@ -104,10 +104,6 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 		inputCharacteristicId = command.CharacteristicId
 	} else {
 		outputCharacteristicId = command.CharacteristicId
-		aspect := model.AspectNode{}
-		if command.Aspect != nil {
-			aspect = *command.Aspect
-		}
 		if service.Interaction == model.EVENT || (service.Interaction == model.EVENT_AND_REQUEST && command.PreferEvent) {
 			return nil, &messages.EventRequest{
 				Device:           *device,
@@ -115,7 +111,7 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 				Protocol:         *protocol,
 				CharacteristicId: command.CharacteristicId,
 				FunctionId:       command.Function.Id,
-				AspectNode:       aspect,
+				AspectNodes:      command.GetAspects(),
 			}, nil
 		}
 	}
@@ -135,15 +131,10 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 				CharacteristicId: inputCharacteristicId,
 				Paths:            command.InputPaths,
 				FunctionId:       command.Function.Id,
-				AspectNode:       command.Aspect,
+				AspectNodes:      command.GetAspects(),
 			})
 		}
 		for _, configurable := range command.ConfigurablesV2 {
-			var aspect *model.AspectNode
-			if configurable.AspectNode.Id != "" {
-				temp := configurable.AspectNode
-				aspect = &temp
-			}
 			paths := []string{}
 			if configurable.Path != "" {
 				paths = []string{configurable.Path}
@@ -153,7 +144,7 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 				CharacteristicId: configurable.CharacteristicId,
 				Paths:            paths,
 				FunctionId:       configurable.FunctionId,
-				AspectNode:       aspect,
+				AspectNodes:      configurable.GetAspectNodes(),
 			})
 		}
 		marshalStartTime := time.Now()
@@ -212,7 +203,7 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 		if outputCharacteristicId != "" {
 			taskRequest.Metadata.OutputPath = command.OutputPath
 			taskRequest.Metadata.OutputFunctionId = command.Function.Id
-			taskRequest.Metadata.OutputAspectNode = command.Aspect
+			taskRequest.Metadata.SetOutputAspectNodes(command.GetAspects())
 		}
 	}
 

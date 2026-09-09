@@ -24,11 +24,13 @@ import (
 	"sync"
 )
 
-func CleanKafkaMock() {
-	Kafka = &KafkaMock{}
+// NewKafka returns the kafka of one test. There is deliberately no shared instance: the
+// worker of a test that has already returned may still be finishing a task, and a produced
+// message landing in the log the next test reads would be indistinguishable from a message
+// that test caused itself.
+func NewKafka() *KafkaMock {
+	return &KafkaMock{Produced: map[string][]string{}}
 }
-
-var Kafka = &KafkaMock{}
 
 type KafkaMock struct {
 	mux       sync.Mutex
@@ -99,8 +101,4 @@ func (this *KafkaMock) GetProduced(topic string) []string {
 		this.Produced[topic] = []string{}
 	}()
 	return this.Produced[topic]
-}
-
-func (this *KafkaMock) New() *KafkaMock {
-	return &KafkaMock{}
 }

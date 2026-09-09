@@ -19,6 +19,7 @@ import (
 )
 
 func TestFetch(t *testing.T) {
+	mockKafka := mock.NewKafka()
 	ctx, cancel := context.WithCancel(context.Background())
 	wg := sync.WaitGroup{}
 
@@ -63,7 +64,7 @@ func TestFetch(t *testing.T) {
 		CamundaFetchLockDuration: 60000,
 		CamundaTopic:             "pessimistic",
 		CamundaWorkerTasks:       10,
-	}, mock.Kafka, prometheus.NewMetrics("test", nil), s)
+	}, mockKafka, prometheus.NewMetrics("test", nil), s)
 	if err != nil {
 		t.Error(err)
 		return
@@ -104,6 +105,7 @@ func TestFetch(t *testing.T) {
 }
 
 func TestGetTask(t *testing.T) {
+	mockKafka := mock.NewKafka()
 	temp := util.GetId
 	util.GetId = func() string {
 		return "test-worker"
@@ -152,7 +154,7 @@ func TestGetTask(t *testing.T) {
 		return
 	}
 
-	_, err = mock.Kafka.NewProducer(ctx, util.Config{})
+	_, err = mockKafka.NewProducer(ctx, util.Config{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -161,27 +163,29 @@ func TestGetTask(t *testing.T) {
 	var tasks []messages.CamundaExternalTask
 	t.Run("create normal process", testCreateProcess(camundaUrl, &pid))
 	t.Run("start process", testStartDeployment(shard, pid))
-	t.Run("run get task", testGetTasks(s, &tasks))
-	t.Run("complete task", testCompleteTask(s, tasks))
-	t.Run("check incidents", testCheckIncidents())
+	t.Run("run get task", testGetTasks(s, &tasks, mockKafka))
+	t.Run("complete task", testCompleteTask(s, tasks, mockKafka))
+	t.Run("check incidents", testCheckIncidents(mockKafka))
 }
 
-func testCheckIncidents() func(t *testing.T) {
+// testCheckIncidents asserts on the kafka the steps before it produced into, so it has to
+// be handed that instance instead of making its own.
+func testCheckIncidents(mockKafka *mock.KafkaMock) func(t *testing.T) {
 	return func(t *testing.T) {
-		if incidents := mock.Kafka.GetProduced("incidents"); len(incidents) > 0 {
+		if incidents := mockKafka.GetProduced("incidents"); len(incidents) > 0 {
 			t.Fatal(incidents)
 		}
 	}
 }
 
-func testCompleteTask(s *shards.Shards, tasks []messages.CamundaExternalTask) func(t *testing.T) {
+func testCompleteTask(s *shards.Shards, tasks []messages.CamundaExternalTask, mockKafka *mock.KafkaMock) func(t *testing.T) {
 	return func(t *testing.T) {
 		if len(tasks) < 1 {
 			t.Fatal(tasks)
 		}
 		c, err := camunda.NewCamundaWithShards(util.Config{
 			KafkaIncidentTopic: "incidents",
-		}, mock.Kafka, prometheus.NewMetrics("test", nil), s)
+		}, mockKafka, prometheus.NewMetrics("test", nil), s)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -199,7 +203,7 @@ func testCompleteTask(s *shards.Shards, tasks []messages.CamundaExternalTask) fu
 	}
 }
 
-func testGetTasks(s *shards.Shards, tasks *[]messages.CamundaExternalTask) func(t *testing.T) {
+func testGetTasks(s *shards.Shards, tasks *[]messages.CamundaExternalTask, mockKafka *mock.KafkaMock) func(t *testing.T) {
 	return func(t *testing.T) {
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -208,7 +212,7 @@ func testGetTasks(s *shards.Shards, tasks *[]messages.CamundaExternalTask) func(
 			CamundaFetchLockDuration: 60000,
 			CamundaTopic:             "pessimistic",
 			CamundaWorkerTasks:       10,
-		}, mock.Kafka, prometheus.NewMetrics("test", nil), s)
+		}, mockKafka, prometheus.NewMetrics("test", nil), s)
 		if err != nil {
 			t.Fatal(err)
 		}

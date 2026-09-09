@@ -18,17 +18,22 @@ package marshaller
 
 import (
 	"context"
+
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
+	marshallerclient "github.com/SENERGY-Platform/marshaller/lib/client"
 )
 
 type Marshaller struct {
-	url string
+	client marshallerclient.Interface
 }
 
 func New(url string) *Marshaller {
-	return &Marshaller{url: url}
+	//no auth token: the marshaller is called service internally, not routed over the api-gateway
+	return &Marshaller{client: marshallerclient.NewClient(url, nil)}
 }
 
+// Interface is the part of the marshaller this worker calls. It is smaller than the
+// client`s own interface, so that the test mock only has to answer what is used here.
 type Interface interface {
 	MarshalV2(service model.Service, protocol model.Protocol, data []MarshallingV2RequestData) (result map[string]string, err error)
 	UnmarshalV2(request UnmarshallingV2Request) (characteristicData interface{}, err error)

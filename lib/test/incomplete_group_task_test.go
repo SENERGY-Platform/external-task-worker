@@ -50,7 +50,8 @@ func TestConstraintGroup(t *testing.T) {
 
 func testForConstraintGroup(sequential bool, missingResponseForRequestIndex map[int]bool) func(t *testing.T) {
 	return func(t *testing.T) {
-		mock.CleanKafkaMock()
+		mockKafka := mock.NewKafka()
+		mockRepo := mock.NewRepo()
 		util.TimeNow = func() time.Time {
 			return time.Time{}
 		}
@@ -73,12 +74,12 @@ func testForConstraintGroup(sequential bool, missingResponseForRequestIndex map[
 		defer cancel()
 		mockCamunda := &mock.CamundaMock{}
 		mockCamunda.Init()
-		go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
+		go lib.Worker(ctx, config, mockKafka, mockRepo, mockCamunda, mock.Marshaller, mock.Timescale)
 
 		time.Sleep(1 * time.Second)
 
 		counter := 0
-		mock.Kafka.Subscribe("protocol1", func(message string) error {
+		mockKafka.Subscribe("protocol1", func(message string) error {
 			msg := messages.ProtocolMsg{}
 			err = json.Unmarshal([]byte(message), &msg)
 			if err != nil {
@@ -95,7 +96,7 @@ func testForConstraintGroup(sequential bool, missingResponseForRequestIndex map[
 				if err != nil {
 					log.Fatal(err)
 				}
-				mock.Kafka.Produce(config.ResponseTopic, string(resp))
+				mockKafka.Produce(config.ResponseTopic, string(resp))
 			} else {
 				log.Println("IGNORE", counter-1, msg.Response.Output)
 			}
@@ -103,28 +104,28 @@ func testForConstraintGroup(sequential bool, missingResponseForRequestIndex map[
 		})
 
 		//populate repository
-		mock.Repo.RegisterDevice(model.Device{
+		mockRepo.RegisterDevice(model.Device{
 			Id:           "device_1",
 			Name:         "d1",
 			DeviceTypeId: "dt2",
 			LocalId:      "d1u",
 		})
 
-		mock.Repo.RegisterDevice(model.Device{
+		mockRepo.RegisterDevice(model.Device{
 			Id:           "device_2",
 			Name:         "d2",
 			DeviceTypeId: "dt2",
 			LocalId:      "d2u",
 		})
 
-		mock.Repo.RegisterDevice(model.Device{
+		mockRepo.RegisterDevice(model.Device{
 			Id:           "device_3",
 			Name:         "d3",
 			DeviceTypeId: "dt2",
 			LocalId:      "d3u",
 		})
 
-		mock.Repo.RegisterDeviceGroup(model.DeviceGroup{
+		mockRepo.RegisterDeviceGroup(model.DeviceGroup{
 			Id:   "dg1",
 			Name: "dg1",
 			Criteria: []model.DeviceGroupFilterCriteria{
@@ -133,14 +134,14 @@ func testForConstraintGroup(sequential bool, missingResponseForRequestIndex map[
 			DeviceIds: []string{"device_1", "device_2", "device_3"},
 		})
 
-		mock.Repo.RegisterProtocol(model.Protocol{
+		mockRepo.RegisterProtocol(model.Protocol{
 			Id:               "p1",
 			Name:             "protocol1",
 			Handler:          "protocol1",
 			ProtocolSegments: []model.ProtocolSegment{{Id: "ms1", Name: "body"}},
 		})
 
-		mock.Repo.RegisterDeviceType(model.DeviceType{
+		mockRepo.RegisterDeviceType(model.DeviceType{
 			Id:            "dt2",
 			Name:          "dt2",
 			DeviceClassId: "dc1",

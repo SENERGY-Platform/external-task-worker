@@ -45,6 +45,7 @@ func GetCommandRequest(task messages.CamundaExternalTask) (command messages.Comm
 	if err != nil {
 		return command, err
 	}
+	command.SetAspects()
 	err = setDeviceOverwrite(&command, task)
 	if err != nil {
 		return command, err

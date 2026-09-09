@@ -38,6 +38,7 @@ import (
 )
 
 func TestHealthCheckBy(t *testing.T) {
+	mockRepo := mock.NewRepo()
 	config, err := util.LoadConfig("../../config.json")
 	if err != nil {
 		log.Fatal(err)
@@ -60,24 +61,24 @@ func TestHealthCheckBy(t *testing.T) {
 	kafka := &StoppableTestKafka{On: true}
 	camunda := &StoppableTestCamunda{On: true}
 
-	go lib.Worker(ctx, config, kafka, mock.Repo, camunda, mock.Marshaller, mock.Timescale)
+	go lib.Worker(ctx, config, kafka, mockRepo, camunda, mock.Marshaller, mock.Timescale)
 	time.Sleep(1 * time.Second)
 
-	mock.Repo.RegisterDevice(model.Device{
+	mockRepo.RegisterDevice(model.Device{
 		Id:           "device_1",
 		Name:         "d1",
 		DeviceTypeId: "dt1",
 		LocalId:      "d1u",
 	})
 
-	mock.Repo.RegisterProtocol(model.Protocol{
+	mockRepo.RegisterProtocol(model.Protocol{
 		Id:               "p1",
 		Name:             "protocol1",
 		Handler:          "protocol1",
 		ProtocolSegments: []model.ProtocolSegment{{Id: "ms1", Name: "body"}},
 	})
 
-	mock.Repo.RegisterService(model.Service{
+	mockRepo.RegisterService(model.Service{
 		Id:         "service_1",
 		Name:       "on",
 		LocalId:    "power",

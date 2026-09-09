@@ -34,6 +34,8 @@ import (
 )
 
 func TestOverwriteResponse(t *testing.T) {
+	mockKafka := mock.NewKafka()
+	mockRepo := mock.NewRepo()
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -45,32 +47,31 @@ func TestOverwriteResponse(t *testing.T) {
 	config.GroupScheduler = util.PARALLEL
 	config.CompletionStrategy = util.PESSIMISTIC
 	config.HttpCommandConsumerPort = ""
-	mock.CleanKafkaMock()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	mockCamunda := &mock.CamundaMock{}
 	mockCamunda.Init()
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
+	go lib.Worker(ctx, config, mockKafka, mockRepo, mockCamunda, mock.Marshaller, mock.Timescale)
 
 	time.Sleep(1 * time.Second)
 
 	//populate repository
-	mock.Repo.RegisterDevice(model.Device{
+	mockRepo.RegisterDevice(model.Device{
 		Id:           "device_1",
 		Name:         "d1",
 		DeviceTypeId: "dt1",
 		LocalId:      "d1u",
 	})
 
-	mock.Repo.RegisterProtocol(model.Protocol{
+	mockRepo.RegisterProtocol(model.Protocol{
 		Id:               "p1",
 		Name:             "protocol1",
 		Handler:          "protocol1",
 		ProtocolSegments: []model.ProtocolSegment{{Id: "ms1", Name: "body"}},
 	})
 
-	mock.Repo.RegisterService(model.Service{
+	mockRepo.RegisterService(model.Service{
 		Id:         "service_1",
 		Name:       "s1",
 		LocalId:    "s1u",
@@ -156,7 +157,7 @@ func TestOverwriteResponse(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 
-	protocolMessageStrings := mock.Kafka.GetProduced("protocol1")
+	protocolMessageStrings := mockKafka.GetProduced("protocol1")
 
 	if len(protocolMessageStrings) != 2 {
 		log.Fatal(protocolMessageStrings)
@@ -175,7 +176,7 @@ func TestOverwriteResponse(t *testing.T) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		mock.Kafka.Produce(config.ResponseTopic, string(resp))
+		mockKafka.Produce(config.ResponseTopic, string(resp))
 		time.Sleep(1 * time.Second)
 	}
 

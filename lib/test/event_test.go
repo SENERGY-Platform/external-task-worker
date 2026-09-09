@@ -34,7 +34,8 @@ import (
 )
 
 func TestWorkerEventResponseV2(t *testing.T) {
-	mock.CleanKafkaMock()
+	mockKafka := mock.NewKafka()
+	mockRepo := mock.NewRepo()
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -61,26 +62,26 @@ func TestWorkerEventResponseV2(t *testing.T) {
 		"device_1": {"service_1": {"metrics.level": "#c83200"}},
 	}
 
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.GetTimescaleMockFactory(timescaleResponses))
+	go lib.Worker(ctx, config, mockKafka, mockRepo, mockCamunda, mock.Marshaller, mock.GetTimescaleMockFactory(timescaleResponses))
 
 	time.Sleep(1 * time.Second)
 
 	//populate repository
-	mock.Repo.RegisterDevice(model.Device{
+	mockRepo.RegisterDevice(model.Device{
 		Id:           "device_1",
 		Name:         "d1",
 		DeviceTypeId: "dt1",
 		LocalId:      "d1u",
 	})
 
-	mock.Repo.RegisterProtocol(model.Protocol{
+	mockRepo.RegisterProtocol(model.Protocol{
 		Id:               "p1",
 		Name:             "protocol1",
 		Handler:          "protocol1",
 		ProtocolSegments: []model.ProtocolSegment{{Id: "ms1", Name: "body"}},
 	})
 
-	mock.Repo.RegisterService(model.Service{
+	mockRepo.RegisterService(model.Service{
 		Id:          "service_1",
 		Name:        "s1",
 		LocalId:     "s1u",
@@ -191,7 +192,8 @@ func TestWorkerEventResponseV2(t *testing.T) {
 }
 
 func TestGroupEventResponses(t *testing.T) {
-	mock.CleanKafkaMock()
+	mockKafka := mock.NewKafka()
+	mockRepo := mock.NewRepo()
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -221,26 +223,26 @@ func TestGroupEventResponses(t *testing.T) {
 		"device_2": {"service_3": {"metrics.level": "#c8320{{count}}"}, "service_4": {"metrics.level": "#c8320{{count}}"}},
 	}
 
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.GetTimescaleMockFactory(timescaleResponses))
+	go lib.Worker(ctx, config, mockKafka, mockRepo, mockCamunda, mock.Marshaller, mock.GetTimescaleMockFactory(timescaleResponses))
 
 	time.Sleep(1 * time.Second)
 
 	//populate repository
-	mock.Repo.RegisterDevice(model.Device{
+	mockRepo.RegisterDevice(model.Device{
 		Id:           "device_1",
 		Name:         "d1",
 		DeviceTypeId: "dt1",
 		LocalId:      "d1u",
 	})
 
-	mock.Repo.RegisterDevice(model.Device{
+	mockRepo.RegisterDevice(model.Device{
 		Id:           "device_2",
 		Name:         "d2",
 		DeviceTypeId: "dt2",
 		LocalId:      "d1u",
 	})
 
-	mock.Repo.RegisterDeviceGroup(model.DeviceGroup{
+	mockRepo.RegisterDeviceGroup(model.DeviceGroup{
 		Id:   "dg1",
 		Name: "dg1",
 		Criteria: []model.DeviceGroupFilterCriteria{
@@ -249,14 +251,14 @@ func TestGroupEventResponses(t *testing.T) {
 		DeviceIds: []string{"device_1", "device_2"},
 	})
 
-	mock.Repo.RegisterProtocol(model.Protocol{
+	mockRepo.RegisterProtocol(model.Protocol{
 		Id:               "p1",
 		Name:             "protocol1",
 		Handler:          "protocol1",
 		ProtocolSegments: []model.ProtocolSegment{{Id: "ms1", Name: "body"}},
 	})
 
-	mock.Repo.RegisterDeviceType(model.DeviceType{
+	mockRepo.RegisterDeviceType(model.DeviceType{
 		Id:            "dt1",
 		Name:          "dt1",
 		DeviceClassId: "dc1",
@@ -322,7 +324,7 @@ func TestGroupEventResponses(t *testing.T) {
 		},
 	})
 
-	mock.Repo.RegisterDeviceType(model.DeviceType{
+	mockRepo.RegisterDeviceType(model.DeviceType{
 		Id:            "dt2",
 		Name:          "dt2",
 		DeviceClassId: "dc1",
@@ -471,7 +473,8 @@ func TestGroupEventResponses(t *testing.T) {
 }
 
 func TestGroupEventResponsesWithMemcached(t *testing.T) {
-	mock.CleanKafkaMock()
+	mockKafka := mock.NewKafka()
+	mockRepo := mock.NewRepo()
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -507,26 +510,26 @@ func TestGroupEventResponsesWithMemcached(t *testing.T) {
 		"device_2": {"service_3": {"metrics.level": "#c8320{{count}}"}, "service_4": {"metrics.level": "#c8320{{count}}"}},
 	}
 
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.GetTimescaleMockFactory(timescaleResponses))
+	go lib.Worker(ctx, config, mockKafka, mockRepo, mockCamunda, mock.Marshaller, mock.GetTimescaleMockFactory(timescaleResponses))
 
 	time.Sleep(1 * time.Second)
 
 	//populate repository
-	mock.Repo.RegisterDevice(model.Device{
+	mockRepo.RegisterDevice(model.Device{
 		Id:           "device_1",
 		Name:         "d1",
 		DeviceTypeId: "dt1",
 		LocalId:      "d1u",
 	})
 
-	mock.Repo.RegisterDevice(model.Device{
+	mockRepo.RegisterDevice(model.Device{
 		Id:           "device_2",
 		Name:         "d2",
 		DeviceTypeId: "dt2",
 		LocalId:      "d1u",
 	})
 
-	mock.Repo.RegisterDeviceGroup(model.DeviceGroup{
+	mockRepo.RegisterDeviceGroup(model.DeviceGroup{
 		Id:   "dg1",
 		Name: "dg1",
 		Criteria: []model.DeviceGroupFilterCriteria{
@@ -535,14 +538,14 @@ func TestGroupEventResponsesWithMemcached(t *testing.T) {
 		DeviceIds: []string{"device_1", "device_2"},
 	})
 
-	mock.Repo.RegisterProtocol(model.Protocol{
+	mockRepo.RegisterProtocol(model.Protocol{
 		Id:               "p1",
 		Name:             "protocol1",
 		Handler:          "protocol1",
 		ProtocolSegments: []model.ProtocolSegment{{Id: "ms1", Name: "body"}},
 	})
 
-	mock.Repo.RegisterDeviceType(model.DeviceType{
+	mockRepo.RegisterDeviceType(model.DeviceType{
 		Id:            "dt1",
 		Name:          "dt1",
 		DeviceClassId: "dc1",
@@ -610,7 +613,7 @@ func TestGroupEventResponsesWithMemcached(t *testing.T) {
 		},
 	})
 
-	mock.Repo.RegisterDeviceType(model.DeviceType{
+	mockRepo.RegisterDeviceType(model.DeviceType{
 		Id:            "dt2",
 		Name:          "dt2",
 		DeviceClassId: "dc1",
@@ -761,7 +764,8 @@ func TestGroupEventResponsesWithMemcached(t *testing.T) {
 }
 
 func TestWorkerEventDeviceWithoutServiceCommand(t *testing.T) {
-	mock.CleanKafkaMock()
+	mockKafka := mock.NewKafka()
+	mockRepo := mock.NewRepo()
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -791,19 +795,19 @@ func TestWorkerEventDeviceWithoutServiceCommand(t *testing.T) {
 		},
 	}
 
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.GetTimescaleMockFactory(timescaleResponses))
+	go lib.Worker(ctx, config, mockKafka, mockRepo, mockCamunda, mock.Marshaller, mock.GetTimescaleMockFactory(timescaleResponses))
 
 	time.Sleep(1 * time.Second)
 
 	//populate repository
-	mock.Repo.RegisterDevice(model.Device{
+	mockRepo.RegisterDevice(model.Device{
 		Id:           "urn:infai:ses:device:423a2718-dea0-4f69-85a3-626c52de175b",
 		Name:         "lampe 1",
 		DeviceTypeId: "urn:infai:ses:device-type:57871169-38a8-40cd-871b-184b99776ca3",
 		LocalId:      "618dfabb-c6a8-4d59-a338-ad9d82735ea2",
 	})
 
-	mock.Repo.RegisterProtocol(model.Protocol{
+	mockRepo.RegisterProtocol(model.Protocol{
 		Id:               "urn:infai:ses:protocol:3b59ea31-da98-45fd-a354-1b9bd06b837e",
 		Name:             "protocol1",
 		Handler:          "protocol1",
@@ -1566,7 +1570,7 @@ func TestWorkerEventDeviceWithoutServiceCommand(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	mock.Repo.RegisterDeviceType(dt)
+	mockRepo.RegisterDeviceType(dt)
 
 	cmd1 := messages.Command{
 		Version:  3,
@@ -1604,7 +1608,8 @@ func TestWorkerEventDeviceWithoutServiceCommand(t *testing.T) {
 }
 
 func TestDeviceEventWithoutServiceResponses(t *testing.T) {
-	mock.CleanKafkaMock()
+	mockKafka := mock.NewKafka()
+	mockRepo := mock.NewRepo()
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -1643,26 +1648,26 @@ func TestDeviceEventWithoutServiceResponses(t *testing.T) {
 		},
 	}
 
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.GetTimescaleMockFactory(timescaleResponses))
+	go lib.Worker(ctx, config, mockKafka, mockRepo, mockCamunda, mock.Marshaller, mock.GetTimescaleMockFactory(timescaleResponses))
 
 	time.Sleep(1 * time.Second)
 
 	//populate repository
-	mock.Repo.RegisterDevice(model.Device{
+	mockRepo.RegisterDevice(model.Device{
 		Id:           "device_1",
 		Name:         "d1",
 		DeviceTypeId: "dt1",
 		LocalId:      "d1u",
 	})
 
-	mock.Repo.RegisterProtocol(model.Protocol{
+	mockRepo.RegisterProtocol(model.Protocol{
 		Id:               "p1",
 		Name:             "protocol1",
 		Handler:          "protocol1",
 		ProtocolSegments: []model.ProtocolSegment{{Id: "ms1", Name: "body"}},
 	})
 
-	mock.Repo.RegisterDeviceType(model.DeviceType{
+	mockRepo.RegisterDeviceType(model.DeviceType{
 		Id:            "dt1",
 		Name:          "dt1",
 		DeviceClassId: "dc1",

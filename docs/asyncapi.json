@@ -171,6 +171,12 @@
                     "output_aspect_node": {
                         "$ref": "#/components/schemas/ModelsAspectNode"
                     },
+                    "output_aspect_nodes": {
+                        "items": {
+                            "$ref": "#/components/schemas/ModelsAspectNode"
+                        },
+                        "type": "array"
+                    },
                     "output_characteristic": {
                         "type": "string"
                     },
@@ -365,6 +371,12 @@
                 "properties": {
                     "aspect_id": {
                         "type": "string"
+                    },
+                    "aspect_ids": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
                     },
                     "characteristic_id": {
                         "type": "string"

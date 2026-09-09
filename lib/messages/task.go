@@ -30,7 +30,8 @@ type Command struct {
 
 	//optional modeling time (used to limit/filter device and service selection in deployment)
 	DeviceClass *model.DeviceClass `json:"device_class,omitempty"`
-	Aspect      *model.AspectNode  `json:"aspect,omitempty"`
+	Aspect      *model.AspectNode  `json:"aspect,omitempty"` //deprecated: please use Aspects
+	Aspects     []model.AspectNode `json:"aspects,omitempty"`
 
 	//deployment time
 	DeviceGroupId string          `json:"device_group_id"`

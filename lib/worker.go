@@ -279,7 +279,7 @@ func (this *CmdWorker) ExecuteCommand(command messages.Command, task messages.Ca
 				this.config.GetLogger().Error("unable to get token", "error", err)
 				continue
 			}
-			code, result := this.GetLastEventValue(string(token), message.Metadata.Task.TenantId, message.Event.Device, message.Event.Service, message.Event.Protocol, message.Event.CharacteristicId, message.Event.FunctionId, message.Event.AspectNode, 10*time.Second)
+			code, result := this.GetLastEventValue(string(token), message.Metadata.Task.TenantId, message.Event.Device, message.Event.Service, message.Event.Protocol, message.Event.CharacteristicId, message.Event.FunctionId, message.Event.AspectNodes, 10*time.Second)
 			if code == 200 {
 				err = this.handleTaskResponse(messages.TaskInfo{
 					WorkerId:            this.camunda.GetWorkerId(),
@@ -365,10 +365,6 @@ func (this *CmdWorker) HandleTaskResponse(msg string) (err error) {
 		if message.Metadata.Version < 3 {
 			output, err = this.marshaller.UnmarshalFromServiceAndProtocol(message.Metadata.OutputCharacteristic, message.Metadata.Service, message.Metadata.Protocol, message.Response.Output, message.Metadata.ContentVariableHints)
 		} else {
-			aspect := model.AspectNode{}
-			if message.Metadata.OutputAspectNode != nil {
-				aspect = *message.Metadata.OutputAspectNode
-			}
 			marshalStartTime := time.Now()
 			output, err = this.marshaller.UnmarshalV2(marshaller.UnmarshallingV2Request{
 				Service:          message.Metadata.Service,
@@ -377,7 +373,7 @@ func (this *CmdWorker) HandleTaskResponse(msg string) (err error) {
 				Message:          message.Response.Output,
 				Path:             message.Metadata.OutputPath,
 				FunctionId:       message.Metadata.OutputFunctionId,
-				AspectNode:       aspect,
+				AspectNodes:      message.Metadata.GetOutputAspectNodes(),
 			})
 			if err == nil {
 				//log marshal latency

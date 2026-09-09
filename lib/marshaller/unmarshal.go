@@ -17,67 +17,22 @@
 package marshaller
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
 	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
-	"io/ioutil"
-	"net/http"
-	"net/url"
-	"runtime/debug"
+	"github.com/SENERGY-Platform/marshaller/lib/api/messages"
 )
 
 func (this *Marshaller) UnmarshalV2(request UnmarshallingV2Request) (characteristicData interface{}, err error) {
-	return SendUnmarshalRequest(this.url+"/v2/unmarshal", request)
-}
-
-func (this *Marshaller) Unmarshal(characteristicId string, serviceId string, message map[string]string, hints []string) (characteristicData interface{}, err error) {
-	return SendUnmarshalRequest(this.url+"/unmarshal/"+url.PathEscape(serviceId)+"/"+url.PathEscape(characteristicId), UnmarshallingRequest{
-		Message:              message,
-		ContentVariableHints: hints,
-	})
-}
-
-func (this *Marshaller) UnmarshalFromService(characteristicId string, service model.Service, message map[string]string, hints []string) (characteristicData interface{}, err error) {
-	return SendUnmarshalRequest(this.url+"/unmarshal", UnmarshallingRequest{
-		CharacteristicId:     characteristicId,
-		Service:              service,
-		Message:              message,
-		ContentVariableHints: hints,
-	})
+	characteristicData, err, _ = this.client.UnmarshalV2(request)
+	return characteristicData, err
 }
 
 func (this *Marshaller) UnmarshalFromServiceAndProtocol(characteristicId string, service model.Service, protocol model.Protocol, message map[string]string, hints []string) (characteristicData interface{}, err error) {
-	return SendUnmarshalRequest(this.url+"/unmarshal", UnmarshallingRequest{
+	characteristicData, err, _ = this.client.Unmarshal(messages.UnmarshallingRequest{
 		CharacteristicId:     characteristicId,
 		Service:              service,
 		Protocol:             &protocol,
 		Message:              message,
 		ContentVariableHints: hints,
 	})
-}
-
-func SendUnmarshalRequest(url string, request interface{}) (characteristicData interface{}, err error) {
-	body, err := json.Marshal(request)
-	if err != nil {
-		debug.PrintStack()
-		return characteristicData, err
-	}
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
-	if err != nil {
-		debug.PrintStack()
-		return characteristicData, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		temp, _ := ioutil.ReadAll(resp.Body)
-		debug.PrintStack()
-		return characteristicData, errors.New(string(temp))
-	}
-	err = json.NewDecoder(resp.Body).Decode(&characteristicData)
-	if err != nil {
-		debug.PrintStack()
-		return characteristicData, err
-	}
 	return characteristicData, err
 }

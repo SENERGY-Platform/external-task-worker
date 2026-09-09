@@ -42,18 +42,19 @@ type ProtocolResponse struct {
 }
 
 type Metadata struct {
-	Version              int64             `json:"version,omitempty"`
-	Device               model.Device      `json:"device"`
-	Service              model.Service     `json:"service"`
-	Protocol             model.Protocol    `json:"protocol"`
-	OutputPath           string            `json:"output_path,omitempty"`        //only for version >= 3
-	OutputFunctionId     string            `json:"output_function_id,omitempty"` //only for version >= 3 if no OutputPath is known
-	OutputAspectNode     *model.AspectNode `json:"output_aspect_node,omitempty"` //only for version >= 3 if no OutputPath is known
-	InputCharacteristic  string            `json:"input_characteristic,omitempty"`
-	OutputCharacteristic string            `json:"output_characteristic,omitempty"`
-	ContentVariableHints []string          `json:"content_variable_hints,omitempty"` //only for version < 3
-	ResponseTo           string            `json:"response_to"`
-	ErrorTo              string            `json:"error_to,omitempty"`
+	Version              int64              `json:"version,omitempty"`
+	Device               model.Device       `json:"device"`
+	Service              model.Service      `json:"service"`
+	Protocol             model.Protocol     `json:"protocol"`
+	OutputPath           string             `json:"output_path,omitempty"`         //only for version >= 3
+	OutputFunctionId     string             `json:"output_function_id,omitempty"`  //only for version >= 3 if no OutputPath is known
+	OutputAspectNode     *model.AspectNode  `json:"output_aspect_node,omitempty"`  //deprecated: please use OutputAspectNodes
+	OutputAspectNodes    []model.AspectNode `json:"output_aspect_nodes,omitempty"` //only for version >= 3 if no OutputPath is known
+	InputCharacteristic  string             `json:"input_characteristic,omitempty"`
+	OutputCharacteristic string             `json:"output_characteristic,omitempty"`
+	ContentVariableHints []string           `json:"content_variable_hints,omitempty"` //only for version < 3
+	ResponseTo           string             `json:"response_to"`
+	ErrorTo              string             `json:"error_to,omitempty"`
 }
 
 type ProtocolMsg struct {
@@ -82,7 +83,7 @@ type EventRequest struct {
 	Protocol         model.Protocol
 	CharacteristicId string
 	FunctionId       string
-	AspectNode       model.AspectNode
+	AspectNodes      []model.AspectNode
 }
 
 type RequestInfo struct {

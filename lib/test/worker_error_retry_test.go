@@ -40,6 +40,8 @@ import (
 )
 
 func TestWorkerErrorRetries(t *testing.T) {
+	mockKafka := mock.NewKafka()
+	mockRepo := mock.NewRepo()
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -54,7 +56,6 @@ func TestWorkerErrorRetries(t *testing.T) {
 	config.HttpCommandConsumerPort = ""
 	config.Debug = true
 	config.CamundaTopic = "pessimistic"
-	mock.CleanKafkaMock()
 
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
@@ -99,12 +100,12 @@ func TestWorkerErrorRetries(t *testing.T) {
 
 	config.ShardsDb = pgConn
 
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, camunda.Factory, mock.Marshaller, mock.Timescale)
+	go lib.Worker(ctx, config, mockKafka, mockRepo, camunda.Factory, mock.Marshaller, mock.Timescale)
 
 	time.Sleep(1 * time.Second)
 
 	protocolMessages := []messages.ProtocolMsg{}
-	mock.Kafka.Subscribe("protocol1", func(msg string) error {
+	mockKafka.Subscribe("protocol1", func(msg string) error {
 		msgObj := messages.ProtocolMsg{}
 		err := json.Unmarshal([]byte(msg), &msgObj)
 		if err != nil {
@@ -121,26 +122,26 @@ func TestWorkerErrorRetries(t *testing.T) {
 			t.Error(err)
 			return nil
 		}
-		go mock.Kafka.Produce(msgObj.Metadata.ErrorTo, string(errResp))
+		go mockKafka.Produce(msgObj.Metadata.ErrorTo, string(errResp))
 		return nil
 	})
 
 	//populate repository
-	mock.Repo.RegisterDevice(model.Device{
+	mockRepo.RegisterDevice(model.Device{
 		Id:           "device_1",
 		Name:         "d1",
 		DeviceTypeId: "dt1",
 		LocalId:      "d1u",
 	})
 
-	mock.Repo.RegisterProtocol(model.Protocol{
+	mockRepo.RegisterProtocol(model.Protocol{
 		Id:               "p1",
 		Name:             "protocol1",
 		Handler:          "protocol1",
 		ProtocolSegments: []model.ProtocolSegment{{Id: "ms1", Name: "body"}},
 	})
 
-	mock.Repo.RegisterService(model.Service{
+	mockRepo.RegisterService(model.Service{
 		Id:         "service_1",
 		Name:       "s1",
 		LocalId:    "s1u",

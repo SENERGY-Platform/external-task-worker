@@ -32,7 +32,6 @@ import (
 )
 
 func TestSequentialExecution(t *testing.T) {
-	mock.CleanKafkaMock()
 	t.Run("0 retries nil lost", testSequentialExecution(0, nil, []float64{0, 1, 2}, false))
 	t.Run("0 retries 0 lost", testSequentialExecution(0, []int{0}, []float64{1, 2}, false))
 	t.Run("0 retries 1 lost", testSequentialExecution(0, []int{1}, []float64{0, 2}, false))
@@ -84,7 +83,7 @@ func TestSequentialExecution(t *testing.T) {
 
 func testSequentialExecution(retries int64, lostResponseFor []int, expectedResultsBlueValues []float64, expectFailed bool) func(t *testing.T) {
 	return func(t *testing.T) {
-		mock.CleanKafkaMock()
+		mockRepo := mock.NewRepo()
 		util.TimeNow = func() time.Time {
 			return time.Time{}
 		}
@@ -103,8 +102,8 @@ func testSequentialExecution(retries int64, lostResponseFor []int, expectedResul
 		defer cancel()
 		mockCamunda := &mock.CamundaMock{}
 		mockCamunda.Init()
-		kafkamock := &mock.KafkaMock{}
-		go lib.Worker(ctx, config, kafkamock, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
+		kafkamock := mock.NewKafka()
+		go lib.Worker(ctx, config, kafkamock, mockRepo, mockCamunda, mock.Marshaller, mock.Timescale)
 
 		time.Sleep(100 * time.Millisecond)
 
@@ -140,28 +139,28 @@ func testSequentialExecution(retries int64, lostResponseFor []int, expectedResul
 		})
 
 		//populate repository
-		mock.Repo.RegisterDevice(model.Device{
+		mockRepo.RegisterDevice(model.Device{
 			Id:           "device_1",
 			Name:         "d1",
 			DeviceTypeId: "dt2",
 			LocalId:      "d1u",
 		})
 
-		mock.Repo.RegisterDevice(model.Device{
+		mockRepo.RegisterDevice(model.Device{
 			Id:           "device_2",
 			Name:         "d2",
 			DeviceTypeId: "dt2",
 			LocalId:      "d2u",
 		})
 
-		mock.Repo.RegisterDevice(model.Device{
+		mockRepo.RegisterDevice(model.Device{
 			Id:           "device_3",
 			Name:         "d3",
 			DeviceTypeId: "dt2",
 			LocalId:      "d3u",
 		})
 
-		mock.Repo.RegisterDeviceGroup(model.DeviceGroup{
+		mockRepo.RegisterDeviceGroup(model.DeviceGroup{
 			Id:   "dg1",
 			Name: "dg1",
 			Criteria: []model.DeviceGroupFilterCriteria{
@@ -170,14 +169,14 @@ func testSequentialExecution(retries int64, lostResponseFor []int, expectedResul
 			DeviceIds: []string{"device_1", "device_2", "device_3"},
 		})
 
-		mock.Repo.RegisterProtocol(model.Protocol{
+		mockRepo.RegisterProtocol(model.Protocol{
 			Id:               "p1",
 			Name:             "protocol1",
 			Handler:          "protocol1",
 			ProtocolSegments: []model.ProtocolSegment{{Id: "ms1", Name: "body"}},
 		})
 
-		mock.Repo.RegisterDeviceType(model.DeviceType{
+		mockRepo.RegisterDeviceType(model.DeviceType{
 			Id:            "dt2",
 			Name:          "dt2",
 			DeviceClassId: "dc1",

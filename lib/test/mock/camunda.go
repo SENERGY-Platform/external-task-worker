@@ -30,18 +30,15 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/util"
 )
 
-var Camunda = &CamundaMock{ResetOnGetInterface: true}
-
 type CamundaMock struct {
-	ResetOnGetInterface bool
-	waitingTasks        []messages.CamundaExternalTask
-	fetchedTasks        map[string]messages.CamundaExternalTask
-	completedTasks      map[string]interface{}
-	failedTasks         map[string]messages.CamundaExternalTask
-	config              util.Config
-	mux                 sync.Mutex
-	lockTimes           map[string]time.Time
-	Camunda             *camunda.Camunda
+	waitingTasks   []messages.CamundaExternalTask
+	fetchedTasks   map[string]messages.CamundaExternalTask
+	completedTasks map[string]interface{}
+	failedTasks    map[string]messages.CamundaExternalTask
+	config         util.Config
+	mux            sync.Mutex
+	lockTimes      map[string]time.Time
+	Camunda        *camunda.Camunda
 }
 
 func (this *CamundaMock) Init() {
@@ -57,9 +54,6 @@ func (this *CamundaMock) Init() {
 func (this *CamundaMock) Get(config util.Config, producer com.ProducerInterface, metrics interfaces.Metrics) (interfaces.CamundaInterface, error) {
 	this.mux.Lock()
 	defer this.mux.Unlock()
-	if this.ResetOnGetInterface {
-		this.Init()
-	}
 	this.config = config
 	return this, nil
 }

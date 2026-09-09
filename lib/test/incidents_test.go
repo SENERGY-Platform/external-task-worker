@@ -37,6 +37,8 @@ import (
 )
 
 func TestUserIncident(t *testing.T) {
+	mockKafka := mock.NewKafka()
+	mockRepo := mock.NewRepo()
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -59,13 +61,13 @@ func TestUserIncident(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c, err := camunda.NewCamundaWithShards(config, mock.Kafka, prometheus.NewMetrics("test", nil), nil)
+	c, err := camunda.NewCamundaWithShards(config, mockKafka, prometheus.NewMetrics("test", nil), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 	mockCamunda := &mock.CamundaMock{Camunda: c}
 	mockCamunda.Init()
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.Timescale)
+	go lib.Worker(ctx, config, mockKafka, mockRepo, mockCamunda, mock.Marshaller, mock.Timescale)
 
 	time.Sleep(1 * time.Second)
 
@@ -86,7 +88,7 @@ func TestUserIncident(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 
-	incidents := mock.Kafka.GetProduced(config.KafkaIncidentTopic)
+	incidents := mockKafka.GetProduced(config.KafkaIncidentTopic)
 
 	expected := []string{`{"command":"POST","msg_version":3,"incident":{"id":"2","external_task_id":"1","process_instance_id":"piid1","process_definition_id":"pdid1","worker_id":"1","error_message":"user triggered incident: test error","time":"0001-01-01T00:00:00Z","tenant_id":"user","deployment_name":"","business_key":""}}`}
 
@@ -97,6 +99,7 @@ func TestUserIncident(t *testing.T) {
 }
 
 func TestError(t *testing.T) {
+	mockKafka := mock.NewKafka()
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -118,7 +121,7 @@ func TestError(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	kafka, err := mock.Kafka.NewProducer(ctx, config)
+	kafka, err := mockKafka.NewProducer(ctx, config)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -132,7 +135,7 @@ func TestError(t *testing.T) {
 	camunda.Error("task_id_1", "piid_1", "pdid_1", "bk1", "error message", "user1")
 	camunda.Error("task_id_2", "piid_2", "pdid_2", "bk2", "error message", "user1")
 
-	incidents := mock.Kafka.GetProduced(config.KafkaIncidentTopic)
+	incidents := mockKafka.GetProduced(config.KafkaIncidentTopic)
 
 	expected := []string{
 		`{"command":"POST","msg_version":3,"incident":{"id":"2","external_task_id":"task_id_1","process_instance_id":"piid_1","process_definition_id":"pdid_1","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":"","business_key":"bk1"}}`,
@@ -145,6 +148,7 @@ func TestError(t *testing.T) {
 }
 
 func TestErrorOverHttp(t *testing.T) {
+	mockKafka := mock.NewKafka()
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -166,7 +170,7 @@ func TestErrorOverHttp(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	kafka, err := mock.Kafka.NewProducer(ctx, config)
+	kafka, err := mockKafka.NewProducer(ctx, config)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -189,7 +193,7 @@ func TestErrorOverHttp(t *testing.T) {
 	camunda.Error("task_id_1", "piid_1", "pdid_1", "bk1", "error message", "user1")
 	camunda.Error("task_id_2", "piid_2", "pdid_2", "bk2", "error message", "user1")
 
-	incidents = append(incidents, mock.Kafka.GetProduced(config.KafkaIncidentTopic)...)
+	incidents = append(incidents, mockKafka.GetProduced(config.KafkaIncidentTopic)...)
 
 	expected := []string{
 		`http incident: POST /incidents {"id":"2","external_task_id":"task_id_1","process_instance_id":"piid_1","process_definition_id":"pdid_1","worker_id":"1","error_message":"error message","time":"0001-01-01T00:00:00Z","tenant_id":"user1","deployment_name":"","business_key":"bk1"}`,

@@ -16,39 +16,38 @@
 
 package marshaller
 
-import "github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
+import (
+	"github.com/SENERGY-Platform/external-task-worker/lib/devicerepository/model"
+	"github.com/SENERGY-Platform/marshaller/lib/api/messages"
+	"github.com/SENERGY-Platform/marshaller/lib/configurables"
+	marshallermodel "github.com/SENERGY-Platform/marshaller/lib/marshaller/model"
+)
 
-type MarshallingV2Request struct {
-	Service  model.Service              `json:"service"`  //semi-optional, may be determined by request path
-	Protocol model.Protocol             `json:"protocol"` //semi-optional, may be determined by service
-	Data     []MarshallingV2RequestData `json:"data"`
-}
+//the request types are the ones of the marshaller itself, so that a field added there does
+//not have to be repeated here to be usable
 
-type MarshallingV2RequestData struct {
-	Value            interface{}       `json:"value"`
-	CharacteristicId string            `json:"characteristic_id"`
-	Paths            []string          `json:"paths"`                 //semi-optional, may be determent by FunctionId
-	FunctionId       string            `json:"function_id"`           //semi-optional, to determine Paths if they are not set
-	AspectNode       *model.AspectNode `json:"aspect_node,omitempty"` //optional, to determine Paths if they are not set, may be empty if only FunctionId should be searched
-}
+type MarshallingV2RequestData = marshallermodel.MarshallingV2RequestData
 
-type UnmarshallingV2Request struct {
-	Service          model.Service     `json:"service"`           //semi-optional, may be determined by request path
-	Protocol         model.Protocol    `json:"protocol"`          //semi-optional, may be determined by service
-	CharacteristicId string            `json:"characteristic_id"` //semi-optional, may be determined by request path
-	Message          map[string]string `json:"message"`
+type UnmarshallingV2Request = messages.UnmarshallingV2Request
 
-	Path         string           `json:"path"`           //semi-optional, may be determent by FunctionId and AspectNode
-	FunctionId   string           `json:"function_id"`    //semi-optional, to determine Path if not set
-	AspectNode   model.AspectNode `json:"aspect_node"`    //semi-optional, to determine Path if not set, may itself be determent by AspectNodeId
-	AspectNodeId string           `json:"aspect_node_id"` //semi-optional, to determine AspectNode if not set
-}
+type Configurable = configurables.Configurable
 
+type ConfigurableCharacteristicValue = configurables.ConfigurableCharacteristicValue
+
+// ConfigurableV2 is the configurable as the process-deployment writes it into the task
+// payload; it mirrors the configurable of a device-repository path option.
 type ConfigurableV2 struct {
-	Path             string           `json:"path"`
-	CharacteristicId string           `json:"characteristic_id"`
-	AspectNode       model.AspectNode `json:"aspect_node"`
-	FunctionId       string           `json:"function_id"`
-	Value            interface{}      `json:"value,omitempty"`
-	Type             string           `json:"type,omitempty"`
+	Path             string             `json:"path"`
+	CharacteristicId string             `json:"characteristic_id"`
+	AspectNode       model.AspectNode   `json:"aspect_node"` //deprecated: please use AspectNodes
+	AspectNodes      []model.AspectNode `json:"aspect_nodes,omitempty"`
+	FunctionId       string             `json:"function_id"`
+	Value            interface{}        `json:"value,omitempty"`
+	Type             string             `json:"type,omitempty"`
+}
+
+// GetAspectNodes returns the aspect nodes of the configurable. The deprecated AspectNode is
+// an alias for a list with one element.
+func (this ConfigurableV2) GetAspectNodes() []model.AspectNode {
+	return marshallermodel.AspectNodesAlias(this.AspectNode, this.AspectNodes)
 }

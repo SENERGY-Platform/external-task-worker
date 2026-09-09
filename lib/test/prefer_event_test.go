@@ -32,7 +32,8 @@ import (
 )
 
 func TestWorkerPreferEventResponseV2(t *testing.T) {
-	mock.CleanKafkaMock()
+	mockKafka := mock.NewKafka()
+	mockRepo := mock.NewRepo()
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -59,26 +60,26 @@ func TestWorkerPreferEventResponseV2(t *testing.T) {
 		"device_1": {"service_1": {"metrics.level": "#c83200"}},
 	}
 
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.GetTimescaleMockFactory(timescaleResponses))
+	go lib.Worker(ctx, config, mockKafka, mockRepo, mockCamunda, mock.Marshaller, mock.GetTimescaleMockFactory(timescaleResponses))
 
 	time.Sleep(1 * time.Second)
 
 	//populate repository
-	mock.Repo.RegisterDevice(model.Device{
+	mockRepo.RegisterDevice(model.Device{
 		Id:           "device_1",
 		Name:         "d1",
 		DeviceTypeId: "dt1",
 		LocalId:      "d1u",
 	})
 
-	mock.Repo.RegisterProtocol(model.Protocol{
+	mockRepo.RegisterProtocol(model.Protocol{
 		Id:               "p1",
 		Name:             "protocol1",
 		Handler:          "protocol1",
 		ProtocolSegments: []model.ProtocolSegment{{Id: "ms1", Name: "body"}},
 	})
 
-	mock.Repo.RegisterService(model.Service{
+	mockRepo.RegisterService(model.Service{
 		Id:          "service_1",
 		Name:        "s1",
 		LocalId:     "s1u",
@@ -160,7 +161,7 @@ func TestWorkerPreferEventResponseV2(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 
-	protocolMessageStrings := mock.Kafka.GetProduced("protocol1")
+	protocolMessageStrings := mockKafka.GetProduced("protocol1")
 
 	if len(protocolMessageStrings) != 1 {
 		t.Error(protocolMessageStrings)
@@ -182,7 +183,7 @@ func TestWorkerPreferEventResponseV2(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		mock.Kafka.Produce(config.ResponseTopic, string(resp))
+		mockKafka.Produce(config.ResponseTopic, string(resp))
 		time.Sleep(1 * time.Second)
 	}
 
@@ -216,7 +217,8 @@ func TestWorkerPreferEventResponseV2(t *testing.T) {
 }
 
 func TestGroupPreferEventResponses(t *testing.T) {
-	mock.CleanKafkaMock()
+	mockKafka := mock.NewKafka()
+	mockRepo := mock.NewRepo()
 	util.TimeNow = func() time.Time {
 		return time.Time{}
 	}
@@ -246,26 +248,26 @@ func TestGroupPreferEventResponses(t *testing.T) {
 		"device_2": {"service_3": {"metrics.level": "#c8320{{count}}"}, "service_4": {"metrics.level": "#c8320{{count}}"}},
 	}
 
-	go lib.Worker(ctx, config, mock.Kafka, mock.Repo, mockCamunda, mock.Marshaller, mock.GetTimescaleMockFactory(timescaleResponses))
+	go lib.Worker(ctx, config, mockKafka, mockRepo, mockCamunda, mock.Marshaller, mock.GetTimescaleMockFactory(timescaleResponses))
 
 	time.Sleep(1 * time.Second)
 
 	//populate repository
-	mock.Repo.RegisterDevice(model.Device{
+	mockRepo.RegisterDevice(model.Device{
 		Id:           "device_1",
 		Name:         "d1",
 		DeviceTypeId: "dt1",
 		LocalId:      "d1u",
 	})
 
-	mock.Repo.RegisterDevice(model.Device{
+	mockRepo.RegisterDevice(model.Device{
 		Id:           "device_2",
 		Name:         "d2",
 		DeviceTypeId: "dt2",
 		LocalId:      "d1u",
 	})
 
-	mock.Repo.RegisterDeviceGroup(model.DeviceGroup{
+	mockRepo.RegisterDeviceGroup(model.DeviceGroup{
 		Id:   "dg1",
 		Name: "dg1",
 		Criteria: []model.DeviceGroupFilterCriteria{
@@ -274,14 +276,14 @@ func TestGroupPreferEventResponses(t *testing.T) {
 		DeviceIds: []string{"device_1", "device_2"},
 	})
 
-	mock.Repo.RegisterProtocol(model.Protocol{
+	mockRepo.RegisterProtocol(model.Protocol{
 		Id:               "p1",
 		Name:             "protocol1",
 		Handler:          "protocol1",
 		ProtocolSegments: []model.ProtocolSegment{{Id: "ms1", Name: "body"}},
 	})
 
-	mock.Repo.RegisterDeviceType(model.DeviceType{
+	mockRepo.RegisterDeviceType(model.DeviceType{
 		Id:            "dt1",
 		Name:          "dt1",
 		DeviceClassId: "dc1",
@@ -347,7 +349,7 @@ func TestGroupPreferEventResponses(t *testing.T) {
 		},
 	})
 
-	mock.Repo.RegisterDeviceType(model.DeviceType{
+	mockRepo.RegisterDeviceType(model.DeviceType{
 		Id:            "dt2",
 		Name:          "dt2",
 		DeviceClassId: "dc1",
@@ -467,7 +469,7 @@ func TestGroupPreferEventResponses(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 
-	protocolMessageStrings := mock.Kafka.GetProduced("protocol1")
+	protocolMessageStrings := mockKafka.GetProduced("protocol1")
 
 	for _, message := range protocolMessageStrings {
 		msg := messages.ProtocolMsg{}
@@ -484,7 +486,7 @@ func TestGroupPreferEventResponses(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		mock.Kafka.Produce(config.ResponseTopic, string(resp))
+		mockKafka.Produce(config.ResponseTopic, string(resp))
 		time.Sleep(1 * time.Second)
 	}
 

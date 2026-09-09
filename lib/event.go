@@ -35,7 +35,7 @@ import (
 	"github.com/SENERGY-Platform/models/go/models"
 )
 
-func (this *CmdWorker) GetLastEventValue(token string, userId string, device model.Device, service model.Service, protocol model.Protocol, characteristicId string, functionId string, aspect model.AspectNode, timeout time.Duration) (code int, result interface{}) {
+func (this *CmdWorker) GetLastEventValue(token string, userId string, device model.Device, service model.Service, protocol model.Protocol, characteristicId string, functionId string, aspectNodes []model.AspectNode, timeout time.Duration) (code int, result interface{}) {
 	output, err, code := this.getLastEventMessage(token, device, service, protocol, timeout)
 	if err != nil {
 		this.config.GetLogger().Error("unable to get event value:", "error", err)
@@ -46,30 +46,22 @@ func (this *CmdWorker) GetLastEventValue(token string, userId string, device mod
 		return code, "unexpected code " + strconv.Itoa(code)
 	}
 	marshalStartTime := time.Now()
-	temp, err := this.marshaller.UnmarshalV2(marshaller.UnmarshallingV2Request{
+	request := marshaller.UnmarshallingV2Request{
 		Service:          service,
 		Protocol:         protocol,
 		CharacteristicId: characteristicId,
 		Message:          output,
 		FunctionId:       functionId,
-		AspectNode:       aspect,
-		AspectNodeId:     aspect.Id,
-	})
+		AspectNodes:      aspectNodes,
+	}
+	temp, err := this.marshaller.UnmarshalV2(request)
 	if err != nil {
 		//log marshal latency
 		marshalDuration := time.Since(marshalStartTime)
 		this.metrics.LogTaskMarshallingLatency("UnmarshalV2", userId, service.Id, functionId, marshalDuration)
 
 		if this.config.Debug {
-			marshalRequestStr, _ := json.Marshal(marshaller.UnmarshallingV2Request{
-				Service:          service,
-				Protocol:         protocol,
-				CharacteristicId: characteristicId,
-				Message:          output,
-				FunctionId:       functionId,
-				AspectNode:       aspect,
-				AspectNodeId:     aspect.Id,
-			})
+			marshalRequestStr, _ := json.Marshal(request)
 			this.config.GetLogger().Debug("unable to unmarshal event value", "error", err, "request", string(marshalRequestStr))
 		}
 		this.config.GetLogger().Error("unable to unmarshal event value", "error", err)

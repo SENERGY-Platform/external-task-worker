@@ -23,15 +23,24 @@ import (
 	"github.com/SENERGY-Platform/external-task-worker/util"
 )
 
-var Repo = &RepoMock{ResetOnGetRepoInterface: true}
+// NewRepo returns the device repository of one test, for the same reason as NewKafka: a
+// straggling worker must not be able to read or write what the next test set up.
+func NewRepo() *RepoMock {
+	return &RepoMock{
+		devices:      map[string]model.Device{},
+		services:     map[string]model.Service{},
+		protocols:    map[string]model.Protocol{},
+		deviceTypes:  map[string]model.DeviceType{},
+		deviceGroups: map[string]model.DeviceGroup{},
+	}
+}
 
 type RepoMock struct {
-	ResetOnGetRepoInterface bool
-	devices                 map[string]model.Device
-	services                map[string]model.Service
-	protocols               map[string]model.Protocol
-	deviceTypes             map[string]model.DeviceType
-	deviceGroups            map[string]model.DeviceGroup
+	devices      map[string]model.Device
+	services     map[string]model.Service
+	protocols    map[string]model.Protocol
+	deviceTypes  map[string]model.DeviceType
+	deviceGroups map[string]model.DeviceGroup
 }
 
 func (this *RepoMock) GetDeviceType(token devicerepository.Impersonate, id string) (model.DeviceType, error) {
@@ -51,13 +60,6 @@ func (this *RepoMock) GetDeviceGroup(token devicerepository.Impersonate, id stri
 }
 
 func (this *RepoMock) Get(configType util.Config) (devicerepository.RepoInterface, error) {
-	if this.ResetOnGetRepoInterface {
-		this.devices = map[string]model.Device{}
-		this.services = map[string]model.Service{}
-		this.protocols = map[string]model.Protocol{}
-		this.deviceTypes = map[string]model.DeviceType{}
-		this.deviceGroups = map[string]model.DeviceGroup{}
-	}
 	return this, nil
 }
 
@@ -122,15 +124,4 @@ func (this *RepoMock) RegisterDeviceType(deviceType model.DeviceType) {
 
 func (this *RepoMock) RegisterDeviceGroup(deviceGroup model.DeviceGroup) {
 	this.deviceGroups[deviceGroup.Id] = deviceGroup
-}
-
-func (this *RepoMock) New() *RepoMock {
-	return &RepoMock{
-		ResetOnGetRepoInterface: false,
-		devices:                 map[string]model.Device{},
-		services:                map[string]model.Service{},
-		protocols:               map[string]model.Protocol{},
-		deviceTypes:             map[string]model.DeviceType{},
-		deviceGroups:            map[string]model.DeviceGroup{},
-	}
 }
