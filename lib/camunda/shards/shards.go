@@ -54,7 +54,8 @@ func (this *Shards) GetShardForUser(userId string) (shardUrl string, err error) 
 }
 
 func getShardForUser(tx Tx, userId string) (shardUrl string, err error) {
-	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
 	resp := tx.QueryRowContext(ctx, SqlSelectShardByUser, userId)
 	err = resp.Err()
 	if err != nil {
@@ -68,7 +69,8 @@ func getShardForUser(tx Tx, userId string) (shardUrl string, err error) {
 }
 
 func (this *Shards) SetShardForUser(userId string, shardAddress string) (err error) {
-	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
 	tx, err := this.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -94,7 +96,8 @@ func (this *Shards) SetShardForUser(userId string, shardAddress string) (err err
 }
 
 func (this *Shards) EnsureShardForUser(userId string) (shardUrl string, err error) {
-	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
 	tx, err := this.db.BeginTx(ctx, nil)
 	if err != nil {
 		return shardUrl, err
@@ -154,7 +157,8 @@ func selectShard(tx Tx) (shardUrl string, err error) {
 
 func getShardUserCount(tx Tx) (result map[string]int, err error) {
 	result = map[string]int{}
-	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
 	rows, err := tx.QueryContext(ctx, SqlShardUserCount)
 	if err != nil {
 		return
@@ -190,7 +194,8 @@ func (this *Shards) GetShards() (result []string, err error) {
 }
 
 func getShards(tx Tx) (result []string, err error) {
-	ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
 	rows, err := tx.QueryContext(ctx, SQLListShards)
 	if err != nil {
 		return result, err

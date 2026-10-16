@@ -70,7 +70,8 @@ func TestFetch(t *testing.T) {
 		return
 	}
 
-	providerCtx, _ := context.WithTimeout(ctx, 1*time.Minute)
+	providerCtx, providerCancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer providerCancel()
 	taskChan, errChan, err := c.ProvideTasks(providerCtx)
 	if err != nil {
 		t.Error(err)
