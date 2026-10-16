@@ -112,7 +112,7 @@ func (this *Iot) GetService(token Impersonate, device model.Device, id string) (
 	if err != nil {
 		dt, err := this.GetDeviceType(token, device.DeviceTypeId)
 		if err != nil {
-			slog.Default().Error("unable to load device-type", "error", err, "deviceTypeId", device.DeviceTypeId, "token", token)
+			slog.Default().Error("unable to load device-type", "error", err, "deviceTypeId", device.DeviceTypeId)
 			return result, err
 		}
 		for _, service := range dt.Services {

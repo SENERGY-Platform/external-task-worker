@@ -72,7 +72,7 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 	if device == nil {
 		temp, err := this.repository.GetDevice(token, command.DeviceId)
 		if err != nil {
-			this.config.GetLogger().Error("unable to load device", "error", err, "deviceId", command.DeviceId, "tenantId", task.TenantId, "token", token)
+			this.config.GetLogger().Error("unable to load device", "error", err, "deviceId", command.DeviceId, "tenantId", task.TenantId)
 			return nil, nil, err
 		}
 		device = &temp
@@ -80,7 +80,7 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 	if service == nil {
 		temp, err := this.repository.GetService(token, *device, command.ServiceId)
 		if err != nil {
-			this.config.GetLogger().Error("unable to load service", "error", err, "serviceId", command.ServiceId, "tenantId", task.TenantId, "token", token)
+			this.config.GetLogger().Error("unable to load service", "error", err, "serviceId", command.ServiceId, "tenantId", task.TenantId)
 			return nil, nil, err
 		}
 		service = &temp
@@ -91,7 +91,7 @@ func (this *CmdWorker) createMessageForProtocolHandler(command messages.Command,
 		}
 		temp, err := this.repository.GetProtocol(token, command.ProtocolId)
 		if err != nil {
-			this.config.GetLogger().Error("unable to load protocol", "error", err, "protocolId", command.ProtocolId, "tenantId", task.TenantId, "token", token)
+			this.config.GetLogger().Error("unable to load protocol", "error", err, "protocolId", command.ProtocolId, "tenantId", task.TenantId)
 			return nil, nil, err
 		}
 		protocol = &temp

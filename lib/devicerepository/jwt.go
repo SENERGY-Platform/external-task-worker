@@ -22,11 +22,17 @@ import (
 	"errors"
 	"io"
 	"log"
+	"log/slog"
 	"net/http"
 	"time"
 )
 
 type Impersonate string
+
+// LogValue keeps the bearer token out of structured logs.
+func (this Impersonate) LogValue() slog.Value {
+	return slog.StringValue("<redacted>")
+}
 
 func (this Impersonate) Post(url string, contentType string, body io.Reader) (resp *http.Response, err error) {
 	req, err := http.NewRequest("POST", url, body)
